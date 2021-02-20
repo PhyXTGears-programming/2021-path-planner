@@ -1,6 +1,7 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain } = require('electron')
 const path = require('path')
+const { writeFile } = require('fs');
 
 let win;
 
@@ -18,10 +19,10 @@ function createWindow () {
   })
 
   // and load the index.html of the app.
-  win.loadFile('index.html')
+  win.loadFile('index.html');
 
   // Open the DevTools.
-  // win.webContents.openDevTools()
+  win.webContents.openDevTools()
 }
 
 // This method will be called when Electron has finished
@@ -47,8 +48,31 @@ app.on('window-all-closed', function () {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
+
+selectSaveFile = () => {
+  const options = {
+    title: 'Select Save File',
+    buttonLabel: 'Select File',
+  };
+
+  return dialog.showSaveDialogSync();
+};
+
 ipcMain.on("toMain", (event, args) => {
   switch (args.event) {
+    case 'selectSaveFile': 
+      const saveFile = selectSaveFile();
+      console.log("send filename to renderer", saveFile);
+      win.webContents.send("fromMain", { event: 'selectSaveFile', data: { saveFile } });
+      break;
+
+    case 'saveFile':
+      const saveData = JSON.stringify(args.data.segments);
+      writeFile(args.data.saveFile, saveData, (err, data) => {
+        console.error(err);
+      });
+      break;
+
     default:
       console.warn("Unknown event: ", args);
   }

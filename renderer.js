@@ -125,6 +125,7 @@ let moveHandle = null;
 let selectState = SelectState.NONE;
 
 let saveFileName = '';
+let saveData = '';
 
 const config = {
   fieldDims: {
@@ -388,11 +389,40 @@ function onFieldLoaded(canvas) {
       elem.classList.add('active');
     });
   }
+
+  document.getElementById('save-file').addEventListener('click', ev => {
+    window.api.send('toMain', { event: 'selectSaveFile' });
+    // saveFileName = selectSaveFile();
+    // ev.target.value = saveFileName;
+  });
   
   document.getElementById('export').addEventListener('click', ev => {
     const data = exportPoses(poseList);
+    window.api.send('toMain', { event: 'saveFile', data: {
+      saveFile: saveFileName,
+      segments: exportPoses(poseList),
+    } });
     console.log(data);
-  })
+  });
+
+  console.log('attach fromMain receiver');
+
+  window.api.receive('fromMain', args => {
+    switch (args.event) {
+      case 'selectSaveFile':
+        saveFileName = args.data.saveFile;
+        const saveFileNameShort = saveFileName.split("/").slice(-1);
+        document.getElementById('save-file').value = saveFileNameShort;
+        break;
+
+      case 'saveFileData':
+        console.log("Save File Stringified: ", saveFileData);
+        break;
+
+      default:
+        console.warn("Unknown event:", args);
+    }
+  });
 }
 
 function redrawCanvas(context, poseList) {
@@ -643,6 +673,7 @@ function exportPoses(poseList) {
       result.push(segment);
       pose1 = pose2;
     }
+    
     return result;
   }
 }
