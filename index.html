@@ -34,6 +34,12 @@ body {
     filter: grayscale(1);
   }
 
+  .toolbar .tool {
+    width: 32px;
+    height: 32px;
+    margin:auto;
+  }
+
   .c-toolbar__start
   , .c-toolbar__middle
   , .c-toolbar__end {
@@ -52,6 +58,13 @@ body {
     height:3rem;
     background-color:rgb(194, 194, 194);
   }
+
+  .o-tool-label {
+    font-family: Arial;
+    text-align: center;
+    background-color: rgb(196, 196, 196);
+    color: blue;
+  }
 </style>
 
     <meta charset="UTF-8">
@@ -63,7 +76,9 @@ body {
 <div class="toolbar">
   <div class="c-toolbar__start">
     <img id="select-tool" class="tool" src="images/finish.png" />
+    <p class="o-tool-label">Select</p>
     <img id="pose-tool" class="tool" src="images/start.png" />
+    <p class="o-tool-label">Waypoint</p>
   </div>
   <div class="c-toolbar__middle">
   </div>
