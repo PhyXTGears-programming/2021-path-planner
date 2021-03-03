@@ -114,7 +114,7 @@ const toolStateToName = {
 
 let toolState = Tool.NONE;
 const images = {};
-const poseList = [];
+let poseList = [];
 
 let hoveredPose = null;
 let movePose = null;
@@ -405,6 +405,22 @@ function onFieldLoaded(canvas) {
     console.log(data);
   });
 
+  document.getElementById('import').addEventListener('click', ev => {
+    const context = canvas.getContext('2d');
+
+    let importFileList = document.getElementById('load-file').files;
+    if (importFileList.length == 0) return;
+
+    importFileList[0].text()
+      .then((text) => JSON.parse(text))
+      .then(importPoses)
+      .then((poses) => { poseList=poses; })
+      .then(() => redrawCanvas(context, poseList));
+
+    console.log(importFileList);
+
+  });
+
   console.log('attach fromMain receiver');
 
   window.api.receive('fromMain', args => {
@@ -676,4 +692,51 @@ function exportPoses(poseList) {
     
     return result;
   }
+}
+
+function importPoses(data) {
+  const poseList = [];
+
+  if (data.length < 1) {
+    return poseList;
+  }
+
+  const metersToCanvas = point => Point(
+      (point.x * images.field.width / config.fieldDims.xmeters),
+      (point.y / config.fieldDims.ymeters - 1) * -1 * images.field.height
+  );
+
+  const toPoint = (p) => Point(p[0], p[1]);
+
+  data = data.map((segment) =>
+    segment.map(toPoint).map(metersToCanvas)
+  );
+  
+  let pt1 = data[0][0];
+  let cp1 = data[0][1];
+
+  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1));
+  poseList.push(pose);
+
+  pt1 = data[0][3];
+  cp1 = data[0][2];
+
+  for (let segment of data.slice(1)) {
+    const cp2 = segment[1];
+
+    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1));
+
+    poseList.push(pose);
+    pt1 = segment[3];
+    cp1 = segment[2];
+  }
+
+  let segment = data.slice(-1)[0];
+  pt1 = segment[3];
+  cp1 = segment[2];
+  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1));
+
+  poseList.push(pose);
+
+  return poseList;
 }

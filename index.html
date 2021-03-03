@@ -58,6 +58,10 @@ body {
     height:3rem;
     background-color:rgb(194, 194, 194);
   }
+  .c-load-file {
+    min-width:5rem;
+    background-color:rgb(194, 194, 194);
+  }
 
   .o-tool-label {
     font-family: Arial;
@@ -83,8 +87,12 @@ body {
   <div class="c-toolbar__middle">
   </div>
   <div class="c-toolbar__end">
+    <br>
     <input type="text" id="save-file" class="c-save-file" placeholder="Select Save File"></input>
     <button id="export" class="touch-button" style="color:blue">Export Path</button>
+
+    <input type="file" id="load-file" class="c-load-file"></input>
+    <button id="import" class="touch-button" style="color:rgb(0, 255, 76)">Import Path</button>
   </div>
 </div>
 <div class="field">
