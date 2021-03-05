@@ -76,6 +76,7 @@ const Tool = {
   FINISH: 2,
   NONE: 3,
   SELECT: 4,
+  DELETE: 5,
 };
 
 const SelectState = {
@@ -108,6 +109,7 @@ const toolStateToName = {
   [Tool.FINISH]: 'finish',
   [Tool.NONE]: '',
   [Tool.SELECT]: 'select',
+  [Tool.DELETE]: 'delete',
 };
 
 // Global variable
@@ -147,6 +149,9 @@ const config = {
     },
     { name: 'select'
     , file: './images/finish.png'
+    },
+    { name: 'delete'
+    , file: './images/delete.png'
     },
   ]
 };
@@ -194,6 +199,9 @@ function onFieldLoaded(canvas) {
     const x = ev.clientX - canvas.offsetLeft;
     const y = ev.clientY - canvas.clientTop;
 
+    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
+    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+
     switch (toolState) {
       case Tool.NONE:
         //Do nothing
@@ -204,12 +212,17 @@ function onFieldLoaded(canvas) {
 
       case Tool.POSE:
         // Compute the canvas position of the cursor relative to the canvas.
-        const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-        const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
         placePointAt(x2, y2);
 
         redrawCanvas(context, poseList);
         break;
+      case Tool.DELETE:
+        const nearestPose = findPoseNear(x2, y2);
+        const poseLocation = poseList.indexOf(nearestPose);
+        poseList.splice(poseLocation, 1);
+        redrawCanvas(context, poseList);
+        break;
+
     }
   });
 
@@ -280,6 +293,12 @@ function onFieldLoaded(canvas) {
 
         redrawCanvas(context, poseList);
         drawTool(context, tool, x3, y3);
+        break;
+
+      case Tool.DELETE:
+        hoveredPose = findPoseNear(x2, y2);
+        redrawCanvas(context, poseList);
+
         break;
     }
 
@@ -377,6 +396,10 @@ function onFieldLoaded(canvas) {
     {
       id: 'select-tool',
       state: Tool.SELECT,
+    },
+    {
+      id: 'delete-tool',
+      state: Tool.DELETE,
     },
   ];
 
