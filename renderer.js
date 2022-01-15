@@ -7,7 +7,13 @@
 
 //Custom types
 
-PointPrototype = {
+const Payload = (p0, p1, p2, p3, options) => {
+  const self = {
+    points : [p0, p1, p2, p3, options],
+  }
+};
+
+const PointPrototype = {
   addVec: function (vec) {
     return Point(this.x + vec.x, this.y + vec.y);
   },
@@ -60,11 +66,12 @@ const Vector = (x, y) => {
   return self;
 };
 
-const Pose = (point, enterHandle, exitHandle) => {
+const Pose = (point, enterHandle, exitHandle, options) => {
   return {
     point,
     enterHandle,
     exitHandle,
+    options,
   };
 };
 
@@ -77,6 +84,7 @@ const Tool = {
   NONE: 3,
   SELECT: 4,
   DELETE: 5,
+  ACTIONS: 6,
 };
 
 const SelectState = {
@@ -110,6 +118,19 @@ const toolStateToName = {
   [Tool.NONE]: '',
   [Tool.SELECT]: 'select',
   [Tool.DELETE]: 'delete',
+  [Tool.ACTIONS]: 'actions',
+};
+
+const actionsCommandGroups = {
+  SEQUENTIAL: 0,
+  PARALLEL: 1,
+  RACE: 2,
+};
+
+const commandGroupsToName = {
+  [actionsCommandGroups.SEQUENTIAL]: 'sequential',
+  [actionsCommandGroups.PARALLEL]: 'parallel',
+  [actionsCommandGroups.RACE]: 'race',
 };
 
 // Global variable
@@ -128,6 +149,8 @@ let selectState = SelectState.NONE;
 
 let saveFileName = '';
 let saveData = '';
+
+let yoinked = null; // For dragging of tools 
 
 const config = {
   fieldDims: {
@@ -153,6 +176,9 @@ const config = {
     { name: 'delete'
     , file: './images/delete.png'
     },
+    { name: 'actions'
+    , file: './images/temp-lower.png'
+    }, 
   ]
 };
 
@@ -239,7 +265,7 @@ function onFieldLoaded(canvas) {
     const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
     const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
 
-    const mousePt = Point(x2, y2);
+    const mousePt = Point(x2, y2, []);
 
     switch (toolState) {
       case Tool.SELECT:
@@ -317,7 +343,7 @@ function onFieldLoaded(canvas) {
     const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
     const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
 
-    const mousePt = Point(x2, y2);
+    const mousePt = Point(x2, y2, []);
 
     switch (toolState) {
       case Tool.POSE:
@@ -401,6 +427,10 @@ function onFieldLoaded(canvas) {
       id: 'delete-tool',
       state: Tool.DELETE,
     },
+    {
+      id: 'action-tool',
+      state: Tool.ACTIONS,
+    },
   ];
 
   for (let tool of tool_map) {
@@ -427,7 +457,8 @@ function onFieldLoaded(canvas) {
     } });
     console.log(data);
   });
-
+//                _▄_▄_   
+// secret frog → ┌█▄█▄█╗
   document.getElementById('import').addEventListener('click', ev => {
     const context = canvas.getContext('2d');
 
@@ -635,17 +666,17 @@ function map(value, x1, w1, x2, w2) {
 }
 
 function placePointAt(x, y) {
-  const new_point = Point(x, y);
+  const new_point = Point(x, y, []);
   let new_pose;
 
   if (0 == poseList.length) {
-    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0));
+    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), []);
   } else {
     const last_point = poseList.slice(-1)[0].point;
     const enterVec =  last_point.sub(new_point).unit().scale(100);
     const exitVec = enterVec.scale(-1);
 
-    new_pose = Pose(new_point, enterVec, exitVec);
+    new_pose = Pose(new_point, enterVec, exitVec, []);
   }
 
   poseList.push(new_pose)
@@ -692,7 +723,7 @@ function exportPoses(poseList) {
   if (2 > poseList.length) {
     return [];
   } else {
-    const result = [];
+    //const result = [];
     const pointToArray = pt => [pt.x, pt.y];
     const canvasToMeters = point => Point(
       point.x / images.field.width * config.fieldDims.xmeters,
@@ -706,14 +737,15 @@ function exportPoses(poseList) {
         pose1.point.addVec(pose1.exitHandle),
         pose2.point.addVec(pose2.enterHandle),
         pose2.point,
+        pose1.options,
       ].map(canvasToMeters)
       .map(pointToArray);
 
-      result.push(segment);
+      Payload.self.push(segment);
       pose1 = pose2;
     }
     
-    return result;
+    return Payload;
   }
 }
 
@@ -726,7 +758,8 @@ function importPoses(data) {
 
   const metersToCanvas = point => Point(
       (point.x * images.field.width / config.fieldDims.xmeters),
-      (point.y / config.fieldDims.ymeters - 1) * -1 * images.field.height
+      (point.y / config.fieldDims.ymeters - 1) * -1 * images.field.height,
+      []
   );
 
   const toPoint = (p) => Point(p[0], p[1]);
@@ -738,7 +771,7 @@ function importPoses(data) {
   let pt1 = data[0][0];
   let cp1 = data[0][1];
 
-  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1));
+  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1), [0]);
   poseList.push(pose);
 
   pt1 = data[0][3];
@@ -747,7 +780,7 @@ function importPoses(data) {
   for (let segment of data.slice(1)) {
     const cp2 = segment[1];
 
-    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1));
+    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1), [0]);
 
     poseList.push(pose);
     pt1 = segment[3];
@@ -757,9 +790,55 @@ function importPoses(data) {
   let segment = data.slice(-1)[0];
   pt1 = segment[3];
   cp1 = segment[2];
-  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1));
+  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), [0]);
 
   poseList.push(pose);
 
   return poseList;
 }
+
+//   Draw UI in the command group dropping area:
+
+// delete this thing just for debug and stuff
+function a(said) {                     //this
+  alert(said);                         //this
+}                                      //this
+//           No More                   //this
+
+let draggedId = null; // Keeps track of id of dragged to define toDrop
+let toDrop = null; // Defines what will be placed into work area of command sequencer
+let workArea = document.getElementById('c-action-work-area__sequence');
+
+document.addEventListener('dragstart', (ev) => {
+
+  draggedId = ev.target.id;
+
+  switch (draggedId) {
+
+    case "sequential":
+      toDrop = document.createElement("div");
+      textNodeHolder = document.createTextNode("yeehaw");
+      toDrop.appendChild(textNodeHolder);
+      break;
+
+    case "parallel":
+
+      break;
+
+    case "race":
+
+      break;
+
+  }
+
+});
+
+document.addEventListener('dragend', (ev) => {
+
+  ev.preventDefault();
+
+  ev.target.appendChild(toDrop);
+
+  a('event over');
+
+});
