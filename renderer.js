@@ -9,7 +9,7 @@
 
 const Payload = (p0, p1, p2, p3, options) => {
   const self = {
-    points : [p0, p1, p2, p3, options],
+    points: [p0, p1, p2, p3, options],
   }
 };
 
@@ -158,27 +158,34 @@ const config = {
     ymeters: 4.57,
   },
   imageFiles: [
-    { name: 'field'
-    , file: './images/field.png'
+    {
+      name: 'field'
+      , file: './images/field.png'
     },
-    { name: 'pose'
-    , file: './images/start.png'
+    {
+      name: 'pose'
+      , file: './images/start.png'
     },
-    { name: 'waypoint'
-    , file: './images/waypoint.png'
+    {
+      name: 'waypoint'
+      , file: './images/waypoint.png'
     },
-    { name: 'finish'
-    , file: './images/finish.png'
+    {
+      name: 'finish'
+      , file: './images/finish.png'
     },
-    { name: 'select'
-    , file: './images/finish.png'
+    {
+      name: 'select'
+      , file: './images/finish.png'
     },
-    { name: 'delete'
-    , file: './images/delete.png'
+    {
+      name: 'delete'
+      , file: './images/delete.png'
     },
-    { name: 'actions'
-    , file: './images/temp-lower.png'
-    }, 
+    {
+      name: 'actions'
+      , file: './images/temp-lower.png'
+    },
   ]
 };
 
@@ -448,17 +455,19 @@ function onFieldLoaded(canvas) {
     // saveFileName = selectSaveFile();
     // ev.target.value = saveFileName;
   });
-  
+
   document.getElementById('export').addEventListener('click', ev => {
     const data = exportPoses(poseList);
-    window.api.send('toMain', { event: 'saveFile', data: {
-      saveFile: saveFileName,
-      segments: exportPoses(poseList),
-    } });
+    window.api.send('toMain', {
+      event: 'saveFile', data: {
+        saveFile: saveFileName,
+        segments: exportPoses(poseList),
+      }
+    });
     console.log(data);
   });
-//                _▄_▄_   
-// secret frog → ┌█▄█▄█╗
+  //                _▄_▄_   
+  // secret frog → ┌█▄█▄█╗
   document.getElementById('import').addEventListener('click', ev => {
     const context = canvas.getContext('2d');
 
@@ -468,7 +477,7 @@ function onFieldLoaded(canvas) {
     importFileList[0].text()
       .then((text) => JSON.parse(text))
       .then(importPoses)
-      .then((poses) => { poseList=poses; })
+      .then((poses) => { poseList = poses; })
       .then(() => redrawCanvas(context, poseList));
 
     console.log(importFileList);
@@ -577,8 +586,8 @@ function isHandleSelected(handle) {
   return (
     null != hoveredHandle
     && (
-         ( hoveredHandle.isEnter && handle === hoveredHandle.pose.enterHandle )
-      || ( !hoveredHandle.isEnter && handle === hoveredHandle.pose.exitHandle )
+      (hoveredHandle.isEnter && handle === hoveredHandle.pose.enterHandle)
+      || (!hoveredHandle.isEnter && handle === hoveredHandle.pose.exitHandle)
     )
   )
 }
@@ -673,7 +682,7 @@ function placePointAt(x, y) {
     new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), []);
   } else {
     const last_point = poseList.slice(-1)[0].point;
-    const enterVec =  last_point.sub(new_point).unit().scale(100);
+    const enterVec = last_point.sub(new_point).unit().scale(100);
     const exitVec = enterVec.scale(-1);
 
     new_pose = Pose(new_point, enterVec, exitVec, []);
@@ -731,7 +740,7 @@ function exportPoses(poseList) {
     );
 
     let pose1 = poseList[0];
-    for (let pose2 of poseList.slice(1)){
+    for (let pose2 of poseList.slice(1)) {
       const segment = [
         pose1.point,
         pose1.point.addVec(pose1.exitHandle),
@@ -739,12 +748,12 @@ function exportPoses(poseList) {
         pose2.point,
         pose1.options,
       ].map(canvasToMeters)
-      .map(pointToArray);
+        .map(pointToArray);
 
       Payload.self.push(segment);
       pose1 = pose2;
     }
-    
+
     return Payload;
   }
 }
@@ -757,9 +766,9 @@ function importPoses(data) {
   }
 
   const metersToCanvas = point => Point(
-      (point.x * images.field.width / config.fieldDims.xmeters),
-      (point.y / config.fieldDims.ymeters - 1) * -1 * images.field.height,
-      []
+    (point.x * images.field.width / config.fieldDims.xmeters),
+    (point.y / config.fieldDims.ymeters - 1) * -1 * images.field.height,
+    []
   );
 
   const toPoint = (p) => Point(p[0], p[1]);
@@ -767,7 +776,7 @@ function importPoses(data) {
   data = data.map((segment) =>
     segment.map(toPoint).map(metersToCanvas)
   );
-  
+
   let pt1 = data[0][0];
   let cp1 = data[0][1];
 
@@ -805,40 +814,109 @@ function a(said) {                     //this
 }                                      //this
 //           No More                   //this
 
+// Once done, move variables up to top of file --
 let draggedId = null; // Keeps track of id of dragged to define toDrop
 let toDrop = null; // Defines what will be placed into work area of command sequencer
 let workArea = document.getElementById('c-action-work-area__sequence');
+let textNodeHolder = null; // For creating text dynamically
+let titleTop = null; // to hold the text node for the title (:
 
 document.addEventListener('dragstart', (ev) => {
 
-  draggedId = ev.target.id;
+  console.log("drag start", ev);
 
-  switch (draggedId) {
+  let dragTargets = [
+    "sequential",
+    "parallel",
+    "race",
+  ];
 
-    case "sequential":
-      toDrop = document.createElement("div");
-      textNodeHolder = document.createTextNode("yeehaw");
-      toDrop.appendChild(textNodeHolder);
-      break;
-
-    case "parallel":
-
-      break;
-
-    case "race":
-
-      break;
-
+  if (dragTargets.includes(ev.target.id)) {
+    ev.dataTransfer.setData('text/plain', ev.target.id);
   }
-
 });
 
 document.addEventListener('dragend', (ev) => {
 
+  console.log("drag end", ev);
+
   ev.preventDefault();
 
-  ev.target.appendChild(toDrop);
 
-  a('event over');
+
+});
+
+document.addEventListener('dragenter', ev => {
+  if (ev.target.classList.contains('action-drop-zone')) {
+    console.log("enter drop zone", ev.target.id, ev.dataTransfer.getData('text'));
+    ev.preventDefault();
+  }
+});
+
+document.addEventListener('dragover', ev => {
+  if (ev.target.classList.contains('action-drop-zone')) {
+    ev.preventDefault();
+  }
+});
+
+document.addEventListener('drop', ev => {
+
+  if (ev.target.classList.contains('action-drop-zone')) {
+    console.log("drop", ev.target.id, ev.dataTransfer.getData('text'));
+
+    switch (ev.dataTransfer.getData('text')) {
+
+      case 'sequential':
+
+        toDrop = document.createElement("div");
+        toDrop.classList.add('action-drop-zone');
+        toDrop.classList.add('o-command-group');
+
+        titleTop = document.createElement("span");
+        textNodeHolder = document.createTextNode("Sequential");
+        titleTop.classList.add('o-command-label');
+        
+        titleTop.appendChild(textNodeHolder);
+        toDrop.appendChild(titleTop);
+    
+        ev.target.appendChild(toDrop);
+
+        break;
+
+      case 'parallel':
+        toDrop = document.createElement("div");
+        toDrop.classList.add('action-drop-zone');
+        toDrop.classList.add('o-command-group');
+
+        titleTop = document.createElement("span");
+        textNodeHolder = document.createTextNode("Parallel");
+        titleTop.classList.add('o-command-label');
+        
+        titleTop.appendChild(textNodeHolder);
+        toDrop.appendChild(titleTop);
+    
+        ev.target.appendChild(toDrop);
+
+        break;
+
+      case 'race':
+        toDrop = document.createElement("div");
+        toDrop.classList.add('action-drop-zone');
+        toDrop.classList.add('o-command-group');
+
+        titleTop = document.createElement("span");
+        textNodeHolder = document.createTextNode("Race");
+        titleTop.classList.add('o-command-label');
+        
+        titleTop.appendChild(textNodeHolder);
+        toDrop.appendChild(titleTop);
+    
+        ev.target.appendChild(toDrop);
+
+        break;
+        
+    }
+
+  }
 
 });

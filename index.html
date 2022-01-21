@@ -98,7 +98,7 @@ body {
     list-style-type: none;
   }
 
-  .o-sequential-command-group {
+  .o-command-group {
     border: 2px solid rgb(1, 0, 53);
     background-color: transparent;
     height: auto;
@@ -144,21 +144,18 @@ body {
       <div class="c-action-work-area__select">
         <ul class="u-no-bullets">
           <li>
-            <img src="images/sequential-command-group.png" class="o-action-command-icon" id="sequential">
+            <img src="images/sequential-command-group.png" class="o-action-command-icon" id="sequential" draggable="true">
           </li>
           <li>
-            <img src="images/parallel-command-group.png" class="o-action-command-icon" id="parallel">
+            <img src="images/parallel-command-group.png" class="o-action-command-icon" id="parallel" draggable="true">
           </li>
           <li>
-            <img src="images/parallel-race-group.png" class="o-action-command-icon" id="race">
+            <img src="images/parallel-race-group.png" class="o-action-command-icon" id="race" draggable="true">
           </li>
         </ul>
       </div>
-      <div class="c-action-work-area__sequence" id="c-action-work-area__sequence">
-        <!-- Static example, replace with JS UI builder -->
-        <!--<div class="o-sequential-command-group">
-          <span class="o-command-label">Sequential Command</span>
-        </div> -->
+      <div class="c-action-work-area__sequence action-drop-zone" id="c-action-work-area__sequence">
+
       </div>
     </div>
   </div>
