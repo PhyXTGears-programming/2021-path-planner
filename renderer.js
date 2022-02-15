@@ -820,6 +820,48 @@ let toDrop = null; // Defines what will be placed into work area of command sequ
 let workArea = document.getElementById('c-action-work-area__sequence');
 let textNodeHolder = null; // For creating text dynamically
 let titleTop = null; // to hold the text node for the title (:
+let idCounter = 0;
+let targetId = null;
+let targetNode = null;
+
+// Once done, slap constructor up at top of file with fellow construction workers
+function ActionNode(kind, children, name, nodeId) {
+  return {
+    kind,
+    children,
+    name,
+    nodeId,
+  };
+}
+
+function makeNode(kind, children, name, nodeId) {
+
+  idCounter += 1;
+  return ActionNode(kind, children, name, nodeId);
+
+}
+
+// findNode :: Node -> Int -> (Node | null)
+function findNode(node, idTarget) {
+
+  if (node.nodeId === idTarget) {
+    return node;
+  }
+  else {
+    for (let child of node.children) {
+      let node = findNode(child, idTarget);
+
+      if (node !== null) {
+        return node;
+      }
+    }
+
+    return null;
+  }
+
+}
+
+let initialNode = makeNode('group', [], 'sequential', 0);
 
 document.addEventListener('dragstart', (ev) => {
 
@@ -875,11 +917,23 @@ document.addEventListener('drop', ev => {
         titleTop = document.createElement("span");
         textNodeHolder = document.createTextNode("Sequential");
         titleTop.classList.add('o-command-label');
-        
+
         titleTop.appendChild(textNodeHolder);
         toDrop.appendChild(titleTop);
-    
+
+        toDrop.dataset.nodeId = idCounter;
+
         ev.target.appendChild(toDrop);
+
+        targetId = parseInt(ev.target.dataset.nodeId);
+        targetNode = findNode(initialNode, targetId);
+
+        if (targetNode === null) {
+          console.error("Unable to find target node", targetId, initialNode);
+        }
+        else {
+          targetNode.children.push(makeNode('group', [], 'sequential', idCounter));
+        }
 
         break;
 
@@ -891,11 +945,23 @@ document.addEventListener('drop', ev => {
         titleTop = document.createElement("span");
         textNodeHolder = document.createTextNode("Parallel");
         titleTop.classList.add('o-command-label');
-        
+
         titleTop.appendChild(textNodeHolder);
         toDrop.appendChild(titleTop);
-    
+
+        toDrop.dataset.nodeId = idCounter;
+
         ev.target.appendChild(toDrop);
+
+        targetId = parseInt(ev.target.dataset.nodeId);
+        targetNode = findNode(initialNode, targetId);
+
+        if (targetNode === null) {
+          console.error("Unable to find target node", targetId, initialNode);
+        }
+        else {
+          targetNode.children.push(makeNode('group', [], 'parallel', idCounter));
+        }
 
         break;
 
@@ -910,8 +976,20 @@ document.addEventListener('drop', ev => {
         
         titleTop.appendChild(textNodeHolder);
         toDrop.appendChild(titleTop);
-    
+
+        toDrop.dataset.nodeId = idCounter;
+
         ev.target.appendChild(toDrop);
+
+        targetId = parseInt(ev.target.dataset.nodeId);
+        targetNode = findNode(initialNode, targetId);
+
+        if (targetNode === null) {
+          console.error("Unable to find target node", targetId, initialNode);
+        }
+        else {
+          targetNode.children.push(makeNode('group', [], 'race', idCounter));
+        }
 
         break;
         
