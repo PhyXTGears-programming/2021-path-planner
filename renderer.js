@@ -159,32 +159,32 @@ const config = {
   },
   imageFiles: [
     {
-      name: 'field'
-      , file: './images/field.png'
+      name: 'field',
+      file: './images/field.png'
     },
     {
-      name: 'pose'
-      , file: './images/start.png'
+      name: 'pose',
+      file: './images/start.png'
     },
     {
-      name: 'waypoint'
-      , file: './images/waypoint.png'
+      name: 'waypoint',
+      file: './images/waypoint.png'
     },
     {
-      name: 'finish'
-      , file: './images/finish.png'
+      name: 'finish',
+      file: './images/finish.png'
     },
     {
-      name: 'select'
-      , file: './images/finish.png'
+      name: 'select',
+      file: './images/finish.png'
     },
     {
-      name: 'delete'
-      , file: './images/delete.png'
+      name: 'delete',
+      file: './images/delete.png'
     },
     {
-      name: 'actions'
-      , file: './images/temp-lower.png'
+      name: 'actions',
+      file: './images/temp-lower.png'
     },
   ]
 };
