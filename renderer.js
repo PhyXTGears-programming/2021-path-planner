@@ -159,32 +159,32 @@ const config = {
   },
   imageFiles: [
     {
-      name: 'field'
-      , file: './images/field.png'
+      name: 'field',
+      file: './images/field.png'
     },
     {
-      name: 'pose'
-      , file: './images/start.png'
+      name: 'pose',
+      file: './images/start.png'
     },
     {
-      name: 'waypoint'
-      , file: './images/waypoint.png'
+      name: 'waypoint',
+      file: './images/waypoint.png'
     },
     {
-      name: 'finish'
-      , file: './images/finish.png'
+      name: 'finish',
+      file: './images/finish.png'
     },
     {
-      name: 'select'
-      , file: './images/finish.png'
+      name: 'select',
+      file: './images/finish.png'
     },
     {
-      name: 'delete'
-      , file: './images/delete.png'
+      name: 'delete',
+      file: './images/delete.png'
     },
     {
-      name: 'actions'
-      , file: './images/temp-lower.png'
+      name: 'actions',
+      file: './images/temp-lower.png'
     },
   ]
 };
@@ -901,100 +901,48 @@ document.addEventListener('dragover', ev => {
   }
 });
 
+function addCommandNode(commandGroupName, target) {
+  let capitalizedCommandGroupName = commandGroupName[0].toUpperCase() + commandGroupName.substring(1);
+
+  toDrop = document.createElement("div");
+  toDrop.classList.add('action-drop-zone');
+  toDrop.classList.add('o-command-group');
+
+  titleTop = document.createElement("span");
+  textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
+  titleTop.classList.add('o-command-label');
+        
+  titleTop.appendChild(textNodeHolder);
+  toDrop.appendChild(titleTop);
+
+  toDrop.dataset.nodeId = idCounter;
+
+  target.appendChild(toDrop);
+
+  targetId = parseInt(target.dataset.nodeId);
+  targetNode = findNode(initialNode, targetId);
+
+  if (targetNode === null) {
+    console.error("Unable to find target node", targetId, initialNode);
+  } else {
+    targetNode.children.push(makeNode('group', [], commandGroupName, idCounter));
+  }
+}
+
 document.addEventListener('drop', ev => {
 
   if (ev.target.classList.contains('action-drop-zone')) {
     console.log("drop", ev.target.id, ev.dataTransfer.getData('text'));
 
-    switch (ev.dataTransfer.getData('text')) {
+    const commandType = ev.dataTransfer.getData('text');
 
+    switch (commandType) {
       case 'sequential':
-
-        toDrop = document.createElement("div");
-        toDrop.classList.add('action-drop-zone');
-        toDrop.classList.add('o-command-group');
-
-        titleTop = document.createElement("span");
-        textNodeHolder = document.createTextNode("Sequential");
-        titleTop.classList.add('o-command-label');
-
-        titleTop.appendChild(textNodeHolder);
-        toDrop.appendChild(titleTop);
-
-        toDrop.dataset.nodeId = idCounter;
-
-        ev.target.appendChild(toDrop);
-
-        targetId = parseInt(ev.target.dataset.nodeId);
-        targetNode = findNode(initialNode, targetId);
-
-        if (targetNode === null) {
-          console.error("Unable to find target node", targetId, initialNode);
-        }
-        else {
-          targetNode.children.push(makeNode('group', [], 'sequential', idCounter));
-        }
-
-        break;
-
-      case 'parallel':
-        toDrop = document.createElement("div");
-        toDrop.classList.add('action-drop-zone');
-        toDrop.classList.add('o-command-group');
-
-        titleTop = document.createElement("span");
-        textNodeHolder = document.createTextNode("Parallel");
-        titleTop.classList.add('o-command-label');
-
-        titleTop.appendChild(textNodeHolder);
-        toDrop.appendChild(titleTop);
-
-        toDrop.dataset.nodeId = idCounter;
-
-        ev.target.appendChild(toDrop);
-
-        targetId = parseInt(ev.target.dataset.nodeId);
-        targetNode = findNode(initialNode, targetId);
-
-        if (targetNode === null) {
-          console.error("Unable to find target node", targetId, initialNode);
-        }
-        else {
-          targetNode.children.push(makeNode('group', [], 'parallel', idCounter));
-        }
-
-        break;
-
       case 'race':
-        toDrop = document.createElement("div");
-        toDrop.classList.add('action-drop-zone');
-        toDrop.classList.add('o-command-group');
-
-        titleTop = document.createElement("span");
-        textNodeHolder = document.createTextNode("Race");
-        titleTop.classList.add('o-command-label');
-        
-        titleTop.appendChild(textNodeHolder);
-        toDrop.appendChild(titleTop);
-
-        toDrop.dataset.nodeId = idCounter;
-
-        ev.target.appendChild(toDrop);
-
-        targetId = parseInt(ev.target.dataset.nodeId);
-        targetNode = findNode(initialNode, targetId);
-
-        if (targetNode === null) {
-          console.error("Unable to find target node", targetId, initialNode);
-        }
-        else {
-          targetNode.children.push(makeNode('group', [], 'race', idCounter));
-        }
-
+      case 'parallel':
+        addCommandNode(commandType, ev.target);
         break;
-        
     }
-
   }
 
 });
