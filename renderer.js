@@ -850,8 +850,6 @@ function findNode(node, idTarget) {
   }
 }
 
-let initialNode = makeNode('group', [], 'sequential', 0);
-
 document.addEventListener('dragstart', (ev) => {
 
   console.log("drag start", ev);
@@ -860,6 +858,7 @@ document.addEventListener('dragstart', (ev) => {
     "sequential",
     "parallel",
     "race",
+    "command",
   ];
 
   if (dragTargets.includes(ev.target.id)) {
@@ -875,14 +874,14 @@ document.addEventListener('dragend', (ev) => {
 
 });
 
-document.addEventListener('dragenter', ev => {
+document.addEventListener('dragenter', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
     console.log("enter drop zone", ev.target.id, ev.dataTransfer.getData('text'));
     ev.preventDefault();
   }
 });
 
-document.addEventListener('dragover', ev => {
+document.addEventListener('dragover', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
 
@@ -956,6 +955,7 @@ function createNode(type, commandGroupName, parent) {
 //   targetNode = findNode(initialNode, targetId);
 // }
 
+document.addEventListener('drop', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
     console.log("drop", ev.target.id, ev.dataTransfer.getData('text'));
 
@@ -967,7 +967,14 @@ function createNode(type, commandGroupName, parent) {
       case 'sequential':
       case 'race':
       case 'parallel':
-        addCommandNode(commandType, ev.target);
+        if (targetNode === null) {
+          console.error("Unable to find target node", targetNode, initialNode);
+        } else {
+          createNode(commandType, commandType, targetNode);
+        }
+        break;
+      case 'command':
+        addCommandNode(commandType, ev.target, false);// TODO
         break;
     }
   }
