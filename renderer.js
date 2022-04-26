@@ -832,7 +832,8 @@ function makeNode(kind, children, name) {
   return ActionNode(kind, children, name, idCounter - 1);
 }
 
-// findNode :: Node -> Int -> (Node | null)
+let initialNode = makeNode('group', [], 'sequential');
+
 function findNode(node, idTarget) {
   if (node.nodeId == idTarget) {
     return node;
@@ -894,41 +895,74 @@ document.addEventListener('dragover', ev => {
   }
 });
 
-function addCommandNode(commandGroupName, target) {
+function drawNodes(node, parentElement) {
   let capitalizedCommandGroupName = commandGroupName[0].toUpperCase() + commandGroupName.substring(1);
 
-  toDrop = document.createElement("div");
-  toDrop.classList.add('action-drop-zone');
-  toDrop.classList.add('o-command-group');
+  if (node.kind == 'group') {
+    nodeUi = document.createElement("div");
+    nodeUi.classList.add('action-drop-zone');
+    nodeUi.classList.add('o-command-group');
 
-  titleTop = document.createElement("span");
-  textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
-  titleTop.classList.add('o-command-label');
+    titleTop = document.createElement("span");
+    textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
+    titleTop.classList.add('o-command-label');
         
-  titleTop.appendChild(textNodeHolder);
-  toDrop.appendChild(titleTop);
+    titleTop.appendChild(textNodeHolder);
+    nodeUi.appendChild(titleTop);
 
-  toDrop.dataset.nodeId = idCounter;
-
-  target.appendChild(toDrop);
-
-  targetId = parseInt(target.dataset.nodeId);
-  targetNode = findNode(initialNode, targetId);
-
-  if (targetNode === null) {
-    console.error("Unable to find target node", targetId, initialNode);
   } else {
-    targetNode.children.push(makeNode('group', [], commandGroupName, idCounter));
+    nodeUi = document.createElement("img");
+    nodeUi.classList.add('o-command');
+    nodeUi.src = "images/command.png";
   }
+
+  nodeUi.dataset.nodeId = idCounter - 1;
+
+  parentElement.appendChild(nodeUi);
 }
 
-document.addEventListener('drop', ev => {
+function createNode(type, commandGroupName, parent) {
+  parent.children.push(makeNode(type, [], commandGroupName));
+}
+
+//createNode(initialNode, document.getElementById('c-action-work-area__sequence'))
+
+// function addCommandNode(commandGroupName, target, isGroup) {
+//   let capitalizedCommandGroupName = commandGroupName[0].toUpperCase() + commandGroupName.substring(1);
+
+//   if (isGroup) {
+//     nodeUi = document.createElement("div");
+//     nodeUi.classList.add('action-drop-zone');
+//     nodeUi.classList.add('o-command-group');
+
+//     titleTop = document.createElement("span");
+//     textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
+//     titleTop.classList.add('o-command-label');
+
+//     titleTop.appendChild(textNodeHolder);
+//     nodeUi.appendChild(titleTop);
+
+//   } else {
+//     nodeUi = document.createElement("img");
+//     nodeUi.classList.add('o-command');
+//     nodeUi.src = "images/command.png";
+//   }
+
+//   nodeUi.dataset.nodeId = idCounter;
+
+//   target.appendChild(nodeUi);
+/////////////////////////////////////////////////////////
+//   targetId = parseInt(target.dataset.nodeId);
+//   targetNode = findNode(initialNode, targetId);
+// }
 
   if (ev.target.classList.contains('action-drop-zone')) {
     console.log("drop", ev.target.id, ev.dataTransfer.getData('text'));
 
     const commandType = ev.dataTransfer.getData('text');
-
+    console.log("Target nodeId: " + ev.target.dataset.nodeId);
+    targetNode = findNode(initialNode, ev.target.dataset.nodeId);
+    console.log("commandType: " + commandType);
     switch (commandType) {
       case 'sequential':
       case 'race':
@@ -937,5 +971,26 @@ document.addEventListener('drop', ev => {
         break;
     }
   }
-
 });
+
+// Hi welcome to pain
+
+// let rootNode = {
+//   kind: 'group',
+//   children: [
+//     {
+//       kind: 'group',
+//       children: [],
+//       name: 'parallel',
+//       id: 1,
+//     },
+//     {
+//       kind: 'group',
+//       children: [],
+//       name: 'race',
+//       id: 2,
+//     }
+//   ],
+//   name: 'sequential',
+//   id: 0,
+// }
