@@ -466,8 +466,7 @@ function onFieldLoaded(canvas) {
     });
     console.log(data);
   });
-  //                _▄_▄_   
-  // secret frog → ┌█▄█▄█╗
+
   document.getElementById('import').addEventListener('click', ev => {
     const context = canvas.getContext('2d');
 
