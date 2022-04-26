@@ -794,14 +794,14 @@ function importPoses(data) {
     pt1 = segment[3];
     cp1 = segment[2];
   }
-
+  
   let segment = data.slice(-1)[0];
   pt1 = segment[3];
   cp1 = segment[2];
   pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), [0]);
-
+  
   poseList.push(pose);
-
+  
   return poseList;
 }
 
@@ -841,7 +841,7 @@ function findNode(node, idTarget) {
   else {
     for (let child of node.children) {
       let node = findNode(child, idTarget);
-
+      
       if (node !== null) {
         return node;
       }
@@ -851,27 +851,27 @@ function findNode(node, idTarget) {
 }
 
 document.addEventListener('dragstart', (ev) => {
-
+  
   console.log("drag start", ev);
-
+  
   let dragTargets = [
     "sequential",
     "parallel",
     "race",
     "command",
   ];
-
+  
   if (dragTargets.includes(ev.target.id)) {
     ev.dataTransfer.setData('text/plain', ev.target.id);
   }
 });
 
 document.addEventListener('dragend', (ev) => {
-
+  
   console.log("drag end", ev);
-
+  
   ev.preventDefault();
-
+  
 });
 
 document.addEventListener('dragenter', (ev) => {
@@ -901,14 +901,14 @@ function drawNodes(node, parentElement) {
     nodeUi = document.createElement("div");
     nodeUi.classList.add('action-drop-zone');
     nodeUi.classList.add('o-command-group');
-
+  
     titleTop = document.createElement("span");
     textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
     titleTop.classList.add('o-command-label');
         
     titleTop.appendChild(textNodeHolder);
     nodeUi.appendChild(titleTop);
-
+  
   } else {
     nodeUi = document.createElement("img");
     nodeUi.classList.add('o-command');
@@ -933,14 +933,14 @@ function createNode(type, commandGroupName, parent) {
 //     nodeUi = document.createElement("div");
 //     nodeUi.classList.add('action-drop-zone');
 //     nodeUi.classList.add('o-command-group');
-
+  
 //     titleTop = document.createElement("span");
 //     textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
 //     titleTop.classList.add('o-command-label');
-
+        
 //     titleTop.appendChild(textNodeHolder);
 //     nodeUi.appendChild(titleTop);
-
+  
 //   } else {
 //     nodeUi = document.createElement("img");
 //     nodeUi.classList.add('o-command');
@@ -958,7 +958,7 @@ function createNode(type, commandGroupName, parent) {
 document.addEventListener('drop', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
     console.log("drop", ev.target.id, ev.dataTransfer.getData('text'));
-
+    
     const commandType = ev.dataTransfer.getData('text');
     console.log("Target nodeId: " + ev.target.dataset.nodeId);
     targetNode = findNode(initialNode, ev.target.dataset.nodeId);
@@ -978,7 +978,7 @@ document.addEventListener('drop', (ev) => {
         break;
     }
   }
-});
+}); 
 
 // Hi welcome to pain
 
