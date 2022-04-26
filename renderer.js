@@ -807,12 +807,6 @@ function importPoses(data) {
 
 //   Draw UI in the command group dropping area:
 
-// delete this thing just for debug and stuff
-function a(said) {                     //this
-  alert(said);                         //this
-}                                      //this
-//           No More                   //this
-
 // Once done, move variables up to top of file --
 let draggedId = null; // Keeps track of id of dragged to define toDrop
 let toDrop = null; // Defines what will be placed into work area of command sequencer
