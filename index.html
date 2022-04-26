@@ -104,8 +104,8 @@ body {
     height: auto;
     width: calc(100% - 4px*5);
     flex:50%;
-    padding: 4px;
-    margin: 4px;
+    padding: 2px;
+    margin: 2px;
     position: relative;
     height: calc(100% - 4px*5);
   }
@@ -118,6 +118,18 @@ body {
     padding: 2px;
     font-size: 0.6em;
     font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  }
+
+  .o-command {
+    width: 24px;
+    height: 24px;
+  }
+
+  .c-drop-zone {
+    width: 100%;
+    height: 30px;
+    display: block;
+    background-color: red;
   }
 
 </style>
@@ -152,10 +164,13 @@ body {
           <li>
             <img src="images/parallel-race-group.png" class="o-action-command-icon" id="race" draggable="true">
           </li>
+          <li>
+            <img src="images/command.png" class="o-action-command-icon" id="command" draggable="true">
+          </li>
         </ul>
       </div>
       <div class="c-action-work-area__sequence action-drop-zone" id="c-action-work-area__sequence">
-        <div class="action-drop-zone o-command-group" data-node-id="0">
+        <div class="action-drop-zone o-command-group" data-node-id="0" id="c-action-work-area__drop-zone">
             <span class="o-command-label">Sequential</span>
         </div>
       </div>
