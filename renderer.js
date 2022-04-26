@@ -808,8 +808,8 @@ function importPoses(data) {
 //   Draw UI in the command group dropping area:
 
 // Once done, move variables up to top of file --
-let draggedId = null; // Keeps track of id of dragged to define toDrop
-let toDrop = null; // Defines what will be placed into work area of command sequencer
+let draggedId = null; // Keeps track of id of dragged to define nodeUi
+let nodeUi = null; // Defines what will be placed into work area of command sequencer
 let workArea = document.getElementById('c-action-work-area__sequence');
 let textNodeHolder = null; // For creating text dynamically
 let titleTop = null; // to hold the text node for the title (:
@@ -827,17 +827,14 @@ function ActionNode(kind, children, name, nodeId) {
   };
 }
 
-function makeNode(kind, children, name, nodeId) {
-
+function makeNode(kind, children, name) {
   idCounter += 1;
-  return ActionNode(kind, children, name, nodeId);
-
+  return ActionNode(kind, children, name, idCounter - 1);
 }
 
 // findNode :: Node -> Int -> (Node | null)
 function findNode(node, idTarget) {
-
-  if (node.nodeId === idTarget) {
+  if (node.nodeId == idTarget) {
     return node;
   }
   else {
@@ -848,10 +845,8 @@ function findNode(node, idTarget) {
         return node;
       }
     }
-
     return null;
   }
-
 }
 
 let initialNode = makeNode('group', [], 'sequential', 0);
@@ -877,8 +872,6 @@ document.addEventListener('dragend', (ev) => {
 
   ev.preventDefault();
 
-
-
 });
 
 document.addEventListener('dragenter', ev => {
@@ -891,6 +884,13 @@ document.addEventListener('dragenter', ev => {
 document.addEventListener('dragover', ev => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
+
+    let dragoverTarget = document.getElementById(ev.target.id);
+    let reserveSpace = document.createElement("div");
+    reserveSpace.classList.add('o-drop-zone-space');
+
+    dragoverTarget.appendChild(reserveSpace);
+    console.log("Target node ID: " + ev.target.dataset.nodeId);
   }
 });
 
