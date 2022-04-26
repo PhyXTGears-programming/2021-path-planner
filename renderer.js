@@ -974,7 +974,7 @@ document.addEventListener('drop', (ev) => {
         }
         break;
       case 'command':
-        addCommandNode(commandType, ev.target, false);// TODO
+        createNode(commandType, commandType, targetNode);
         break;
     }
   }
