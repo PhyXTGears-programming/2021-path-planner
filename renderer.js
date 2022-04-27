@@ -885,7 +885,7 @@ document.addEventListener('dragover', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
 
-    let dragoverTarget = document.getElementById(ev.target.id);
+    let dragoverTarget = ev.target;
     let reserveSpace = document.createElement("div");
     reserveSpace.classList.add('o-drop-zone-space');
 
@@ -895,19 +895,19 @@ document.addEventListener('dragover', (ev) => {
 });
 
 function drawNodes(node, parentElement) {
-  let capitalizedCommandGroupName = commandGroupName[0].toUpperCase() + commandGroupName.substring(1);
+  //let capitalizedCommandGroupName = commandGroupName[0].toUpperCase() + commandGroupName.substring(1);
 
   if (node.kind == 'group') {
     nodeUi = document.createElement("div");
     nodeUi.classList.add('action-drop-zone');
     nodeUi.classList.add('o-command-group');
   
-    titleTop = document.createElement("span");
-    textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
-    titleTop.classList.add('o-command-label');
+    // titleTop = document.createElement("span");
+    // textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
+    // titleTop.classList.add('o-command-label');
         
-    titleTop.appendChild(textNodeHolder);
-    nodeUi.appendChild(titleTop);
+    // titleTop.appendChild(textNodeHolder);
+    // nodeUi.appendChild(titleTop);
   
   } else {
     nodeUi = document.createElement("img");
@@ -978,6 +978,7 @@ document.addEventListener('drop', (ev) => {
         break;
     }
   }
+  drawNodes(initialNode, ev.target);
 }); 
 
 // Hi welcome to pain
