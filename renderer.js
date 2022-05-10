@@ -196,6 +196,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   loadImages(() => {
     onFieldLoaded(canvas);
+    drawAllNodes(initialNode);
+
+    console.log("dom content loaded. initial node: ", initialNode);
   });
 })
 
@@ -485,22 +488,26 @@ function onFieldLoaded(canvas) {
 
   console.log('attach fromMain receiver');
 
-  window.api.receive('fromMain', args => {
-    switch (args.event) {
-      case 'selectSaveFile':
-        saveFileName = args.data.saveFile;
-        const saveFileNameShort = saveFileName.split("/").slice(-1);
-        document.getElementById('save-file').value = saveFileNameShort;
-        break;
+  if (window.api && window.api.receive) {
 
-      case 'saveFileData':
-        console.log("Save File Stringified: ", saveFileData);
-        break;
+    window.api.receive('fromMain', args => {
+      switch (args.event) {
+        case 'selectSaveFile':
+          saveFileName = args.data.saveFile;
+          const saveFileNameShort = saveFileName.split("/").slice(-1);
+          document.getElementById('save-file').value = saveFileNameShort;
+          break;
 
-      default:
-        console.warn("Unknown event:", args);
-    }
-  });
+        case 'saveFileData':
+          console.log("Save File Stringified: ", saveFileData);
+          break;
+
+        default:
+          console.warn("Unknown event:", args);
+      }
+    });
+
+  }
 }
 
 function redrawCanvas(context, poseList) {
@@ -883,16 +890,23 @@ document.addEventListener('dragover', (ev) => {
     ev.preventDefault();
 
     let dragoverTarget = ev.target;
-    let reserveSpace = document.createElement("div");
-    reserveSpace.classList.add('o-drop-zone-space');
-
-    dragoverTarget.appendChild(reserveSpace);
-    console.log("Target node ID: " + ev.target.dataset.nodeId);
   }
-});
+}); // extra frog
 
-function drawNodes(node, parentElement) {
-  //let capitalizedCommandGroupName = commandGroupName[0].toUpperCase() + commandGroupName.substring(1);
+function drawAllNodes(rootNode) {
+  const rootElement = document.getElementById("c-action-work-area__sequence");
+
+  for (let child of rootElement.children) {
+    rootElement.removeChild(child);
+  }
+
+  const elem = drawNodes(rootNode);
+
+  rootElement.appendChild(elem);
+}
+
+function drawNodes(node) {
+  let capitalizedCommandName = node.name[0].toUpperCase() + node.name.substring(1);
 
   if (node.kind == 'group') {
     const nodeElem = document.createElement("div");
@@ -932,8 +946,12 @@ function createNode(type, commandName, parent) {
   parent.children.push(makeNode(type, [], commandName));
 }
 
-function createNode(type, commandGroupName, parent) {
-  parent.children.push(makeNode(type, [], commandGroupName));
+function getCommandImg(commandName) {
+  commandImgs.forEach(element => {
+    if (element == commandName) {
+      return commandImgs.element;
+    }
+  });
 }
 
 //createNode(initialNode, document.getElementById('c-action-work-area__sequence'))
@@ -969,29 +987,32 @@ function createNode(type, commandGroupName, parent) {
 
 document.addEventListener('drop', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
-    console.log("drop", ev.target.id, ev.dataTransfer.getData('text'));
-    
-    const commandType = ev.dataTransfer.getData('text');
-    console.log("Target nodeId: " + ev.target.dataset.nodeId);
+
+    const commandName = ev.dataTransfer.getData('text/plain');
+    console.log("Target nodeId: ", ev.target.dataset.nodeId, ev.target);
+
     targetNode = findNode(initialNode, ev.target.dataset.nodeId);
-    console.log("commandType: " + commandType);
-    switch (commandType) {
+
+    switch (commandName) {
       case 'sequential':
       case 'race':
       case 'parallel':
         if (targetNode === null) {
           console.error("Unable to find target node", targetNode, initialNode);
         } else {
-          createNode(commandType, commandType, targetNode);
+          createNode('group', commandName, targetNode);
         }
         break;
-      case 'command':
-        createNode(commandType, commandType, targetNode);
+      case 'example':
+        createNode('command', commandName, targetNode);
         break;
+      default:
+        console.error("Oh no command not recognised help: ", commandName);
     }
   }
-  drawNodes(initialNode, ev.target);
-}); 
+  console.log("Updated Data structure: ", initialNode, targetNode);
+  drawAllNodes(initialNode);
+});
 
 // Hi welcome to pain
 
