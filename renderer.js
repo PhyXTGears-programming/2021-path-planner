@@ -895,26 +895,41 @@ function drawNodes(node, parentElement) {
   //let capitalizedCommandGroupName = commandGroupName[0].toUpperCase() + commandGroupName.substring(1);
 
   if (node.kind == 'group') {
-    nodeUi = document.createElement("div");
-    nodeUi.classList.add('action-drop-zone');
-    nodeUi.classList.add('o-command-group');
-  
-    // titleTop = document.createElement("span");
-    // textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
-    // titleTop.classList.add('o-command-label');
-        
-    // titleTop.appendChild(textNodeHolder);
-    // nodeUi.appendChild(titleTop);
-  
+    const nodeElem = document.createElement("div");
+    nodeElem.classList.add('action-drop-zone');
+    nodeElem.classList.add('o-command-group');
+
+    nodeElem.dataset.nodeId = node.nodeId;
+    nodeElem.dataset.nodeName = node.name;
+    nodeElem.dataset.nodeKind = node.kind;
+
+    const titleTop = document.createElement("span");
+    const groupName = document.createTextNode(capitalizedCommandName);
+    titleTop.classList.add('o-command-label');
+
+    titleTop.appendChild(groupName);
+    nodeElem.appendChild(titleTop);
+
+    for (let child of node.children) {
+      nodeElem.appendChild(drawNodes(child));
+    }
+
+    return nodeElem;
   } else {
-    nodeUi = document.createElement("img");
-    nodeUi.classList.add('o-command');
-    nodeUi.src = "images/command.png";
+    nodeElem = document.createElement("img");
+    nodeElem.classList.add('o-command');
+    nodeElem.src = "images/command.png";
+
+    nodeElem.dataset.nodeId = node.nodeId;
+    nodeElem.dataset.nodeName = node.name;
+    nodeElem.dataset.nodeKind = node.kind;
+
+    return nodeElem;
   }
+}
 
-  nodeUi.dataset.nodeId = idCounter - 1;
-
-  parentElement.appendChild(nodeUi);
+function createNode(type, commandName, parent) {
+  parent.children.push(makeNode(type, [], commandName));
 }
 
 function createNode(type, commandGroupName, parent) {
