@@ -816,6 +816,7 @@ let titleTop = null; // to hold the text node for the title (:
 let idCounter = 0;
 let targetId = null;
 let targetNode = null;
+const commandTypeImgs = { lowerIntake: "./images/temp-lower.png" };
 
 // Once done, slap constructor up at top of file with fellow construction workers
 function ActionNode(kind, children, name, nodeId) {
@@ -851,27 +852,23 @@ function findNode(node, idTarget) {
 }
 
 document.addEventListener('dragstart', (ev) => {
-  
-  console.log("drag start", ev);
-  
+
   let dragTargets = [
     "sequential",
     "parallel",
     "race",
-    "command",
+    "example",
   ];
-  
+
   if (dragTargets.includes(ev.target.id)) {
     ev.dataTransfer.setData('text/plain', ev.target.id);
   }
 });
 
 document.addEventListener('dragend', (ev) => {
-  
-  console.log("drag end", ev);
-  
+
   ev.preventDefault();
-  
+
 });
 
 document.addEventListener('dragenter', (ev) => {
