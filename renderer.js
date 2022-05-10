@@ -794,14 +794,14 @@ function importPoses(data) {
     pt1 = segment[3];
     cp1 = segment[2];
   }
-  
+
   let segment = data.slice(-1)[0];
   pt1 = segment[3];
   cp1 = segment[2];
   pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), [0]);
-  
+
   poseList.push(pose);
-  
+
   return poseList;
 }
 
@@ -841,7 +841,7 @@ function findNode(node, idTarget) {
   else {
     for (let child of node.children) {
       let node = findNode(child, idTarget);
-      
+
       if (node !== null) {
         return node;
       }
@@ -933,14 +933,14 @@ function createNode(type, commandGroupName, parent) {
 //     nodeUi = document.createElement("div");
 //     nodeUi.classList.add('action-drop-zone');
 //     nodeUi.classList.add('o-command-group');
-  
+
 //     titleTop = document.createElement("span");
 //     textNodeHolder = document.createTextNode(capitalizedCommandGroupName);
 //     titleTop.classList.add('o-command-label');
-        
+
 //     titleTop.appendChild(textNodeHolder);
 //     nodeUi.appendChild(titleTop);
-  
+
 //   } else {
 //     nodeUi = document.createElement("img");
 //     nodeUi.classList.add('o-command');
