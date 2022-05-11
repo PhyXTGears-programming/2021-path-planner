@@ -823,6 +823,7 @@ let titleTop = null; // to hold the text node for the title (:
 let idCounter = 0;
 let targetId = null;
 let targetNode = null;
+let spacerTarget = null;
 const commandTypeImgs = { lowerIntake: "./images/temp-lower.png" };
 
 // Once done, slap constructor up at top of file with fellow construction workers
@@ -880,18 +881,28 @@ document.addEventListener('dragend', (ev) => {
 
 document.addEventListener('dragenter', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
+
     console.log("enter drop zone", ev.target.id, ev.dataTransfer.getData('text'));
+
+    for(element of ev.target.children) {
+      if(element.classList.contains("o-command-group-spacer")) {
+        spacerTarget = element;
+        spacerTarget.style.height = "40px";
+        spacerTarget.style.backgroundColor = "blue";
+      }
+    }
+
     ev.preventDefault();
+
   }
 });
 
 document.addEventListener('dragover', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
-
     let dragoverTarget = ev.target;
-  }
-}); // extra frog
+  } // extra frog
+  });
 
 function drawAllNodes(rootNode) {
   const rootElement = document.getElementById("c-action-work-area__sequence");
@@ -912,7 +923,7 @@ function drawNodes(node) {
     const nodeElem = document.createElement("div");
     nodeElem.classList.add('action-drop-zone');
     nodeElem.classList.add('o-command-group');
-
+    
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
     nodeElem.dataset.nodeKind = node.kind;
@@ -921,8 +932,13 @@ function drawNodes(node) {
     const groupName = document.createTextNode(capitalizedCommandName);
     titleTop.classList.add('o-command-label');
 
+    const spacerElem = document.createElement("div");
+    spacerElem.style.height = "20px";
+    spacerElem.classList.add("o-command-group-spacer"); // <-- Add this, above check hovered elems chilren list for spacers based upon class and if found, make spacer larger
+
     titleTop.appendChild(groupName);
     nodeElem.appendChild(titleTop);
+    nodeElem.appendChild(spacerElem);
 
     for (let child of node.children) {
       nodeElem.appendChild(drawNodes(child));
