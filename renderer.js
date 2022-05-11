@@ -836,6 +836,20 @@ function ActionNode(kind, children, name, nodeId) {
   };
 }
 
+/*
+
+            Task list:
+
+    - Make spacers "dissappear" (become less prominent) when hovering stops
+      >Problem: ?Confusion? Document not allowing addition of children, maybe
+      spacer is in the way?
+
+    - Delete tool for commands and groups
+      >Idea: When clicking with delete tool, grab node-id from elem and search
+      node tree for corresponding object; Dete it.
+
+*/
+
 function makeNode(kind, children, name) {
   idCounter += 1;
   return ActionNode(kind, children, name, idCounter - 1);
@@ -881,6 +895,11 @@ document.addEventListener('dragend', (ev) => {
 
 document.addEventListener('dragenter', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
+
+    if(spacerTarget) {
+      spacerTarget.style.height = "20px";
+      spacerTarget.style.backgroundColor = "lightgrey";
+    }
 
     console.log("enter drop zone", ev.target.id, ev.dataTransfer.getData('text'));
 
