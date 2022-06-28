@@ -196,9 +196,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   loadImages(() => {
     onFieldLoaded(canvas);
-    drawAllNodes(initialNode);
 
-    console.log("dom content loaded. initial node: ", initialNode);
+    drawAllNodes(rootSomething);
+
+    console.log("dom content loaded. initial node: ", rootSomething.rootNode);
   });
 })
 
@@ -836,28 +837,20 @@ function ActionNode(kind, children, name, nodeId) {
   };
 }
 
-/*
-
-            Task list:
-
-    - Make spacers "dissappear" (become less prominent) when hovering stops
-      >Problem: Spacers getting in the way of adding children to parents of
-      group nodes; Maybe we can set the target to the parent (?) or moreso
-      set the variable used to access target to parent of selected, but only
-      if selected elem has spacer class.
-
-    - Delete tool for commands and groups
-      >Idea: When clicking with delete tool, grab node-id from elem and search
-      node tree for corresponding object; Dete it.
-
-*/
-
 function makeNode(kind, children, name) {
   idCounter += 1;
   return ActionNode(kind, children, name, idCounter - 1);
 }
 
-let initialNode = makeNode('group', [], 'sequential');
+let initialSomething = {
+  moveCondition: "go",
+  rootNode: makeNode('group', [], 'sequential'),
+};
+
+let rootSomething = {
+  moveCondition: "go",
+  rootNode: makeNode('group', [], 'sequential'),
+};
 
 function findNode(node, idTarget) {
   if (node.nodeId == idTarget) {
@@ -890,14 +883,13 @@ document.addEventListener('dragstart', (ev) => {
 });
 
 document.addEventListener('dragend', (ev) => {
-
   ev.preventDefault();
-
 });
 
 document.addEventListener('dragenter', (ev) => {
-  if (ev.target.classList.contains('action-drop-zone')) {
+  ev.preventDefault();
 
+  if (ev.target.classList.contains('action-drop-zone')) {
     if(spacerTarget) {
       spacerTarget.style.height = "20px";
       spacerTarget.style.backgroundColor = "lightgrey";
@@ -905,16 +897,11 @@ document.addEventListener('dragenter', (ev) => {
 
     console.log("enter drop zone", ev.target.id, ev.dataTransfer.getData('text'));
 
-    for(element of ev.target.children) {
-      if(element.classList.contains("o-command-group-spacer")) {
-        spacerTarget = element;
-        spacerTarget.style.height = "40px";
-        spacerTarget.style.backgroundColor = "blue";
-      }
+    if(ev.target.classList.contains("o-command-group-spacer")) {
+      spacerTarget = ev.target;
+      spacerTarget.style.height = "30px";
+      spacerTarget.style.backgroundColor = "blue";
     }
-
-    ev.preventDefault();
-
   }
 });
 
@@ -922,11 +909,24 @@ document.addEventListener('dragover', (ev) => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
     let dragoverTarget = ev.target;
-  } // extra frog
-  });
+  } // frog  (._.)
+});
 
-function drawAllNodes(rootNode) {
+function drawAllNodes(rootSomething) {
   const rootElement = document.getElementById("c-action-work-area__sequence");
+
+  const { moveCondition, rootNode } = rootSomething;
+
+  const moveConditionSwitch = document.createElement("div");
+  moveConditionSwitch.classList.add('o-command-moveSwitch');
+
+  if (moveCondition === "go") {
+    moveConditionSwitch.textContent = "Go";
+    moveConditionSwitch.classList.add("o-command-moveswitch-go");
+  } else {
+    moveConditionSwitch.textContent = "Halt";
+    moveConditionSwitch.classList.add("o-command-moveSwitch-stop");
+  }
 
   for (let child of rootElement.children) {
     rootElement.removeChild(child);
@@ -934,6 +934,7 @@ function drawAllNodes(rootNode) {
 
   const elem = drawNodes(rootNode);
 
+  rootElement.appendChild(moveConditionSwitch);
   rootElement.appendChild(elem);
 }
 
@@ -942,7 +943,6 @@ function drawNodes(node) {
 
   if (node.kind == 'group') {
     const nodeElem = document.createElement("div");
-    nodeElem.classList.add('action-drop-zone');
     nodeElem.classList.add('o-command-group');
     
     nodeElem.dataset.nodeId = node.nodeId;
@@ -953,17 +953,33 @@ function drawNodes(node) {
     const groupName = document.createTextNode(capitalizedCommandName);
     titleTop.classList.add('o-command-label');
 
-    const spacerElem = document.createElement("div");
-    spacerElem.style.height = "20px";
-    spacerElem.classList.add("o-command-group-spacer"); // <-- Add this, above check hovered elems chilren list for spacers based upon class and if found, make spacer larger
+    function createSpacer(insertIndex) {
+      const spacerElem = document.createElement("div");
+
+      spacerElem.style.height = "20px";
+      spacerElem.classList.add("action-drop-zone");
+      spacerElem.classList.add("o-command-group-spacer");
+      spacerElem.dataset.insertIndex = insertIndex;
+
+      return spacerElem;
+    }
 
     titleTop.appendChild(groupName);
     nodeElem.appendChild(titleTop);
-    nodeElem.appendChild(spacerElem);
 
-    for (let child of node.children) {
-      nodeElem.appendChild(drawNodes(child));
+    const numChildren = node.children.length;
+
+    if (numChildren) {
+      for (let a = 0; a < numChildren; a++) {
+        const child = node.children[a];
+
+        nodeElem.appendChild(createSpacer(a));
+
+        nodeElem.appendChild(drawNodes(child));
+      }
     }
+
+    nodeElem.appendChild(createSpacer(numChildren));
 
     return nodeElem;
   } else {
@@ -979,8 +995,18 @@ function drawNodes(node) {
   }
 }
 
-function createNode(type, commandName, parent) {
-  parent.children.push(makeNode(type, [], commandName));
+function createNode(type, commandName) {
+  return makeNode(type, [], commandName);
+}
+
+function attachNode(child, parent) {
+  parent.children.push(child);
+}
+
+function insertNode(child, parent, index) {
+  parent.children = parent.children.slice(0, index)
+    .concat([child])
+    .concat(parent.children.slice(index));
 }
 
 function getCommandImg(commandName) {
@@ -1025,42 +1051,54 @@ function getCommandImg(commandName) {
 document.addEventListener('drop', (ev) => {
 
   if(spacerTarget) {
-    spacerTarget.style.height = "20px";
-    spacerTarget.style.backgroundColor = "lightgrey";
+    spacerTarget.style.height = "10px";
+    spacerTarget.style.backgroundColor = "mint";
   }
 
   if (ev.target.classList.contains('action-drop-zone')) {
 
-    const commandName = ev.dataTransfer.getData('text/plain');
-    console.log("Target nodeId: ", ev.target.dataset.nodeId, ev.target);
+    let target = ev.target;
 
-    targetNode = findNode(initialNode, ev.target.dataset.nodeId);
+    let insertIndex = 0;
+
+    if (target.classList.contains('o-command-group-spacer')) {
+      insertIndex = target.dataset.insertIndex;
+      target = target.parentElement;
+    }
+
+    const commandName = ev.dataTransfer.getData('text/plain');
+    console.log("Target nodeId: ", target.dataset.nodeId, target);
+
+    targetNode = findNode(rootSomething.rootNode, target.dataset.nodeId);
 
     switch (commandName) {
       case 'sequential':
       case 'race':
       case 'parallel':
         if (targetNode === null) {
-          console.error("Unable to find target node", targetNode, initialNode);
+          console.error("Unable to find target node", targetNode, rootSomething.rootNode);
         } else {
-          createNode('group', commandName, targetNode);
+          insertNode(createNode('group', commandName), targetNode, insertIndex);
         }
         break;
       case 'example':
-        createNode('command', commandName, targetNode);
+        insertNode(createNode('command', commandName), targetNode, insertIndex);
         break;
       default:
         console.error("Oh no command not recognised help: ", commandName);
     }
   }
-  console.log("Updated Data structure: ", initialNode, targetNode);
-  drawAllNodes(initialNode);
+  console.log("Updated Data structure: ", rootSomething.rootNode, targetNode);
+  drawAllNodes(rootSomething);
 });
 
 // Hi welcome to pain
 
-// let rootNode = {
+// let rootSomething = {
+//  moveCondition: "go" | "stop",
+//  rootNode: {
 //   kind: 'group',
+//   moveCondition: "go" | "stop",
 //   children: [
 //     {
 //       kind: 'group',
