@@ -151,58 +151,60 @@ body {
 
 </style>
 
+  <link rel="icon" type="image/x-icon" href="./images/fix-gear.ico">
+
     <meta charset="UTF-8">
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' file://*">
-    <title>Hello World!</title>
+    <title>Path Planner</title>
   </head>
-  <body>
-<div class="toolbar">
-  <div class="c-toolbar__start">
-    <img id="select-tool" class="tool" src="images/select.png" />
-    <p class="o-tool-label">Select</p>
-    <img id="pose-tool" class="tool" src="images/start.png" />
-    <p class="o-tool-label">Waypoint</p>
-    <img id="delete-tool" class="tool" src="images/delete.png" />
-    <p class="o-tool-label">Delete</p>
-    <img id="action-tool" class="tool" src="./images/temp-lower.png">
-    <p class="o-tool-label">Actions</p>
-  </div>
-  <div class="c-toolbar__middle">
-    <div class="c-action-work-area">
-      <div class="c-action-work-area__select">
-        <ul class="u-no-bullets">
-          <li>
-            <img src="images/sequential-command-group.png" class="o-action-command-icon" id="sequential" draggable="true">
-          </li>
-          <li>
-            <img src="images/parallel-command-group.png" class="o-action-command-icon" id="parallel" draggable="true">
-          </li>
-          <li>
-            <img src="images/parallel-race-group.png" class="o-action-command-icon" id="race" draggable="true">
-          </li>
-          <li>
-            <img src="images/command.png" class="o-action-command-icon" id="example" draggable="true">
-          </li>
-        </ul>
-      </div>
-      <div class="c-action-work-area__sequence action-drop-zone" id="c-action-work-area__sequence">
+<body>
+  <div class="toolbar">
+    <div class="c-toolbar__start">
+      <img id="select-tool" class="tool" src="images/select.png" >
+      <p class="o-tool-label">Select</p>
+      <img id="pose-tool" class="tool" src="images/start.png" >
+      <p class="o-tool-label">Waypoint</p>
+      <img id="delete-tool" class="tool" src="images/delete.png" >
+      <p class="o-tool-label">Delete</p>
+      <img id="action-tool" class="tool" src="./images/temp-lower.png" >
+      <p class="o-tool-label">Actions</p>
+    </div>
+    <div class="c-toolbar__middle">
+      <div class="c-action-work-area">
+        <div class="c-action-work-area__select">
+          <ul class="u-no-bullets">
+            <li>
+              <img src="images/sequential-command-group.png" class="o-action-command-icon" id="sequential" draggable="true">
+            </li>
+            <li>
+              <img src="images/parallel-command-group.png" class="o-action-command-icon" id="parallel" draggable="true">
+            </li>
+            <li>
+              <img src="images/parallel-race-group.png" class="o-action-command-icon" id="race" draggable="true">
+            </li>
+            <li>
+              <img src="images/command.png" class="o-action-command-icon" id="example" draggable="true">
+            </li>
+          </ul>
+        </div>
+        <div class="c-action-work-area__sequence action-drop-zone" id="c-action-work-area__sequence">
+        </div>
       </div>
     </div>
-  </div>
-  <div class="c-toolbar__end">
-    <br>
-    <input type="text" id="save-file" class="c-save-file" placeholder="Select Save File"></input>
-    <button id="export" class="touch-button" style="color:blue">Export Path</button>
+    <div class="c-toolbar__end">
+      <br>
+      <input type="text" id="save-file" class="c-save-file" placeholder="Select Save File"></input>
+      <button id="export" class="touch-button" style="color:blue">Export Path</button>
 
-    <input type="file" id="load-file" class="c-load-file"></input>
-    <button id="import" class="touch-button" style="color:rgb(0, 255, 76)">Import Path</button>
+      <input type="file" id="load-file" class="c-load-file"></input>
+      <button id="import" class="touch-button" style="color:rgb(0, 255, 76)">Import Path</button>
+    </div>
   </div>
-</div>
-<div class="field">
-  <canvas id="canvas"></canvas>
-</div>
-    <!-- You can also require other files to run in this process -->
-    <script src="./renderer.js"></script>
+  <div class="field">
+    <canvas id="canvas"></canvas>
+  </div>
+      <!-- You can also require other files to run in this process -->
+      <script src="./renderer.js"></script>
   </body>
 </html>
