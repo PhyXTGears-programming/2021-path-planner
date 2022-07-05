@@ -5,6 +5,9 @@
 // selectively enable features needed in the rendering
 // process.
 
+// While addition of command nodes to poses is underway, import/export functionality will
+// be very much non-functional.
+
 //Custom types
 
 const Payload = (p0, p1, p2, p3, options) => {
@@ -147,7 +150,9 @@ const commandGroupsToName = {
   [actionsCommandGroups.RACE]: 'race',
 };
 
-// Global variable
+// Global variables
+
+// const frog = {attributes["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
 
 let toolState = Tool.NONE;
 const images = {};
