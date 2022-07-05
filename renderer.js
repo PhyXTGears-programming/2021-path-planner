@@ -918,22 +918,31 @@ function drawAllNodes(rootSomething) {
   const moveConditionSwitch = document.createElement("div");
   moveConditionSwitch.classList.add('o-command-moveSwitch');
 
+  console.log("Root elem pre-removal child count: ", rootElement.children.length);
+
+  const childList = Array.prototype.slice.call(rootElement.children, 0);
+
+  for (let child of childList) {
+    rootElement.removeChild(child);
+  }
+
+  console.log("Root elem post-removal child count: ", rootElement.children.length);
+  console.log("Root elem: ", rootElement);
   if (moveCondition === "go") {
     moveConditionSwitch.textContent = "Go";
+    moveConditionSwitch.classList.remove("o-command-moveswitch-stop");
     moveConditionSwitch.classList.add("o-command-moveswitch-go");
   } else {
     moveConditionSwitch.textContent = "Halt";
+    moveConditionSwitch.classList.remove("o-command-moveswitch-go");
     moveConditionSwitch.classList.add("o-command-moveSwitch-stop");
-  }
-
-  for (let child of rootElement.children) {
-    rootElement.removeChild(child);
   }
 
   const elem = drawNodes(rootNode);
 
   rootElement.appendChild(moveConditionSwitch);
   rootElement.appendChild(elem);
+  console.log("Root elem post-addition child count: ", rootElement.children.length);
 }
 
 function drawNodes(node) {
@@ -1057,7 +1066,7 @@ document.addEventListener('drop', (ev) => {
 
     let insertIndex = 0;
 
-    if (target.classList.contains('o-command-group-spacer')) {
+    if (target.classList.contains('o-command-group__spacer')) {
       insertIndex = target.dataset.insertIndex;
       target = target.parentElement;
     }
