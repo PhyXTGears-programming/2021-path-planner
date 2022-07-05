@@ -152,6 +152,17 @@ let saveData = '';
 
 let yoinked = null; // For dragging of tools 
 
+let draggedId = null; // Keeps track of id of dragged to define nodeUi
+let nodeUi = null; // Defines what will be placed into work area of command sequencer
+let workArea = document.getElementById('c-action-work-area__sequence');
+let textNodeHolder = null; // For creating text dynamically
+let titleTop = null; // to hold the text node for the title (:
+let idCounter = 0;
+let targetId = null;
+let targetNode = null;
+let spacerTarget = null;
+const commandTypeImgs = { lowerIntake: "./images/temp-lower.png" };
+
 const config = {
   fieldDims: {
     xmeters: 9.14,
