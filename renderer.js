@@ -891,16 +891,14 @@ document.addEventListener('dragenter', (ev) => {
 
   if (ev.target.classList.contains('action-drop-zone')) {
     if(spacerTarget) {
-      spacerTarget.style.height = "20px";
-      spacerTarget.style.backgroundColor = "lightgrey";
+      spacerTarget.classList.remove("is-active-dropzone");
     }
 
     console.log("enter drop zone", ev.target.id, ev.dataTransfer.getData('text'));
 
-    if(ev.target.classList.contains("o-command-group-spacer")) {
+    if(ev.target.classList.contains("o-command-group__spacer")) {
       spacerTarget = ev.target;
-      spacerTarget.style.height = "30px";
-      spacerTarget.style.backgroundColor = "blue";
+      spacerTarget.classList.add('is-active-dropzone');
     }
   }
 });
@@ -956,9 +954,8 @@ function drawNodes(node) {
     function createSpacer(insertIndex) {
       const spacerElem = document.createElement("div");
 
-      spacerElem.style.height = "20px";
       spacerElem.classList.add("action-drop-zone");
-      spacerElem.classList.add("o-command-group-spacer");
+      spacerElem.classList.add("o-command-group__spacer");
       spacerElem.dataset.insertIndex = insertIndex;
 
       return spacerElem;
@@ -1051,8 +1048,7 @@ function getCommandImg(commandName) {
 document.addEventListener('drop', (ev) => {
 
   if(spacerTarget) {
-    spacerTarget.style.height = "10px";
-    spacerTarget.style.backgroundColor = "mint";
+    spacerTarget.classList.remove("is-active-dropzone");
   }
 
   if (ev.target.classList.contains('action-drop-zone')) {
