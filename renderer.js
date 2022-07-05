@@ -75,6 +75,20 @@ const Pose = (point, enterHandle, exitHandle, options) => {
   };
 };
 
+function ActionNode(kind, children, name, nodeId) {
+  return {
+    kind,
+    children,
+    name,
+    nodeId,
+  };
+}
+
+function makeNode(kind, children, name) {
+  idCounter += 1;
+  return ActionNode(kind, children, name, idCounter - 1);
+}
+
 // Constants
 
 const Tool = {
@@ -825,34 +839,6 @@ function importPoses(data) {
 }
 
 //   Draw UI in the command group dropping area:
-
-// Once done, move variables up to top of file --
-let draggedId = null; // Keeps track of id of dragged to define nodeUi
-let nodeUi = null; // Defines what will be placed into work area of command sequencer
-let workArea = document.getElementById('c-action-work-area__sequence');
-let textNodeHolder = null; // For creating text dynamically
-let titleTop = null; // to hold the text node for the title (:
-let idCounter = 0;
-let targetId = null;
-let targetNode = null;
-let spacerTarget = null;
-const commandTypeImgs = { lowerIntake: "./images/temp-lower.png" };
-
-// Once done, slap constructor up at top of file with fellow construction workers
-function ActionNode(kind, children, name, nodeId) {
-  return {
-    kind,
-    children,
-    name,
-    nodeId,
-  };
-}
-
-function makeNode(kind, children, name) {
-  idCounter += 1;
-  return ActionNode(kind, children, name, idCounter - 1);
-}
-
 let initialSomething = {
   moveCondition: "go",
   rootNode: makeNode('group', [], 'sequential'),
