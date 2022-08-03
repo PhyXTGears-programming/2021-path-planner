@@ -882,37 +882,43 @@ function importPoses(data) {
   let segment = data.slice(-1)[0];
   pt1 = segment[3];
   cp1 = segment[2];
-  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), [0]);
+  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), {commands:PoseCommandGroup()});
 
   poseList.push(pose);
 
   return poseList;
 }
 
-//   Draw UI in the command group dropping area:
-let initialSomething = {
-  moveCondition: "go",
-  rootNode: makeNode('group', [], 'sequential'),
-};
+function findNode(passedNode, idTarget, initialCall) {
+  console.log("Node obj: ", passedNode);
 
-let rootSomething = {
-  moveCondition: "go",
-  rootNode: makeNode('group', [], 'sequential'),
-};
+  if(initialCall) {
+    if (passedNode.rootNode.nodeId == idTarget) {
+      return passedNode.rootNode;
+    }
+    else {
+      for (let child of passedNode.rootNode.children) {
+        let node = findNode(child, idTarget, false);
 
-function findNode(node, idTarget) {
-  if (node.nodeId == idTarget) {
-    return node;
-  }
-  else {
-    for (let child of node.children) {
-      let node = findNode(child, idTarget);
-
-      if (node !== null) {
-        return node;
+        if (node !== null) {
+          return node;
+        }
       }
     }
-    return null;
+  } else {
+    if (passedNode.nodeId == idTarget) {
+      return passedNode;
+    }
+    else {
+      for (let child of passedNode.children) {
+        let node = findNode(child, idTarget, false);
+
+        if (node !== null) {
+          return node;
+        }
+      }
+      return null;
+    }
   }
 }
 
