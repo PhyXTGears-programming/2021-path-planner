@@ -103,6 +103,18 @@ function makeNode(kind, children, name) {
   return ActionNode(kind, children, name, idCounter - 1);
 }
 
+//For changing and updating MoveSwitch
+function switchMoveSwitch() {
+  const switchRootSomething = actionedPose.options.commands;
+  if(switchRootSomething.moveCondition == "go") {
+    switchRootSomething.moveCondition = "halt";
+  }
+  if(switchRootSomething.moveCondition == "halt") {
+    switchRootSomething.moveCondition = "go";
+  }
+  drawAllNodes(switchRootSomething);
+}
+
 // Constants
 
 const Tool = {
