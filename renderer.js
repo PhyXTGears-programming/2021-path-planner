@@ -8,7 +8,11 @@
 // While addition of command nodes to poses is underway, import/export functionality will
 // be very much non-functional.
 
-//Custom types
+// Issue at hand:
+// When clicking on the condition switch, it does not change. DrawAllNodes
+// function does redraw it, so variable holding value may be wrong
+
+// Custom types
 
 const Payload = (p0, p1, p2, p3, options) => {
   const self = {
@@ -766,6 +770,14 @@ function findHandleNear(x, y) {
 }
 
 function exportPoses(poseList) {
+  /** Export file format
+   *
+   *  Segment :: Tuple Point Point Point (List Options)
+   *
+   *  Payload :: { self :: List Segment }
+   */
+
+
   if (2 > poseList.length) {
     return [];
   } else {
