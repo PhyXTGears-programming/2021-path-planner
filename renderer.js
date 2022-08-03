@@ -82,6 +82,13 @@ const Pose = (point, enterHandle, exitHandle, options) => {
   };
 };
 
+function PoseCommandGroup() {
+  return {
+    moveCondition: "halt",
+    rootNode: makeNode("group", [], 'sequential'),
+  }
+}
+
 function ActionNode(kind, children, name, nodeId) {
   return {
     kind,
@@ -168,12 +175,14 @@ let movePose = null;
 let hoveredHandle = null;
 let moveHandle = null;
 
+let actionedPose = null;
+
 let selectState = SelectState.NONE;
 
 let saveFileName = '';
 let saveData = '';
 
-let yoinked = null; // For dragging of tools 
+let yoinked = null; // For dragging of commands
 
 let draggedId = null; // Keeps track of id of dragged to define nodeUi
 let nodeUi = null; // Defines what will be placed into work area of command sequencer
@@ -720,13 +729,13 @@ function placePointAt(x, y) {
   let new_pose;
 
   if (0 == poseList.length) {
-    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), []);
+    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), {commands: PoseCommandGroup()});
   } else {
     const last_point = poseList.slice(-1)[0].point;
     const enterVec = last_point.sub(new_point).unit().scale(100);
     const exitVec = enterVec.scale(-1);
 
-    new_pose = Pose(new_point, enterVec, exitVec, []);
+    new_pose = Pose(new_point, enterVec, exitVec, {commands: PoseCommandGroup()});
   }
 
   poseList.push(new_pose)
@@ -829,7 +838,7 @@ function importPoses(data) {
   let pt1 = data[0][0];
   let cp1 = data[0][1];
 
-  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1), [0]);
+  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1), {commands:PoseCommandGroup()});
   poseList.push(pose);
 
   pt1 = data[0][3];
@@ -838,7 +847,7 @@ function importPoses(data) {
   for (let segment of data.slice(1)) {
     const cp2 = segment[1];
 
-    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1), [0]);
+    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1), {commands:PoseCommandGroup()});
 
     poseList.push(pose);
     pt1 = segment[3];
@@ -940,12 +949,12 @@ function drawAllNodes(rootSomething) {
 
   if (moveCondition === "go") {
     moveConditionSwitch.textContent = "Go";
-    moveConditionSwitch.classList.remove("o-command-moveswitch-stop");
-    moveConditionSwitch.classList.add("o-command-moveswitch-go");
+    moveConditionSwitch.classList.add("o-command-moveSwitch-stop");
+    moveConditionSwitch.classList.remove("o-command-moveswitch-go");
   } else {
     moveConditionSwitch.textContent = "Halt";
-    moveConditionSwitch.classList.remove("o-command-moveswitch-go");
-    moveConditionSwitch.classList.add("o-command-moveSwitch-stop");
+    moveConditionSwitch.classList.remove("o-command-moveswitch-stop");
+    moveConditionSwitch.classList.add("o-command-moveswitch-go");
   }
 
   const elem = drawNodes(rootNode);
@@ -1065,13 +1074,16 @@ function getCommandImg(commandName) {
 
 document.addEventListener('drop', (ev) => {
 
+  const targetPoseCommands = actionedPose.options.commands;
+  let target = ev.target;
+
   if(spacerTarget) {
     spacerTarget.classList.remove("is-active-dropzone");
   }
 
   if (ev.target.classList.contains('action-drop-zone')) {
 
-    let target = ev.target;
+    const targetPoseCommands = actionedPose.options.commands; // pass in options of current target of actions tool
 
     let insertIndex = 0;
 
@@ -1083,14 +1095,14 @@ document.addEventListener('drop', (ev) => {
     const commandName = ev.dataTransfer.getData('text/plain');
     console.log("Target nodeId: ", target.dataset.nodeId, target);
 
-    targetNode = findNode(rootSomething.rootNode, target.dataset.nodeId);
+    targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true); // need to figure out index of target pose in poselist, pass in the options.commands object of said pose
 
     switch (commandName) {
       case 'sequential':
       case 'race':
       case 'parallel':
         if (targetNode === null) {
-          console.error("Unable to find target node", targetNode, rootSomething.rootNode);
+          console.error("Unable to find target node", targetNode);
         } else {
           insertNode(createNode('group', commandName), targetNode, insertIndex);
         }
@@ -1102,8 +1114,8 @@ document.addEventListener('drop', (ev) => {
         console.error("Oh no command not recognised help: ", commandName);
     }
   }
-  console.log("Updated Data structure: ", rootSomething.rootNode, targetNode);
-  drawAllNodes(rootSomething);
+  console.log("Updated Data structure: ", targetPoseCommands, targetNode);
+  drawAllNodes(targetPoseCommands);
 });
 
 // Hi welcome to pain
