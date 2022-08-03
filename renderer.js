@@ -889,23 +889,9 @@ function importPoses(data) {
   return poseList;
 }
 
-function findNode(passedNode, idTarget, initialCall) {
+function findNode(passedNode, idTarget) {
   console.log("Node obj: ", passedNode);
 
-  if(initialCall) {
-    if (passedNode.rootNode.nodeId == idTarget) {
-      return passedNode.rootNode;
-    }
-    else {
-      for (let child of passedNode.rootNode.children) {
-        let node = findNode(child, idTarget, false);
-
-        if (node !== null) {
-          return node;
-        }
-      }
-    }
-  } else {
     if (passedNode.nodeId == idTarget) {
       return passedNode;
     }
@@ -919,7 +905,6 @@ function findNode(passedNode, idTarget, initialCall) {
       }
       return null;
     }
-  }
 }
 
 document.addEventListener('dragstart', (ev) => {
@@ -1126,7 +1111,7 @@ document.addEventListener('drop', (ev) => {
     const commandName = ev.dataTransfer.getData('text/plain');
     console.log("Target nodeId: ", target.dataset.nodeId, target);
 
-    targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true); // need to figure out index of target pose in poselist, pass in the options.commands object of said pose
+    targetNode = findNode(targetPoseCommands.rootNode, target.dataset.nodeId, true); // need to figure out index of target pose in poselist, pass in the options.commands object of said pose
 
     switch (commandName) {
       case 'sequential':
