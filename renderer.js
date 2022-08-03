@@ -252,9 +252,9 @@ window.addEventListener('DOMContentLoaded', () => {
   loadImages(() => {
     onFieldLoaded(canvas);
 
-    drawAllNodes(rootSomething);
-
-    console.log("dom content loaded. initial node: ", rootSomething.rootNode);
+    if(actionedPose) {
+      drawAllNodes(actionedPose.options.commands);
+    }
   });
 })
 
@@ -294,6 +294,10 @@ function onFieldLoaded(canvas) {
     const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
     const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
 
+        if(ev.target.classList.contains("o-command-moveSwitch")) {
+          switchMoveSwitch();
+        }
+
     switch (toolState) {
       case Tool.NONE:
         //Do nothing
@@ -314,7 +318,16 @@ function onFieldLoaded(canvas) {
         poseList.splice(poseLocation, 1);
         redrawCanvas(context, poseList);
         break;
+      case Tool.ACTIONS:
+        let target = ev.target;
+        actionedPose = findPoseNear(x2, y2);
 
+        if(!actionedPose) {
+          break;
+        }
+
+        drawAllNodes(actionedPose.options.commands);
+        break;
     }
   });
 
