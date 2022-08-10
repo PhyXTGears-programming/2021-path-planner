@@ -955,7 +955,10 @@ function drawAllNodes(rootSomething) {
   const { moveCondition, rootNode } = rootSomething;
 
   const moveConditionSwitch = document.createElement("div");
-  moveConditionSwitch.classList.add('o-command-moveSwitch');
+  moveConditionSwitch.classList.add('o-command-moveswitch');
+  moveConditionSwitch.addEventListener('click', () => {
+    switchMoveSwitch();
+  });
 
   const childList = Array.prototype.slice.call(rootElement.children, 0);
 
@@ -965,12 +968,10 @@ function drawAllNodes(rootSomething) {
 
   if (moveCondition === "go") {
     moveConditionSwitch.textContent = "Go";
-    moveConditionSwitch.classList.add("o-command-moveSwitch-stop");
-    moveConditionSwitch.classList.remove("o-command-moveswitch-go");
+    moveConditionSwitch.classList.add("o-command-moveswitch--go");
   } else {
     moveConditionSwitch.textContent = "Halt";
-    moveConditionSwitch.classList.remove("o-command-moveswitch-stop");
-    moveConditionSwitch.classList.add("o-command-moveswitch-go");
+    moveConditionSwitch.classList.add("o-command-moveswitch--stop");
   }
 
   const elem = drawNodes(rootNode);
