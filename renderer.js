@@ -105,14 +105,13 @@ function makeNode(kind, children, name) {
 
 //For changing and updating MoveSwitch
 function switchMoveSwitch() {
-  const switchRootSomething = actionedPose.options.commands;
-  if(switchRootSomething.moveCondition == "go") {
-    switchRootSomething.moveCondition = "halt";
+  const commands = actionedPose.options.commands;
+  if(commands.moveCondition == "go") {
+    commands.moveCondition = "halt";
+  } else if (commands.moveCondition == "halt") {
+    commands.moveCondition = "go";
   }
-  if(switchRootSomething.moveCondition == "halt") {
-    switchRootSomething.moveCondition = "go";
-  }
-  drawAllNodes(switchRootSomething);
+  drawAllNodes(commands);
 }
 
 // Constants
@@ -293,10 +292,6 @@ function onFieldLoaded(canvas) {
 
     const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
     const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
-
-        if(ev.target.classList.contains("o-command-moveSwitch")) {
-          switchMoveSwitch();
-        }
 
     switch (toolState) {
       case Tool.NONE:
@@ -1100,7 +1095,7 @@ document.addEventListener('drop', (ev) => {
 
   if (ev.target.classList.contains('action-drop-zone')) {
 
-    const targetPoseCommands = actionedPose.options.commands; // pass in options of current target of actions tool
+    const targetPoseCommands = actionedPose.options.commands;
 
     let insertIndex = 0;
 
@@ -1112,7 +1107,7 @@ document.addEventListener('drop', (ev) => {
     const commandName = ev.dataTransfer.getData('text/plain');
     console.log("Target nodeId: ", target.dataset.nodeId, target);
 
-    targetNode = findNode(targetPoseCommands.rootNode, target.dataset.nodeId, true); // need to figure out index of target pose in poselist, pass in the options.commands object of said pose
+    targetNode = findNode(targetPoseCommands.rootNode, target.dataset.nodeId, true);
 
     switch (commandName) {
       case 'sequential':
