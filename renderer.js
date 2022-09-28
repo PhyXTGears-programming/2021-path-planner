@@ -84,6 +84,7 @@ const Pose = (point, enterHandle, exitHandle, options) => {
 
 function PoseCommandGroup() {
   return {
+    moveConditionCanSwitch: false,
     moveCondition: "halt",
     rootNode: makeNode("group", [], 'sequential'),
   }
@@ -104,12 +105,28 @@ function makeNode(kind, children, name) {
 }
 
 //For changing and updating MoveSwitch
+
+function updateMoveSwitchPerms() {
+  for(let pose of poseList) {
+    if(poseList.indexOf(pose) < poseList.length - 1) {
+      pose.options.commands.moveConditionCanSwitch = true;
+    } else {
+      pose.options.commands.moveConditionCanSwitch = false;
+    }
+  }
+}
+
 function switchMoveSwitch() {
   const commands = actionedPose.options.commands;
-  if(commands.moveCondition == "go") {
-    commands.moveCondition = "halt";
-  } else if (commands.moveCondition == "halt") {
-    commands.moveCondition = "go";
+  if (commands.moveConditionCanSwitch) {
+    if(commands.moveCondition == "go") {
+      commands.moveCondition = "halt";
+    } else if (commands.moveCondition == "halt") {
+      commands.moveCondition = "go";
+    }
+  }
+  else {
+    alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
   }
   drawAllNodes(commands);
 }
@@ -304,6 +321,7 @@ function onFieldLoaded(canvas) {
       case Tool.POSE:
         // Compute the canvas position of the cursor relative to the canvas.
         placePointAt(x2, y2);
+        updateMoveSwitchPerms();
 
         redrawCanvas(context, poseList);
         break;
