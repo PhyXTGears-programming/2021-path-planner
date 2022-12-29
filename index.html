@@ -2,21 +2,23 @@
 <html>
 
   <head>
-<style>
-* {
-  --color-work-area: rgb(153, 175, 140);
-}
+    <style>
+      * {
+        --color-work-area: rgb(153, 175, 140);
+      }
 
-body {
-  background-color: rgb(34, 34, 34);
-  padding: 0;
-  margin: 0;
-  overflow: hidden;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: row;
-}
+      body {
+        background-color: rgb(34, 34, 34);
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: row;
+        /* Uncomment it I dare you (:<   */
+        /* filter: saturate(200);*/
+      }
   canvas#canvas {
     max-width: 100%;
     max-height: 100%;
@@ -159,11 +161,25 @@ body {
     border: 2px solid darkred;
   }
 
+  .c-command-moveswitch-continue-foot {
+    color: green;
+    font-weight: 600;
+  }
+
+  .c-command-moveswitch-continue-foot__end {
+    color: rgb(46, 0, 0);
+    font-weight: 600;
+  }
+
   .c-drop-zone {
     width: 100%;
     height: 30px;
     display: block;
     background-color: red;
+  }
+
+  .c-selectedPose {
+    border: 2px solid greenyellow;
   }
 
 </style>

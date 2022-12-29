@@ -191,7 +191,7 @@ const commandGroupsToName = {
 
 // Global variables
 
-// const frog = {attributes["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
+// const frog = {attributes : ["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
 
 let toolState = Tool.NONE;
 const images = {};
@@ -967,6 +967,15 @@ function drawAllNodes(rootSomething) {
 
   const { moveCondition, rootNode } = rootSomething;
 
+  const moveConditionContinueClarification = document.createElement("p");
+  if(actionedPose.options.commands.moveConditionCanSwitch) {
+    moveConditionContinueClarification.textContent = "Continue";
+    moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
+  } else {
+    moveConditionContinueClarification.textContent = "End Auto";
+    moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot__end');
+  }
+
   const moveConditionSwitch = document.createElement("div");
   moveConditionSwitch.classList.add('o-command-moveswitch');
   moveConditionSwitch.addEventListener('click', () => {
@@ -991,6 +1000,7 @@ function drawAllNodes(rootSomething) {
 
   rootElement.appendChild(moveConditionSwitch);
   rootElement.appendChild(elem);
+  rootElement.appendChild(moveConditionContinueClarification);
 }
 
 function drawNodes(node) {
