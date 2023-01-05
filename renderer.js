@@ -5,12 +5,7 @@
 // selectively enable features needed in the rendering
 // process.
 
-// While addition of command nodes to poses is underway, import/export functionality will
-// be very much non-functional.
-
-// Issue at hand:
-// When clicking on the condition switch, it does not change. DrawAllNodes
-// function does redraw it, so variable holding value may be wrong
+// import/export functionality still broken
 
 // Custom types
 
@@ -969,8 +964,10 @@ function drawAllNodes(rootSomething) {
 
   const moveConditionContinueClarification = document.createElement("p");
   if(actionedPose.options.commands.moveConditionCanSwitch) {
-    moveConditionContinueClarification.textContent = "Continue";
-    moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
+    if(moveCondition == "halt") {
+      moveConditionContinueClarification.textContent = "Go";
+      moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
+    }
   } else {
     moveConditionContinueClarification.textContent = "End Auto";
     moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot__end');
