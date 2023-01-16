@@ -13,7 +13,7 @@ const { documentDir } = window.__TAURI__.path;
 
 // Custom types
 
-const FRC_SEASON = "2021";
+const FRC_SEASON = "2023";
 
 const Payload = (p0, p1, p2, p3, options) => {
   const self = {
@@ -226,10 +226,6 @@ let spacerTarget = null;
 const commandTypeImgs = { lowerIntake: "./images/temp-lower.png" };
 
 const config = {
-  fieldDims: {
-    xmeters: 9.14,
-    ymeters: 4.57,
-  },
   imageFiles: [
     {
       name: 'pose',
@@ -894,15 +890,22 @@ function exportPoses(poseList) {
    *  Payload :: { self :: List Segment }
    */
 
+  if (!seasonConfig.isLoaded()) {
+    console.error('no season config loaded. unable to export');
+    return;
+  }
+
 
   if (2 > poseList.length) {
     return [];
   } else {
+    const { width: fieldWidth, height: fieldHeight } = seasonConfig.config.image;
+
     //const result = [];
     const pointToArray = pt => [pt.x, pt.y];
     const canvasToMeters = point => Point(
-      point.x / images.field.width * config.fieldDims.xmeters,
-      (1 - (point.y / images.field.height)) * config.fieldDims.ymeters,
+      point.x / fieldWidth * seasonConfig.config.fieldDims.xmeters,
+      (1 - (point.y / fieldHeight)) * seasonConfig.config.fieldDims.ymeters,
     );
 
     let pose1 = poseList[0];
@@ -927,13 +930,18 @@ function exportPoses(poseList) {
 function importPoses(data) {
   const poseList = [];
 
+  if (!seasonConfig.isLoaded()) {
+    console.error('no season config loaded. unable to import');
+    return postList;
+  }
+
   if (data.length < 1) {
     return poseList;
   }
 
   const metersToCanvas = point => Point(
-    (point.x * images.field.width / config.fieldDims.xmeters),
-    (point.y / config.fieldDims.ymeters - 1) * -1 * images.field.height,
+    (point.x * images.field.width / seasonConfig.config.fieldDims.xmeters),
+    (point.y / seasonConfig.config.fieldDims.ymeters - 1) * -1 * images.field.height,
     []
   );
 
