@@ -13,6 +13,8 @@ const { documentDir } = window.__TAURI__.path;
 
 // Custom types
 
+const FRC_SEASON = "2021";
+
 const Payload = (p0, p1, p2, p3, options) => {
   const self = {
     points: [p0, p1, p2, p3, options],
@@ -230,10 +232,6 @@ const config = {
   },
   imageFiles: [
     {
-      name: 'field',
-      file: './images/field.png'
-    },
-    {
       name: 'pose',
       file: './images/start.png'
     },
@@ -260,18 +258,52 @@ const config = {
   ]
 };
 
+const seasonConfig = {
+  isLoaded() { return null !== this.config; },
+
+  loadSeason(year) {
+    const self = this;
+
+    return Promise.all([
+      fetch(`./season/${year}/config.json`)
+        .then(resp => {
+          if (!resp.ok) {
+            alert(`Cannot load season ${FRC_SEASON} config file. ${resp.text()}`);
+            throw Error('Failed to load season config');
+          }
+
+          return resp.json();
+        }),
+      loadImage('field', `./season/${year}/field.png`)
+        .then(res => res.image)
+    ]).then(([ config, image ]) => {
+      self.config = Object.assign(config, { image });
+      console.log('season config loaded', self.config);
+      return self;
+    }).catch(err => {
+      self.config = null;
+      throw `Failed to load season config: ${err}`;
+    });
+  },
+
+  config: null,
+};
+
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('canvas');
 
-  loadImages(() => {
-    onFieldLoaded(canvas);
+  (new Promise((ok, err) => loadImages(ok)))
+    .then(() => seasonConfig.loadSeason(FRC_SEASON))
+    .then(() => {
+      onFieldLoaded(canvas);
 
-    if(actionedPose) {
-      drawAllNodes(actionedPose.options.commands);
-    }
-  });
+      if(actionedPose) {
+        drawAllNodes(actionedPose.options.commands);
+      }
+    })
+    .catch(err => console.error('dom content loaded', err));
 })
 
 // Load all images in parallel, wait for all images to finish loading,
@@ -294,9 +326,24 @@ function loadImages(onDone) {
   }
 }
 
+function loadImage(name, filename) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      const onLoad = () => resolve({ name, image });
+
+      image.src = filename;
+      image.addEventListener('load', onLoad, { once: true });
+    });
+}
+
 function onFieldLoaded(canvas) {
-  canvas.width = images.field.width;
-  canvas.height = images.field.height;
+  if (!seasonConfig.isLoaded()) {
+    console.error('season config is not loaded');
+    return;
+  }
+
+  canvas.width = seasonConfig.config.image.width;
+  canvas.height = seasonConfig.config.image.height;
 
   const context = canvas.getContext('2d');
   clearCanvas(context);
@@ -622,7 +669,9 @@ function redrawCanvas(context, poseList) {
 }
 
 function clearCanvas(context) {
-  context.drawImage(images.field, 0, 0);
+  if (seasonConfig.isLoaded()) {
+    context.drawImage(seasonConfig.config.image, 0, 0);
+  }
 }
 
 function drawTool(context, tool, x, y) {
