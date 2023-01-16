@@ -7,6 +7,10 @@
 
 // import/export functionality still broken
 
+const { open, save } = window.__TAURI__.dialog;
+const { exists, readTextFile, writeTextFile } = window.__TAURI__.fs;
+const { documentDir } = window.__TAURI__.path;
+
 // Custom types
 
 const Payload = (p0, p1, p2, p3, options) => {
