@@ -7,6 +7,10 @@
 
 // import/export functionality still broken
 
+const { open, save } = window.__TAURI__.dialog;
+const { exists, readTextFile, writeTextFile } = window.__TAURI__.fs;
+const { documentDir } = window.__TAURI__.path;
+
 // Custom types
 
 const Payload = (p0, p1, p2, p3, options) => {
@@ -202,6 +206,7 @@ let actionedPose = null;
 
 let selectState = SelectState.NONE;
 
+let importFileName = '';
 let saveFileName = '';
 let saveData = '';
 
@@ -531,60 +536,81 @@ function onFieldLoaded(canvas) {
   }
 
   document.getElementById('save-file').addEventListener('click', ev => {
-    window.api.send('toMain', { event: 'selectSaveFile' });
-    // saveFileName = selectSaveFile();
-    // ev.target.value = saveFileName;
+    documentDir()
+      .then(docDir =>
+        save({
+          defaultPath: docDir,
+          filters: [{
+            name: 'Json',
+            extensions: [ 'json' ],
+          }],
+        })
+      ).then(filename => {
+        // Leave filename in text box if user cancels Save File dialog.
+        if (null !== filename) {
+          saveFileName = filename;
+
+          const saveFileNameShort = saveFileName.split("/").slice(-1);
+          const saveFileElem = document.getElementById('save-file');
+
+          saveFileElem.value = saveFileNameShort;
+          saveFileElem.title = saveFileName;
+        }
+      });
   });
 
   document.getElementById('export').addEventListener('click', ev => {
-    const data = exportPoses(poseList);
-    window.api.send('toMain', {
-      event: 'saveFile', data: {
-        saveFile: saveFileName,
-        segments: exportPoses(poseList),
-      }
-    });
-    console.log(data);
+    const data = JSON.stringify(exportPoses(poseList));
+
+    writeTextFile(saveFileName, data);
+
+    console.log('export data', data);
+  });
+
+  document.getElementById('load-file').addEventListener('click', ev => {
+    documentDir()
+      .then(docDir =>
+        open({
+          defaultPath: docDir,
+          filters: [{
+            name: 'Json',
+            extensions: [ 'json' ],
+          }],
+        })
+      ).then(selected => {
+        if (Array.isArray(selected)) {
+          importFileName = selected[0];
+        } else if (null === selected) {
+          // Do nothing.
+        } else {
+          importFileName = selected;
+        }
+
+        const importFileNameShort = importFileName.split("/").slice(-1);
+        const importFileElem = document.getElementById('load-file');
+
+        importFileElem.value = importFileNameShort;
+        importFileElem.title = importFileName;
+      })
   });
 
   document.getElementById('import').addEventListener('click', ev => {
     const context = canvas.getContext('2d');
 
-    let importFileList = document.getElementById('load-file').files;
-    if (importFileList.length == 0) return;
+    if (null === importFileName) return;
+    if ("" === importFileName) return;
 
-    importFileList[0].text()
-      .then((text) => JSON.parse(text))
-      .then(importPoses)
-      .then((poses) => { poseList = poses; })
-      .then(() => redrawCanvas(context, poseList));
-
-    console.log(importFileList);
-
+    exists(importFileName)
+      .then(hasFile => {
+        if (hasFile) {
+          readTextFile(importFileName)
+            .then((text) => JSON.parse(text))
+            .then(importPoses)
+            .then((poses) => { poseList = poses; })
+            .then(() => redrawCanvas(context, poseList));
+        }
+      })
   });
-
-  console.log('attach fromMain receiver');
-
-  if (window.api && window.api.receive) {
-
-    window.api.receive('fromMain', args => {
-      switch (args.event) {
-        case 'selectSaveFile':
-          saveFileName = args.data.saveFile;
-          const saveFileNameShort = saveFileName.split("/").slice(-1);
-          document.getElementById('save-file').value = saveFileNameShort;
-          break;
-
-        case 'saveFileData':
-          console.log("Save File Stringified: ", saveFileData);
-          break;
-
-        default:
-          console.warn("Unknown event:", args);
-      }
-    });
-
-  }
 }
 
 function redrawCanvas(context, poseList) {
