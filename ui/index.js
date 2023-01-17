@@ -15,11 +15,10 @@ const { documentDir } = window.__TAURI__.path;
 
 const FRC_SEASON = "2023";
 
-const Payload = (p0, p1, p2, p3, options) => {
-  const self = {
-    points: [p0, p1, p2, p3, options],
-  }
-};
+const Payload = () => ({
+  segments: [],
+  waypoints: [],
+});
 
 const PointPrototype = {
   addVec: function (vec) {
@@ -752,11 +751,12 @@ function onFieldLoaded(canvas) {
   });
 
   document.getElementById('export').addEventListener('click', ev => {
-    const data = JSON.stringify(exportPoses(poseList));
+    const payload = exportPoses(poseList);
+    const data = JSON.stringify(payload);
+
+    console.log('export data', payload);
 
     writeTextFile(saveFileName, data);
-
-    console.log('export data', data);
   });
 
   document.getElementById('load-file').addEventListener('click', ev => {
@@ -1056,27 +1056,27 @@ function findHandleNear(x, y) {
 function exportPoses(poseList) {
   /** Export file format
    *
-   *  Segment :: Tuple Point Point Point (List Options)
+   *  Point :: List Float Float
+   *  Segment :: Tuple Point Point Point Point
+   *  Waypoint :: { commands  :: List ??
+   *              , shallHalt :: Boolean
+   *              }
    *
-   *  Payload :: { self :: List Segment }
+   *  Payload :: { segments :: List Segment
+   *             , waypoints :: List Waypoint
+   *             }
    */
 
-  if (!seasonConfig.isLoaded()) {
-    console.error('no season config loaded. unable to export');
-    return;
-  }
-
+  const payload = Payload();
 
   if (2 > poseList.length) {
-    return [];
+    return payload;
   } else {
-    const { width: fieldWidth, height: fieldHeight } = seasonConfig.config.image;
-
     //const result = [];
     const pointToArray = pt => [pt.x, pt.y];
     const canvasToMeters = point => Point(
-      point.x / fieldWidth * seasonConfig.config.fieldDims.xmeters,
-      (1 - (point.y / fieldHeight)) * seasonConfig.config.fieldDims.ymeters,
+      point.x / images.field.width * config.fieldDims.xmeters,
+      (1 - (point.y / images.field.height)) * config.fieldDims.ymeters,
     );
 
     let pose1 = poseList[0];
@@ -1086,15 +1086,22 @@ function exportPoses(poseList) {
         pose1.point.addVec(pose1.exitHandle),
         pose2.point.addVec(pose2.enterHandle),
         pose2.point,
-        pose1.options,
       ].map(canvasToMeters)
-        .map(pointToArray);
+       .map(pointToArray);
 
-      Payload.self.push(segment);
+      payload.segments.push(segment);
+
+      const waypoint = {
+        commands: pose1.options.commands.rootNode,
+        shallHalt: pose1.options.commands.moveCondition === 'halt',
+      };
+
+      payload.waypoints.push(waypoint);
+
       pose1 = pose2;
     }
 
-    return Payload;
+    return payload;
   }
 }
 
