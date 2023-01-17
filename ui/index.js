@@ -278,6 +278,14 @@ const canvasViewport = {
     this.panVec = offset;
   },
 
+  resetZoom() {
+    this.zoom = 1.0;
+  },
+
+  resetPan() {
+    this.offset = Vector(0.0, 0.0);
+  },
+
   toViewCoord(vec) {
     return vec.sub(this.offset).scale(1.0 / this.scale);
   },
