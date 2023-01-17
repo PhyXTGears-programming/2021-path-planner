@@ -423,8 +423,6 @@ function onFieldLoaded(canvas) {
       return;
     }
 
-    const context = canvas.getContext('2d');
-
     const x = ev.clientX - canvas.offsetLeft;
     const y = ev.clientY - canvas.clientTop;
 
@@ -446,13 +444,13 @@ function onFieldLoaded(canvas) {
         placePointAt(x3, y3);
         updateMoveSwitchPerms();
 
-        redrawCanvas(context, poseList);
+        redrawCanvas(canvas, poseList);
         break;
       case Tool.DELETE:
         const nearestPose = findPoseNear(x3, y3);
         const poseLocation = poseList.indexOf(nearestPose);
         poseList.splice(poseLocation, 1);
-        redrawCanvas(context, poseList);
+        redrawCanvas(canvas, poseList);
         break;
       case Tool.ACTIONS:
         let target = ev.target;
@@ -469,8 +467,6 @@ function onFieldLoaded(canvas) {
 
   // Mouse move handler to draw tool icon that follows mouse cursor.
   canvas.addEventListener('mousemove', (ev) => {
-    const context = canvas.getContext('2d');
-
     const tool = toolStateToName[toolState];
 
     // Compute the screen position of the cursor relative to the canvas.
@@ -493,7 +489,7 @@ function onFieldLoaded(canvas) {
 
             movePose.pose.point = posePt;
 
-            redrawCanvas(context, poseList);
+            redrawCanvas(canvas, poseList);
             break;
 
           case SelectState.MOVE_ENTER_HANDLE:
@@ -503,7 +499,7 @@ function onFieldLoaded(canvas) {
             moveHandle.pose.exitHandle = enterVec.scale(-1).unit().scale(moveHandle.pose.exitHandle.length());
             moveHandle.pose.enterHandle = enterVec;
 
-            redrawCanvas(context, poseList);
+            redrawCanvas(canvas, poseList);
             break;
 
           case SelectState.MOVE_EXIT_HANDLE:
@@ -513,14 +509,14 @@ function onFieldLoaded(canvas) {
             moveHandle.pose.exitHandle = exitVec;
             moveHandle.pose.enterHandle = exitVec.scale(-1).unit().scale(moveHandle.pose.enterHandle.length());
 
-            redrawCanvas(context, poseList);
+            redrawCanvas(canvas, poseList);
             break;
 
           case SelectState.NONE:
             hoveredPose = findPoseNear(x3, y3);
             hoveredHandle = findHandleNear(x3, y3);
 
-            redrawCanvas(context, poseList);
+            redrawCanvas(canvas, poseList);
             break;
         }
 
@@ -535,13 +531,15 @@ function onFieldLoaded(canvas) {
         const x4 = x2 - images[tool].width / 2;
         const y4 = y2 - images[tool].height / 2;
 
-        redrawCanvas(context, poseList);
+        const context = canvas.getContext('2d');
+
+        redrawCanvas(canvas, poseList);
         drawTool(context, tool, x4, y4);
         break;
 
       case Tool.DELETE:
         hoveredPose = findPoseNear(x3, y3);
-        redrawCanvas(context, poseList);
+        redrawCanvas(canvas, poseList);
 
         break;
     }
@@ -656,7 +654,7 @@ function onFieldLoaded(canvas) {
     const startVec = Vector(x2, y2);
 
     canvasViewport.startPan(startVec);
-    redrawCanvas(canvas.getContext('2d'), poseList);
+    redrawCanvas(canvas, poseList);
   });
 
   // Mouse move handler to pan the canvase.
@@ -676,7 +674,7 @@ function onFieldLoaded(canvas) {
     const endVec = Vector(x2, y2);
 
     canvasViewport.pan(endVec);
-    redrawCanvas(canvas.getContext('2d'), poseList);
+    redrawCanvas(canvas, poseList);
   });
 
   // Mouse wheel to zoom the canvas view.
@@ -695,7 +693,7 @@ function onFieldLoaded(canvas) {
       canvasViewport.zoomOut(Point(x2, y2));
     }
 
-    redrawCanvas(canvas.getContext('2d'), poseList);
+    redrawCanvas(canvas, poseList);
   });
 
   // Adding event handlers for toolbar icons
@@ -789,8 +787,6 @@ function onFieldLoaded(canvas) {
   });
 
   document.getElementById('import').addEventListener('click', ev => {
-    const context = canvas.getContext('2d');
-
     if (null === importFileName) return;
     if ("" === importFileName) return;
 
@@ -801,18 +797,20 @@ function onFieldLoaded(canvas) {
             .then((text) => JSON.parse(text))
             .then(importPoses)
             .then((poses) => { poseList = poses; })
-            .then(() => redrawCanvas(context, poseList));
+            .then(() => redrawCanvas(canvas, poseList));
         }
       })
   });
 }
 
-function redrawCanvas(context, poseList) {
+function redrawCanvas(canvas, poseList) {
+  const context = canvas.getContext('2d');
+
   // Clear previous transform.  Return to unit coordinate system.
   context.setTransform();
 
   // Clear screen.
-  context.rect(0, 0, context.canvas.width, context.canvas.height);
+  context.rect(0, 0, canvas.width, canvas.height);
   context.fillStyle = '#282828';
   context.fill();
 
