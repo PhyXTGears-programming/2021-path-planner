@@ -277,6 +277,14 @@ const canvasViewport = {
     this.offset = this.offset.add(offset.sub(this.panVec));
     this.panVec = offset;
   },
+
+  toViewCoord(vec) {
+    return vec.sub(this.offset).scale(1.0 / this.scale);
+  },
+
+  toUnitCoord(vec) {
+    return vec.scale(this.scale).add(this.offset);
+  },
 };
 
 const config = {
@@ -415,6 +423,8 @@ function onFieldLoaded(canvas) {
     const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
     const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
 
+    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+
     switch (toolState) {
       case Tool.NONE:
         //Do nothing
@@ -425,20 +435,20 @@ function onFieldLoaded(canvas) {
 
       case Tool.POSE:
         // Compute the canvas position of the cursor relative to the canvas.
-        placePointAt(x2, y2);
+        placePointAt(x3, y3);
         updateMoveSwitchPerms();
 
         redrawCanvas(context, poseList);
         break;
       case Tool.DELETE:
-        const nearestPose = findPoseNear(x2, y2);
+        const nearestPose = findPoseNear(x3, y3);
         const poseLocation = poseList.indexOf(nearestPose);
         poseList.splice(poseLocation, 1);
         redrawCanvas(context, poseList);
         break;
       case Tool.ACTIONS:
         let target = ev.target;
-        actionedPose = findPoseNear(x2, y2);
+        actionedPose = findPoseNear(x3, y3);
 
         if(!actionedPose) {
           break;
@@ -463,7 +473,9 @@ function onFieldLoaded(canvas) {
     const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
     const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
 
-    const mousePt = Point(x2, y2, []);
+    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+
+    const mousePt = Point(x3, y3);
 
     switch (toolState) {
       case Tool.SELECT:
@@ -497,8 +509,8 @@ function onFieldLoaded(canvas) {
             break;
 
           case SelectState.NONE:
-            hoveredPose = findPoseNear(x2, y2);
-            hoveredHandle = findHandleNear(x2, y2);
+            hoveredPose = findPoseNear(x3, y3);
+            hoveredHandle = findHandleNear(x3, y3);
 
             redrawCanvas(context, poseList);
             break;
@@ -512,15 +524,15 @@ function onFieldLoaded(canvas) {
 
       case Tool.POSE:
         // Center tool image on cursor.
-        const x3 = x2 - images[tool].width / 2;
-        const y3 = y2 - images[tool].height / 2;
+        const x4 = x2 - images[tool].width / 2;
+        const y4 = y2 - images[tool].height / 2;
 
         redrawCanvas(context, poseList);
-        drawTool(context, tool, x3, y3);
+        drawTool(context, tool, x4, y4);
         break;
 
       case Tool.DELETE:
-        hoveredPose = findPoseNear(x2, y2);
+        hoveredPose = findPoseNear(x3, y3);
         redrawCanvas(context, poseList);
 
         break;
@@ -544,7 +556,9 @@ function onFieldLoaded(canvas) {
     const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
     const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
 
-    const mousePt = Point(x2, y2, []);
+    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+
+    const mousePt = Point(x3, y3);
 
     switch (toolState) {
       case Tool.POSE:
