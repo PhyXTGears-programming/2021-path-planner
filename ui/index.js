@@ -225,6 +225,60 @@ let targetNode = null;
 let spacerTarget = null;
 const commandTypeImgs = { lowerIntake: "./images/temp-lower.png" };
 
+const ZOOM_FACTOR = 1.2;
+
+const canvasViewport = {
+  offset: Vector(0, 0),
+  scale: 1.0,
+
+  panVec: Vector(0, 0),
+
+  zoomIn(pt) {
+    this.zoom(pt, this.scale * (1.0 / ZOOM_FACTOR));
+  },
+
+  zoomOut(pt) {
+    this.zoom(pt, this.scale * (ZOOM_FACTOR / 1.0));
+  },
+
+  zoom(unitPt, scale) {
+    const prevScale = this.scale;
+
+    // ua :: Vector
+    // let ua be vector to anchor pt from origin of unit coordinate system.
+    const ua = unitPt.sub(Point(0, 0));
+
+    // ub1 :: Vector
+    // let ub1 be vector to corner of previous-scaled origin in unit coordinate system.
+    const ub1 = this.offset;
+
+    // uc :: Vector
+    // let uc be vector to corner of previous-scaled origin from anchor in unit coordinate system.
+    const uc = ub1.sub(ua);
+
+    // ucc :: Vector
+    // while uc is in unit coordinate system, it's length matches that of vector in previous-scale coordinate system.
+    // let ucc be vector uc scaled from previous-scale to unit scale.
+    const ucc = uc.scale(1.0 / prevScale);
+
+    // ub2:: Vector
+    // let ub2 be vector (in unit coordinate system) from origin to new-scale corner/origin.
+    const ub2 = ua.add(ucc.scale(scale));
+
+    this.offset = ub2;
+    this.scale = scale;
+  },
+
+  startPan(offset) {
+    this.panVec = offset;
+  },
+
+  pan(offset) {
+    this.offset = this.offset.add(offset.sub(this.panVec));
+    this.panVec = offset;
+  },
+};
+
 const config = {
   imageFiles: [
     {
@@ -344,7 +398,15 @@ function onFieldLoaded(canvas) {
   const context = canvas.getContext('2d');
   clearCanvas(context);
 
+  // Mouse buttons.
+  const LEFT_BUTTON = 0;
+  const MIDDLE_BUTTON = 1;
+
   canvas.addEventListener('click', (ev) => {
+    if (LEFT_BUTTON !== ev.button) {
+      return;
+    }
+
     const context = canvas.getContext('2d');
 
     const x = ev.clientX - canvas.offsetLeft;
@@ -387,6 +449,7 @@ function onFieldLoaded(canvas) {
     }
   });
 
+  // Mouse move handler to draw tool icon that follows mouse cursor.
   canvas.addEventListener('mousemove', (ev) => {
     const context = canvas.getContext('2d');
 
@@ -469,6 +532,9 @@ function onFieldLoaded(canvas) {
   });
 
   canvas.addEventListener('mousedown', ev => {
+    if (LEFT_BUTTON !== ev.button) {
+      return;
+    }
 
     // Compute the screen position of the cursor relative to the canvas.
     const x = ev.clientX - canvas.offsetLeft;
@@ -519,6 +585,10 @@ function onFieldLoaded(canvas) {
   });
 
   canvas.addEventListener('mouseup', ev => {
+    if (LEFT_BUTTON != ev.button) {
+      return;
+    }
+
     switch (toolState) {
       case Tool.POSE:
         break;
@@ -545,6 +615,65 @@ function onFieldLoaded(canvas) {
       default:
         break;
     }
+  });
+
+  // Mouse down handler to pan the canvas view.
+  canvas.addEventListener('mousedown', (ev) => {
+    if (MIDDLE_BUTTON !== ev.button) {
+      return;
+    }
+
+    // Compute the screen position of the cursor relative to the canvas.
+    const x = ev.clientX - canvas.offsetLeft;
+    const y = ev.clientY - canvas.clientTop;
+
+    // Compute the canvas position of the cursor relative to the canvas.
+    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
+    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+
+    const startVec = Vector(x2, y2);
+
+    canvasViewport.startPan(startVec);
+    redrawCanvas(canvas.getContext('2d'), poseList);
+  });
+
+  // Mouse move handler to pan the canvase.
+  canvas.addEventListener('mousemove', (ev) => {
+    if (MIDDLE_BUTTON !== ev.button) {
+      return;
+    }
+
+    // Compute the screen position of the cursor relative to the canvas top-left corner.
+    const x = ev.clientX - canvas.offsetLeft;
+    const y = ev.clientY - canvas.clientTop;
+
+    // Compute the canvas position of the cursor relative to the canvas top-left corner.
+    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
+    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+
+    const endVec = Vector(x2, y2);
+
+    canvasViewport.pan(endVec);
+    redrawCanvas(canvas.getContext('2d'), poseList);
+  });
+
+  // Mouse wheel to zoom the canvas view.
+  canvas.addEventListener('mousewheel', ev => {
+    // Compute the screen position of the cursor relative to the canvas top-left corner.
+    const x = ev.clientX - canvas.offsetLeft;
+    const y = ev.clientY - canvas.clientTop;
+
+    // Compute the canvas position of the cursor relative to the canvas top-left corner.
+    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
+    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+
+    if (ev.deltaY > 0) {
+      canvasViewport.zoomIn(Point(x2, y2));
+    } else if (ev.deltaY < 0) {
+      canvasViewport.zoomOut(Point(x2, y2));
+    }
+
+    redrawCanvas(canvas.getContext('2d'), poseList);
   });
 
   // Adding event handlers for toolbar icons
@@ -657,11 +786,33 @@ function onFieldLoaded(canvas) {
 }
 
 function redrawCanvas(context, poseList) {
+  // Clear previous transform.  Return to unit coordinate system.
+  context.setTransform();
+
+  // Clear screen.
+  context.rect(0, 0, context.canvas.width, context.canvas.height);
+  context.fillStyle = '#282828';
+  context.fill();
+
+  // Save canvas transform.
+  context.save();
+
+  // Reposition origin to hold zoom location under cursor.
+  // Switch to viewport coordinate system.
+  context.translate(canvasViewport.offset.x, canvasViewport.offset.y);
+  context.scale(canvasViewport.scale, canvasViewport.scale);
+
+  // Draw canvas objects in viewport coordinate system.
   clearCanvas(context);
   drawBezier(context, poseList);
   drawAllHandleLines(context, poseList);
   drawAllPoses(context, poseList);
   drawAllHandleDots(context, poseList);
+
+  // Restore canvas transform.
+  context.restore();
+
+  // Draw overlays in unit coordinate system here.
 }
 
 function clearCanvas(context) {
