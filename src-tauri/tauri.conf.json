@@ -46,7 +46,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "org.phyxtgears.frc-1720-path-planner",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
