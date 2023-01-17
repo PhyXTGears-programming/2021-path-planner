@@ -4,7 +4,12 @@
   <head>
     <style>
       * {
-        --color-work-area: rgb(153, 175, 140);
+        --color-border-command: rgb(153, 175, 140);
+
+        --color-bg-work-area-select: rgb(153, 175, 140);
+
+        --color-fg-work-area-sequence: hsl(96, 71.67%, 26.21%);
+        --color-bg-work-area-sequence: hsl(96, 100%, 67.84%);
       }
 
       body {
@@ -86,7 +91,7 @@
   .c-action-work-area {
     display:flex;
     flex-direction: row;
-    background-color:var(--color-work-area);
+    background-color:var(--color-bg-work-area-select);
   }
   .c-action-work-area__select, 
   .c-action-work-area__sequence {
@@ -94,14 +99,16 @@
   }
   .c-action-work-area__sequence {
     padding-top: 0;
-    background-color: rgb(156, 255, 91);
+    background-color: var(--color-bg-work-area-sequence);
     border: 3px solid rgb(0, 37, 11);
     min-height: 100px;
   }
 
-  .o-action-command-icon {
+  .o-action-command-icon,
+  .o-command {
     width: 24px;
     height: 24px;
+    border: thin solid var(--color-border-command);
   }
 
   .u-no-bullets {
@@ -109,40 +116,45 @@
   }
 
   .o-command-group {
-    border: 2px solid rgb(1, 0, 53);
+    border: 2px solid var(--color-fg-work-area-sequence);
+    border-top: 1.2rem solid var(--color-fg-work-area-sequence);
     background-color: transparent;
     height: auto;
-    width: calc(100% - 4px*5);
-    flex:50%;
-    padding: 2px;
-    margin: 2px;
-    margin-top: 10px;
+    width: calc(100% - 0.5rem - 2px);
+    display: flex;
+    flex-direction: column;
+
+    padding-left: 0.5rem;
     position: relative;
+  }
+
+  .c-action-work-area__sequence > .o-command-group {
+    width: calc(100% - 0.5rem - 4px);
   }
 
   .o-command-group__spacer {
     height: 10px;
-    background-color: rgb(156, 255, 91);
+    background-color: transparent;
+    border: 4px solid transparent;
+    margin: 2px;
   }
 
   .o-command-group__spacer.is-active-dropzone {
     height: 30px;
     background-color: green;
+    border-radius: 8px;
   }
 
   .o-command-label {
     position: absolute;
+    top: -2px;
     transform: translateY(-100%);
-    background-color: var(--color-work-area);
+    color: var(--color-bg-work-area-sequence);
     text-align: center;
     padding: 2px;
     font-size: 0.6em;
+    font-weight: bold;
     font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  }
-
-  .o-command {
-    width: 24px;
-    height: 24px;
   }
 
   .o-command-moveswitch {

@@ -1310,6 +1310,30 @@ function drawAllNodes(rootSomething) {
 }
 
 function drawNodes(node) {
+  /* HTML Template: Group Node
+   *
+   * <div class="o-command-group"
+   *      data-node-id="0"
+   *      data-node-name="race"
+   *      data-node-kind="group">
+   *  <span class="o-command-label">
+   *    COMMAND NAME
+   *  </span>
+   *  <div class="action-drop-zone o-command-group__spacer"
+   *       data-insert-index="0" />
+  *   <!-- Put child nodes here.
+   * </div>
+   *
+   * HTML Template: Command Node
+   * <img class="o-command"
+   *      src="./images/..."
+   *      title="move arm"
+   *      data-node-id="0"
+   *      data-node-name="move arm"
+   *      data-node-kind="command" />
+   */
+
+
   let capitalizedCommandName = node.name[0].toUpperCase() + node.name.substring(1);
 
   if (node.kind == 'group') {
