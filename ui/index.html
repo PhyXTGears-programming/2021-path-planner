@@ -184,6 +184,18 @@
     border: 2px solid greenyellow;
   }
 
+  .o-command-list {
+    list-style-type: none;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
 </style>
 
   <link rel="icon" type="image/x-icon" href="./images/fix-gear.ico">
@@ -208,7 +220,7 @@
     <div class="c-toolbar__middle">
       <div class="c-action-work-area">
         <div class="c-action-work-area__select">
-          <ul class="u-no-bullets">
+          <ul class="o-command-list">
             <li>
               <img src="images/sequential-command-group.png" class="o-action-command-icon" id="sequential" draggable="true">
             </li>
@@ -218,6 +230,8 @@
             <li>
               <img src="images/parallel-race-group.png" class="o-action-command-icon" id="race" draggable="true">
             </li>
+          </ul>
+          <ul id="robot-command-list" class="o-command-list">
             <li>
               <img src="images/command.png" class="o-action-command-icon" id="example" draggable="true">
             </li>

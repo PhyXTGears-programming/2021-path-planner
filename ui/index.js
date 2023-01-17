@@ -222,7 +222,10 @@ let idCounter = 0;
 let targetId = null;
 let targetNode = null;
 let spacerTarget = null;
-const commandTypeImgs = { lowerIntake: "./images/temp-lower.png" };
+
+// Example:
+// commandImages.set('lowerIntake', './images/temp-lower.png')
+const commandImages = new Map();
 
 const ZOOM_FACTOR = 1.2;
 
@@ -342,7 +345,7 @@ const seasonConfig = {
       loadImage('field', `./season/${year}/field.png`)
         .then(res => res.image)
     ]).then(([ config, image ]) => {
-      self.config = Object.assign(config, { image });
+      self.config = Object.assign(config, { image, year });
       console.log('season config loaded', self.config);
       return self;
     }).catch(err => {
@@ -361,6 +364,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   (new Promise((ok, err) => loadImages(ok)))
     .then(() => seasonConfig.loadSeason(FRC_SEASON))
+    .then(updateRobotCommands)
     .then(() => {
       onFieldLoaded(canvas);
 
@@ -370,6 +374,45 @@ window.addEventListener('DOMContentLoaded', () => {
     })
     .catch(err => console.error('dom content loaded', err));
 })
+
+function updateRobotCommands() {
+  if (!seasonConfig.isLoaded()) {
+    console.error('season config is not loaded. unable to update robot commands');
+    return;
+  }
+
+  const listElem = document.getElementById('robot-command-list');
+
+  // Remove current children in robot command list.
+  while (listElem.firstChild) {
+    listElem.removeChild(listElem.lastChild);
+  }
+
+  commandImages.clear();
+
+  // Add robot commands from season config.
+  for (const cmd of seasonConfig.config.robot.commands) {
+    const imgSrc = (cmd.image)
+      ? `./season/${seasonConfig.config.year}/${cmd.image}`
+      : './images/default-command-icon.png';
+
+    // Update command list GUI.
+    const imgElem = document.createElement('img');
+    imgElem.src = imgSrc;
+    imgElem.draggable = true;
+    imgElem.id = cmd.name;
+    imgElem.title = cmd.name;
+    imgElem.classList.add('o-action-command-icon');
+
+    const itemElem = document.createElement('li');
+    itemElem.appendChild(imgElem);
+
+    listElem.appendChild(itemElem);
+
+    // Add command images to image index.
+    commandImages.set(cmd.name, imgSrc);
+  }
+}
 
 // Load all images in parallel, wait for all images to finish loading,
 // then activate onDone function.
@@ -1182,8 +1225,13 @@ document.addEventListener('dragstart', (ev) => {
     "sequential",
     "parallel",
     "race",
-    "example",
   ];
+
+  if (seasonConfig.isLoaded()) {
+    // Add robot commands to drag targets.
+
+    dragTargets = dragTargets.concat(seasonConfig.config.robot.commands.map(c => c.name));
+  }
 
   if (dragTargets.includes(ev.target.id)) {
     ev.dataTransfer.setData('text/plain', ev.target.id);
@@ -1307,7 +1355,8 @@ function drawNodes(node) {
   } else {
     nodeElem = document.createElement("img");
     nodeElem.classList.add('o-command');
-    nodeElem.src = "images/command.png";
+    nodeElem.src = commandImages.get(node.name) || "images/command.png";
+    nodeElem.title = node.name;
 
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
@@ -1405,11 +1454,8 @@ document.addEventListener('drop', (ev) => {
           insertNode(createNode('group', commandName), targetNode, insertIndex);
         }
         break;
-      case 'example':
-        insertNode(createNode('command', commandName), targetNode, insertIndex);
-        break;
       default:
-        console.error("Oh no command not recognised help: ", commandName);
+        insertNode(createNode('command', commandName), targetNode, insertIndex);
     }
   }
   console.log("Updated Data structure: ", targetPoseCommands, targetNode);

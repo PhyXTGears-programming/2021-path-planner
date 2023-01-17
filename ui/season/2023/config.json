@@ -2,5 +2,33 @@
   "fieldDims": {
     "xmeters": 18.146,
     "ymeters": 11.030
+  },
+  "robot": {
+    "commands": [
+      {
+        "name": "arm: move to top peg",
+        "image": "cmd-arm-to-top-peg.png"
+      },
+      {
+        "name": "arm: move to mid peg",
+        "image": "cmd-arm-to-mid-peg.png"
+      },
+      {
+        "name": "arm: move to hybrid",
+        "image": null
+      },
+      {
+        "name": "arm: move to bumper pickup",
+        "image": null
+      },
+      {
+        "name": "grip: open",
+        "image": null
+      },
+      {
+        "name": "grip: close",
+        "image": null
+      }
+    ]
   }
 }
