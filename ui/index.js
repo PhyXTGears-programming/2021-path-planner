@@ -37,7 +37,7 @@ const Point = (x, y) => {
   return self;
 };
 
-VectorPrototype = {
+const VectorPrototype = {
   add: function (other) {
     return Vector(this.x + other.x, this.y + other.y);
   },
