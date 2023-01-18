@@ -12,7 +12,7 @@ import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
 
-import { map } from './js/util.js';
+import { map, IdGen } from './js/util.js';
 
 import Viewport from './js/viewport.js';
 
@@ -56,8 +56,7 @@ function ActionNode(kind, children, name, nodeId) {
 }
 
 function makeNode(kind, children, name) {
-  idCounter += 1;
-  return ActionNode(kind, children, name, idCounter - 1);
+  return ActionNode(kind, children, name, genId());
 }
 
 //For changing and updating MoveSwitch
@@ -174,10 +173,11 @@ let nodeUi = null; // Defines what will be placed into work area of command sequ
 let workArea = document.getElementById('c-action-work-area__sequence');
 let textNodeHolder = null; // For creating text dynamically
 let titleTop = null; // to hold the text node for the title (:
-let idCounter = 0;
 let targetId = null;
 let targetNode = null;
 let spacerTarget = null;
+
+const genId = IdGen();
 
 // Example:
 // commandImages.set('lowerIntake', './images/temp-lower.png')
