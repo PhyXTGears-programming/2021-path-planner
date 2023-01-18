@@ -7,6 +7,8 @@
 
 // import/export functionality still broken
 
+import { mouseEventToCanvasPoint } from './js/canvas-util.js';
+
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
 
@@ -353,13 +355,11 @@ function onFieldLoaded(canvas) {
       return;
     }
 
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
+    // Compute the canvas position of the cursor relative to the canvas.
+    const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
-
-    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+    // Compute field position of cursor with current zoom+pan.
+    const { x, y } = canvasViewport.toViewCoord(clickVec);
 
     switch (toolState) {
       case Tool.NONE:
@@ -371,20 +371,20 @@ function onFieldLoaded(canvas) {
 
       case Tool.POSE:
         // Compute the canvas position of the cursor relative to the canvas.
-        placePointAt(x3, y3);
+        placePointAt(x, y);
         updateMoveSwitchPerms();
 
         redrawCanvas(canvas, poseList);
         break;
       case Tool.DELETE:
-        const nearestPose = findPoseNear(x3, y3);
+        const nearestPose = findPoseNear(x, y);
         const poseLocation = poseList.indexOf(nearestPose);
         poseList.splice(poseLocation, 1);
         redrawCanvas(canvas, poseList);
         break;
       case Tool.ACTIONS:
         let target = ev.target;
-        actionedPose = findPoseNear(x3, y3);
+        actionedPose = findPoseNear(x, y);
 
         if(!actionedPose) {
           break;
@@ -399,17 +399,13 @@ function onFieldLoaded(canvas) {
   canvas.addEventListener('mousemove', (ev) => {
     const tool = toolStateToName[toolState];
 
-    // Compute the screen position of the cursor relative to the canvas.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
     // Compute the canvas position of the cursor relative to the canvas.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+    const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
-    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+    // Compute field position of cursor with current zoom+pan.
+    const { x, y } = canvasViewport.toViewCoord(clickVec);
 
-    const mousePt = Point(x3, y3);
+    const mousePt = Point(x, y);
 
     switch (toolState) {
       case Tool.SELECT:
@@ -443,8 +439,8 @@ function onFieldLoaded(canvas) {
             break;
 
           case SelectState.NONE:
-            hoveredPose = findPoseNear(x3, y3);
-            hoveredHandle = findHandleNear(x3, y3);
+            hoveredPose = findPoseNear(x, y);
+            hoveredHandle = findHandleNear(x, y);
 
             redrawCanvas(canvas, poseList);
             break;
@@ -458,17 +454,17 @@ function onFieldLoaded(canvas) {
 
       case Tool.POSE:
         // Center tool image on cursor.
-        const x4 = x2 - images[tool].width / 2;
-        const y4 = y2 - images[tool].height / 2;
+        const tx = clickVec.x - images[tool].width / 2;
+        const ty = clickVec.y - images[tool].height / 2;
 
         const context = canvas.getContext('2d');
 
         redrawCanvas(canvas, poseList);
-        drawTool(context, tool, x4, y4);
+        drawTool(context, tool, tx, ty);
         break;
 
       case Tool.DELETE:
-        hoveredPose = findPoseNear(x3, y3);
+        hoveredPose = findPoseNear(x, y);
         redrawCanvas(canvas, poseList);
 
         break;
@@ -484,17 +480,13 @@ function onFieldLoaded(canvas) {
       return;
     }
 
-    // Compute the screen position of the cursor relative to the canvas.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
     // Compute the canvas position of the cursor relative to the canvas.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+    const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
-    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+    // Compute field position of cursor with current zoom+pan.
+    const { x, y } = canvasViewport.toViewCoord(clickVec);
 
-    const mousePt = Point(x3, y3);
+    const mousePt = Point(x, y);
 
     switch (toolState) {
       case Tool.POSE:
@@ -573,15 +565,8 @@ function onFieldLoaded(canvas) {
       return;
     }
 
-    // Compute the screen position of the cursor relative to the canvas.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
     // Compute the canvas position of the cursor relative to the canvas.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
-
-    const startVec = Vector(x2, y2);
+    const startVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
     canvasViewport.startPan(startVec);
     redrawCanvas(canvas, poseList);
@@ -593,15 +578,8 @@ function onFieldLoaded(canvas) {
       return;
     }
 
-    // Compute the screen position of the cursor relative to the canvas top-left corner.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
-    // Compute the canvas position of the cursor relative to the canvas top-left corner.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
-
-    const endVec = Vector(x2, y2);
+    // Compute the canvas position of the cursor relative to the canvas.
+    const endVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
     canvasViewport.pan(endVec);
     redrawCanvas(canvas, poseList);
@@ -609,18 +587,13 @@ function onFieldLoaded(canvas) {
 
   // Mouse wheel to zoom the canvas view.
   canvas.addEventListener('mousewheel', ev => {
-    // Compute the screen position of the cursor relative to the canvas top-left corner.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
-    // Compute the canvas position of the cursor relative to the canvas top-left corner.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+    // Compute the canvas position of the cursor relative to the canvas.
+    const clickPt = mouseEventToCanvasPoint(ev, canvas);
 
     if (ev.deltaY > 0) {
-      canvasViewport.zoomIn(Point(x2, y2));
+      canvasViewport.zoomIn(clickPt);
     } else if (ev.deltaY < 0) {
-      canvasViewport.zoomOut(Point(x2, y2));
+      canvasViewport.zoomOut(clickPt);
     }
 
     redrawCanvas(canvas, poseList);

@@ -5,6 +5,10 @@ const PointPrototype = {
     return Point(this.x + vec.x, this.y + vec.y);
   },
 
+  vecFromOrigin: function () {
+    return Vector(this.x, this.y);
+  },
+
   sub: function (other) {
     return Vector(this.x - other.x, this.y - other.y);
   },
