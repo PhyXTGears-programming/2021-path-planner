@@ -38,11 +38,11 @@ const Pose = (point, enterHandle, exitHandle, options) => {
   };
 };
 
-function PoseCommandGroup() {
+function PoseCommandGroup (id) {
   return {
     moveConditionCanSwitch: false,
     moveCondition: "halt",
-    rootNode: makeNode("group", [], 'sequential'),
+    rootNode: ActionNode("group", [], 'sequential', id),
   }
 }
 
@@ -53,10 +53,6 @@ function ActionNode(kind, children, name, nodeId) {
     name,
     nodeId,
   };
-}
-
-function makeNode(kind, children, name) {
-  return ActionNode(kind, children, name, genId());
 }
 
 //For changing and updating MoveSwitch
@@ -904,13 +900,13 @@ function placePointAt(x, y) {
   let new_pose;
 
   if (0 == poseList.length) {
-    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), {commands: PoseCommandGroup()});
+    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), {commands: PoseCommandGroup(genId())});
   } else {
     const last_point = poseList.slice(-1)[0].point;
     const enterVec = last_point.sub(new_point).unit().scale(100);
     const exitVec = enterVec.scale(-1);
 
-    new_pose = Pose(new_point, enterVec, exitVec, {commands: PoseCommandGroup()});
+    new_pose = Pose(new_point, enterVec, exitVec, {commands: PoseCommandGroup(genId())});
   }
 
   poseList.push(new_pose)
@@ -1032,7 +1028,7 @@ function importPoses(data) {
   let pt1 = data[0][0];
   let cp1 = data[0][1];
 
-  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1), {commands:PoseCommandGroup()});
+  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1), {commands:PoseCommandGroup(genId())});
   poseList.push(pose);
 
   pt1 = data[0][3];
@@ -1041,7 +1037,7 @@ function importPoses(data) {
   for (let segment of data.slice(1)) {
     const cp2 = segment[1];
 
-    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1), {commands:PoseCommandGroup()});
+    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1), {commands:PoseCommandGroup(genId())});
 
     poseList.push(pose);
     pt1 = segment[3];
@@ -1051,7 +1047,7 @@ function importPoses(data) {
   let segment = data.slice(-1)[0];
   pt1 = segment[3];
   cp1 = segment[2];
-  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), {commands:PoseCommandGroup()});
+  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), {commands:PoseCommandGroup(genId())});
 
   poseList.push(pose);
 
@@ -1248,7 +1244,7 @@ function drawNodes(node) {
 }
 
 function createNode(type, commandName) {
-  return makeNode(type, [], commandName);
+  return ActionNode(type, [], commandName, genId());
 }
 
 function attachNode(child, parent) {
