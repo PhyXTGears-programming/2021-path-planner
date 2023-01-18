@@ -806,9 +806,21 @@ function drawAllHandleLines(context, poseList) {
     return;
   }
 
-  for (let pose of poseList.poses) {
+  const first = poseList.poses.slice(0, 1);
+  const inner = poseList.poses.slice(1, -1);
+  const last  = poseList.poses.slice(-1);
+
+  for (const pose of first) {
+    drawHandleLine(context, pose.exitHandle, pose.point);
+  }
+
+  for (const pose of inner) {
     drawHandleLine(context, pose.enterHandle, pose.point);
     drawHandleLine(context, pose.exitHandle, pose.point);
+  }
+
+  for (const pose of last) {
+    drawHandleLine(context, pose.enterHandle, pose.point);
   }
 }
 
@@ -817,7 +829,7 @@ function drawAllHandleDots(context, poseList) {
     return;
   }
 
-  for (let pose of poseList.poses) {
+  const drawEnterDot = pose => {
     const enterColor = isHandleSelected(pose.enterHandle)
       ? colors.handle.enter.selected.color
       : colors.handle.enter.color;
@@ -827,7 +839,9 @@ function drawAllHandleDots(context, poseList) {
       : 1.0;
 
     drawHandleDot(context, pose.enterHandle, pose.point, enterColor, enterScale);
+  };
 
+  const drawExitDot = pose => {
     const exitColor = isHandleSelected(pose.exitHandle)
       ? colors.handle.exit.selected.color
       : colors.handle.exit.color;
@@ -837,6 +851,23 @@ function drawAllHandleDots(context, poseList) {
       : 1.0;
 
     drawHandleDot(context, pose.exitHandle, pose.point, exitColor, exitScale);
+  };
+
+  const first = poseList.poses.slice(0, 1);
+  const inner = poseList.poses.slice(1, -1);
+  const last  = poseList.poses.slice(-1);
+
+  for (const pose of first) {
+    drawExitDot(pose);
+  }
+
+  for (const pose of inner) {
+    drawEnterDot(pose);
+    drawExitDot(pose);
+  }
+
+  for (const pose of last) {
+    drawEnterDot(pose);
   }
 }
 
