@@ -31,12 +31,12 @@ const PoseListPrototype = {
     }
 
     const lastPose = this.poses[this.length - 1];
-    lastPose.options.commands.moveConditionCanSwitch = false;
+    lastPose.commands.moveConditionCanSwitch = false;
 
     const rest = this.poses.slice(0, -1);
 
     for (const pose of rest) {
-      pose.options.commands.moveConditionCanSwitch = true;
+      pose.commands.moveConditionCanSwitch = true;
     }
   },
 
@@ -51,11 +51,11 @@ export const PoseList = (poses = []) => {
 
 const PosePrototype = {
   canSwitch () {
-    return this.options.commands.moveConditionCanSwitch;
+    return this.commands.moveConditionCanSwitch;
   },
 
   toggleMoveCondition () {
-    const sequence = this.options.commands;
+    const sequence = this.commands;
     if (sequence.moveConditionCanSwitch) {
       if ('go' == commands.moveCondition) {
         sequence.moveCondition = 'halt';
@@ -68,11 +68,12 @@ const PosePrototype = {
 
 export const Pose = (point, enterHandle, exitHandle, options) => {
   const self = Object.create(PosePrototype);
+  const { commands } = options;
   return Object.assign(self, {
     point,
     enterHandle,
     exitHandle,
-    options,
+    commands,
   });
 };
 
@@ -139,8 +140,8 @@ export const exportPoses = (poseList, fieldDims) => {
       payload.segments.push(segment);
 
       const waypoint = {
-        commands: pose1.options.commands.rootNode,
-        shallHalt: pose1.options.commands.moveCondition === 'halt',
+        commands: pose1.commands.rootNode,
+        shallHalt: pose1.commands.moveCondition === 'halt',
       };
 
       payload.waypoints.push(waypoint);

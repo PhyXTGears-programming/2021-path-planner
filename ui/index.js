@@ -201,7 +201,7 @@ window.addEventListener('DOMContentLoaded', () => {
       onFieldLoaded(canvas);
 
       if(actionedPose) {
-        drawAllNodes(actionedPose.options.commands);
+        drawAllNodes(actionedPose.commands);
       }
     })
     .catch(err => console.error('dom content loaded', err));
@@ -331,7 +331,7 @@ function onFieldLoaded(canvas) {
           break;
         }
 
-        drawAllNodes(actionedPose.options.commands);
+        drawAllNodes(actionedPose.commands);
         break;
     }
   });
@@ -965,7 +965,7 @@ function drawAllNodes(rootSomething) {
   const { moveCondition, rootNode } = rootSomething;
 
   const moveConditionContinueClarification = document.createElement("p");
-  if(actionedPose.options.commands.moveConditionCanSwitch) {
+  if(actionedPose.commands.moveConditionCanSwitch) {
     if(moveCondition == "halt") {
       moveConditionContinueClarification.textContent = "Go";
       moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
@@ -983,7 +983,7 @@ function drawAllNodes(rootSomething) {
     } else {
       alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
     }
-    drawAllNodes(actionedPose.options.commands);
+    drawAllNodes(actionedPose.commands);
   });
 
   const childList = Array.prototype.slice.call(rootElement.children, 0);
@@ -1143,7 +1143,7 @@ function getCommandImg(commandName) {
 
 document.addEventListener('drop', ev => {
 
-  const targetPoseCommands = actionedPose.options.commands;
+  const targetPoseCommands = actionedPose.commands;
   let target = ev.target;
 
   if(spacerTarget) {
@@ -1152,7 +1152,7 @@ document.addEventListener('drop', ev => {
 
   if (ev.target.classList.contains('action-drop-zone')) {
 
-    const targetPoseCommands = actionedPose.options.commands;
+    const targetPoseCommands = actionedPose.commands;
 
     let insertIndex = 0;
 
