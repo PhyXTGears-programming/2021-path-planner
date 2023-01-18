@@ -14,6 +14,10 @@ import Vector from './js/geom/vector.js';
 
 import { map, IdGen } from './js/util.js';
 
+import {
+  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList
+} from './js/pose.js';
+
 import Viewport from './js/viewport.js';
 
 const { open, save } = window.__TAURI__.dialog;
@@ -23,64 +27,6 @@ const { documentDir } = window.__TAURI__.path;
 // Custom types
 
 const FRC_SEASON = "2023";
-
-const Payload = () => ({
-  segments: [],
-  waypoints: [],
-});
-
-const Pose = (point, enterHandle, exitHandle, options) => {
-  return {
-    point,
-    enterHandle,
-    exitHandle,
-    options,
-  };
-};
-
-function PoseCommandGroup (id) {
-  return {
-    moveConditionCanSwitch: false,
-    moveCondition: "halt",
-    rootNode: ActionNode("group", [], 'sequential', id),
-  }
-}
-
-function ActionNode(kind, children, name, nodeId) {
-  return {
-    kind,
-    children,
-    name,
-    nodeId,
-  };
-}
-
-//For changing and updating MoveSwitch
-
-function updateMoveSwitchPerms() {
-  for(let pose of poseList) {
-    if(poseList.indexOf(pose) < poseList.length - 1) {
-      pose.options.commands.moveConditionCanSwitch = true;
-    } else {
-      pose.options.commands.moveConditionCanSwitch = false;
-    }
-  }
-}
-
-function switchMoveSwitch() {
-  const commands = actionedPose.options.commands;
-  if (commands.moveConditionCanSwitch) {
-    if(commands.moveCondition == "go") {
-      commands.moveCondition = "halt";
-    } else if (commands.moveCondition == "halt") {
-      commands.moveCondition = "go";
-    }
-  }
-  else {
-    alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
-  }
-  drawAllNodes(commands);
-}
 
 // Constants
 
@@ -128,25 +74,13 @@ const toolStateToName = {
   [Tool.ACTIONS]: 'actions',
 };
 
-const actionsCommandGroups = {
-  SEQUENTIAL: 0,
-  PARALLEL: 1,
-  RACE: 2,
-};
-
-const commandGroupsToName = {
-  [actionsCommandGroups.SEQUENTIAL]: 'sequential',
-  [actionsCommandGroups.PARALLEL]: 'parallel',
-  [actionsCommandGroups.RACE]: 'race',
-};
-
 // Global variables
 
 // const frog = {attributes : ["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
 
 let toolState = Tool.NONE;
 const images = {};
-let poseList = [];
+let poseList = PoseList();
 
 let hoveredPose = null;
 let movePose = null;
@@ -214,6 +148,18 @@ const config = {
 
 const seasonConfig = {
   isLoaded() { return null !== this.config; },
+
+  get fieldDims() {
+    if (!this.isLoaded()) {
+      return null;
+    }
+
+    return {
+      ...this.config.fieldDims,
+      xPixels: this.config.image.width,
+      yPixels: this.config.image.height,
+    };
+  },
 
   loadSeason(year) {
     const self = this;
@@ -368,14 +314,13 @@ function onFieldLoaded(canvas) {
       case Tool.POSE:
         // Compute the canvas position of the cursor relative to the canvas.
         placePointAt(x, y);
-        updateMoveSwitchPerms();
+        poseList.updateMoveSwitchPerms();
 
         redrawCanvas(canvas, poseList);
         break;
       case Tool.DELETE:
         const nearestPose = findPoseNear(x, y);
-        const poseLocation = poseList.indexOf(nearestPose);
-        poseList.splice(poseLocation, 1);
+        poseList.deletePose(nearestPose);
         redrawCanvas(canvas, poseList);
         break;
       case Tool.ACTIONS:
@@ -651,7 +596,7 @@ function onFieldLoaded(canvas) {
   });
 
   document.getElementById('export').addEventListener('click', ev => {
-    const payload = exportPoses(poseList);
+    const payload = exportPoses(poseList, seasonConfig.fieldDims);
     const data = JSON.stringify(payload);
 
     console.log('export data', payload);
@@ -695,8 +640,8 @@ function onFieldLoaded(canvas) {
         if (hasFile) {
           readTextFile(importFileName)
             .then((text) => JSON.parse(text))
-            .then(importPoses)
-            .then((poses) => { poseList = poses; })
+            .then((data) => importPoses(data, seasonConfig.fieldDims, genId))
+            .then((p) => { poseList = p; })
             .then(() => redrawCanvas(canvas, poseList));
         }
       })
@@ -758,9 +703,9 @@ function drawPose(context, pose, image) {
 function drawAllPoses(context, poseList) {
   if (poseList.length < 1) return;
 
-  const first = poseList.slice(0, 1);
-  const inner = poseList.slice(1, -1);
-  const last = poseList.slice(-1);
+  const first = poseList.poses.slice(0, 1);
+  const inner = poseList.poses.slice(1, -1);
+  const last = poseList.poses.slice(-1);
 
   drawPose(context, first[0], images[toolStateToName[Tool.POSE]]);
 
@@ -780,14 +725,14 @@ function drawBezier(context, poseList) {
     return;
   }
 
-  let pose1 = poseList[0];
+  let pose1 = poseList.poses[0];
 
   context.save();
   context.lineWidth = 2.0;
   context.beginPath();
   context.moveTo(pose1.point.x, pose1.point.y);
 
-  for (let pose2 of poseList.slice(1)) {
+  for (let pose2 of poseList.poses.slice(1)) {
     const exitPt = pose1.point.addVec(pose1.exitHandle);
     const enterPt = pose2.point.addVec(pose2.enterHandle);
 
@@ -861,7 +806,7 @@ function drawAllHandleLines(context, poseList) {
     return;
   }
 
-  for (let pose of poseList) {
+  for (let pose of poseList.poses) {
     drawHandleLine(context, pose.enterHandle, pose.point);
     drawHandleLine(context, pose.exitHandle, pose.point);
   }
@@ -872,7 +817,7 @@ function drawAllHandleDots(context, poseList) {
     return;
   }
 
-  for (let pose of poseList) {
+  for (let pose of poseList.poses) {
     const enterColor = isHandleSelected(pose.enterHandle)
       ? colors.handle.enter.selected.color
       : colors.handle.enter.color;
@@ -902,18 +847,18 @@ function placePointAt(x, y) {
   if (0 == poseList.length) {
     new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), {commands: PoseCommandGroup(genId())});
   } else {
-    const last_point = poseList.slice(-1)[0].point;
+    const last_point = poseList.poses.slice(-1)[0].point;
     const enterVec = last_point.sub(new_point).unit().scale(100);
     const exitVec = enterVec.scale(-1);
 
     new_pose = Pose(new_point, enterVec, exitVec, {commands: PoseCommandGroup(genId())});
   }
 
-  poseList.push(new_pose)
+  poseList.appendPose(new_pose)
 }
 
 function findPoseNear(x, y) {
-  for (let pose of poseList) {
+  for (let pose of poseList.poses) {
     const distance = Math.pow(x - pose.point.x, 2) + Math.pow(y - pose.point.y, 2);
 
     if (distance < 450) {
@@ -925,7 +870,7 @@ function findPoseNear(x, y) {
 }
 
 function findHandleNear(x, y) {
-  for (let pose of poseList) {
+  for (let pose of poseList.poses) {
     let pt = pose.point.addVec(pose.enterHandle);
     let distance = Math.pow(x - pt.x, 2) + Math.pow(y - pt.y, 2);
 
@@ -947,111 +892,6 @@ function findHandleNear(x, y) {
   }
 
   return null;
-}
-
-function exportPoses(poseList) {
-  /** Export file format
-   *
-   *  Point :: List Float Float
-   *  Segment :: Tuple Point Point Point Point
-   *  Waypoint :: { commands  :: List ??
-   *              , shallHalt :: Boolean
-   *              }
-   *
-   *  Payload :: { segments :: List Segment
-   *             , waypoints :: List Waypoint
-   *             }
-   */
-
-  const payload = Payload();
-
-  if (2 > poseList.length) {
-    return payload;
-  } else {
-    //const result = [];
-    const pointToArray = pt => [pt.x, pt.y];
-    const canvasToMeters = point => Point(
-      point.x / images.field.width * config.fieldDims.xmeters,
-      (1 - (point.y / images.field.height)) * config.fieldDims.ymeters,
-    );
-
-    let pose1 = poseList[0];
-    for (let pose2 of poseList.slice(1)) {
-      const segment = [
-        pose1.point,
-        pose1.point.addVec(pose1.exitHandle),
-        pose2.point.addVec(pose2.enterHandle),
-        pose2.point,
-      ].map(canvasToMeters)
-       .map(pointToArray);
-
-      payload.segments.push(segment);
-
-      const waypoint = {
-        commands: pose1.options.commands.rootNode,
-        shallHalt: pose1.options.commands.moveCondition === 'halt',
-      };
-
-      payload.waypoints.push(waypoint);
-
-      pose1 = pose2;
-    }
-
-    return payload;
-  }
-}
-
-function importPoses(data) {
-  const poseList = [];
-
-  if (!seasonConfig.isLoaded()) {
-    console.error('no season config loaded. unable to import');
-    return postList;
-  }
-
-  if (data.length < 1) {
-    return poseList;
-  }
-
-  const metersToCanvas = point => Point(
-    (point.x * images.field.width / seasonConfig.config.fieldDims.xmeters),
-    (point.y / seasonConfig.config.fieldDims.ymeters - 1) * -1 * images.field.height,
-    []
-  );
-
-  const toPoint = (p) => Point(p[0], p[1]);
-
-  data = data.map((segment) =>
-    segment.map(toPoint).map(metersToCanvas)
-  );
-
-  let pt1 = data[0][0];
-  let cp1 = data[0][1];
-
-  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1), {commands:PoseCommandGroup(genId())});
-  poseList.push(pose);
-
-  pt1 = data[0][3];
-  cp1 = data[0][2];
-
-  for (let segment of data.slice(1)) {
-    const cp2 = segment[1];
-
-    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1), {commands:PoseCommandGroup(genId())});
-
-    poseList.push(pose);
-    pt1 = segment[3];
-    cp1 = segment[2];
-  }
-
-  let segment = data.slice(-1)[0];
-  pt1 = segment[3];
-  cp1 = segment[2];
-  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), {commands:PoseCommandGroup(genId())});
-
-  poseList.push(pose);
-
-  return poseList;
 }
 
 function findNode(passedNode, idTarget) {
@@ -1138,7 +978,12 @@ function drawAllNodes(rootSomething) {
   const moveConditionSwitch = document.createElement("div");
   moveConditionSwitch.classList.add('o-command-moveswitch');
   moveConditionSwitch.addEventListener('click', () => {
-    switchMoveSwitch();
+    if (actionedPose.canSwitch()) {
+      actionedPose.toggleMoveCondition();
+    } else {
+      alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
+    }
+    drawAllNodes(actionedPose.options.commands);
   });
 
   const childList = Array.prototype.slice.call(rootElement.children, 0);
