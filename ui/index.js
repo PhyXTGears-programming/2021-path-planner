@@ -7,6 +7,19 @@
 
 // import/export functionality still broken
 
+import { mouseEventToCanvasPoint } from './js/canvas-util.js';
+
+import Point from './js/geom/point.js';
+import Vector from './js/geom/vector.js';
+
+import { map, IdGen } from './js/util.js';
+
+import {
+  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList
+} from './js/pose.js';
+
+import Viewport from './js/viewport.js';
+
 const { open, save } = window.__TAURI__.dialog;
 const { exists, readTextFile, writeTextFile } = window.__TAURI__.fs;
 const { documentDir } = window.__TAURI__.path;
@@ -14,122 +27,6 @@ const { documentDir } = window.__TAURI__.path;
 // Custom types
 
 const FRC_SEASON = "2023";
-
-const Payload = () => ({
-  segments: [],
-  waypoints: [],
-});
-
-const PointPrototype = {
-  addVec: function (vec) {
-    return Point(this.x + vec.x, this.y + vec.y);
-  },
-
-  sub: function (other) {
-    return Vector(this.x - other.x, this.y - other.y);
-  },
-};
-
-const Point = (x, y) => {
-  const self = Object.create(PointPrototype);
-  self.x = x;
-  self.y = y;
-  return self;
-};
-
-VectorPrototype = {
-  add: function (other) {
-    return Vector(this.x + other.x, this.y + other.y);
-  },
-
-  sub: function (other) {
-    return Vector(this.x - other.x, this.y - other.y);
-  },
-
-  scale: function (factor) {
-    return Vector(this.x * factor, this.y * factor);
-  },
-
-  length: function () {
-    return Math.sqrt(this.x * this.x + this.y * this.y);
-  },
-
-  unit: function () {
-    const length = this.length();
-
-    // If near zero, return a zero vector.
-    if (0.001 > length) {
-      return Vector(0, 0);
-    } else {
-      return this.scale(1 / this.length());
-    }
-  },
-};
-
-const Vector = (x, y) => {
-  const self = Object.create(VectorPrototype);
-  self.x = x;
-  self.y = y;
-  return self;
-};
-
-const Pose = (point, enterHandle, exitHandle, options) => {
-  return {
-    point,
-    enterHandle,
-    exitHandle,
-    options,
-  };
-};
-
-function PoseCommandGroup() {
-  return {
-    moveConditionCanSwitch: false,
-    moveCondition: "halt",
-    rootNode: makeNode("group", [], 'sequential'),
-  }
-}
-
-function ActionNode(kind, children, name, nodeId) {
-  return {
-    kind,
-    children,
-    name,
-    nodeId,
-  };
-}
-
-function makeNode(kind, children, name) {
-  idCounter += 1;
-  return ActionNode(kind, children, name, idCounter - 1);
-}
-
-//For changing and updating MoveSwitch
-
-function updateMoveSwitchPerms() {
-  for(let pose of poseList) {
-    if(poseList.indexOf(pose) < poseList.length - 1) {
-      pose.options.commands.moveConditionCanSwitch = true;
-    } else {
-      pose.options.commands.moveConditionCanSwitch = false;
-    }
-  }
-}
-
-function switchMoveSwitch() {
-  const commands = actionedPose.options.commands;
-  if (commands.moveConditionCanSwitch) {
-    if(commands.moveCondition == "go") {
-      commands.moveCondition = "halt";
-    } else if (commands.moveCondition == "halt") {
-      commands.moveCondition = "go";
-    }
-  }
-  else {
-    alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
-  }
-  drawAllNodes(commands);
-}
 
 // Constants
 
@@ -177,25 +74,13 @@ const toolStateToName = {
   [Tool.ACTIONS]: 'actions',
 };
 
-const actionsCommandGroups = {
-  SEQUENTIAL: 0,
-  PARALLEL: 1,
-  RACE: 2,
-};
-
-const commandGroupsToName = {
-  [actionsCommandGroups.SEQUENTIAL]: 'sequential',
-  [actionsCommandGroups.PARALLEL]: 'parallel',
-  [actionsCommandGroups.RACE]: 'race',
-};
-
 // Global variables
 
 // const frog = {attributes : ["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
 
 let toolState = Tool.NONE;
 const images = {};
-let poseList = [];
+let poseList = PoseList();
 
 let hoveredPose = null;
 let movePose = null;
@@ -218,10 +103,11 @@ let nodeUi = null; // Defines what will be placed into work area of command sequ
 let workArea = document.getElementById('c-action-work-area__sequence');
 let textNodeHolder = null; // For creating text dynamically
 let titleTop = null; // to hold the text node for the title (:
-let idCounter = 0;
 let targetId = null;
 let targetNode = null;
 let spacerTarget = null;
+
+const genId = IdGen();
 
 // Example:
 // commandImages.set('lowerIntake', './images/temp-lower.png')
@@ -229,73 +115,7 @@ const commandImages = new Map();
 
 const ZOOM_FACTOR = 1.2;
 
-const canvasViewport = {
-  offset: Vector(0, 0),
-  scale: 1.0,
-
-  panVec: Vector(0, 0),
-
-  zoomIn(pt) {
-    this.zoom(pt, this.scale * (1.0 / ZOOM_FACTOR));
-  },
-
-  zoomOut(pt) {
-    this.zoom(pt, this.scale * (ZOOM_FACTOR / 1.0));
-  },
-
-  zoom(unitPt, scale) {
-    const prevScale = this.scale;
-
-    // ua :: Vector
-    // let ua be vector to anchor pt from origin of unit coordinate system.
-    const ua = unitPt.sub(Point(0, 0));
-
-    // ub1 :: Vector
-    // let ub1 be vector to corner of previous-scaled origin in unit coordinate system.
-    const ub1 = this.offset;
-
-    // uc :: Vector
-    // let uc be vector to corner of previous-scaled origin from anchor in unit coordinate system.
-    const uc = ub1.sub(ua);
-
-    // ucc :: Vector
-    // while uc is in unit coordinate system, it's length matches that of vector in previous-scale coordinate system.
-    // let ucc be vector uc scaled from previous-scale to unit scale.
-    const ucc = uc.scale(1.0 / prevScale);
-
-    // ub2:: Vector
-    // let ub2 be vector (in unit coordinate system) from origin to new-scale corner/origin.
-    const ub2 = ua.add(ucc.scale(scale));
-
-    this.offset = ub2;
-    this.scale = scale;
-  },
-
-  startPan(offset) {
-    this.panVec = offset;
-  },
-
-  pan(offset) {
-    this.offset = this.offset.add(offset.sub(this.panVec));
-    this.panVec = offset;
-  },
-
-  resetZoom() {
-    this.zoom = 1.0;
-  },
-
-  resetPan() {
-    this.offset = Vector(0.0, 0.0);
-  },
-
-  toViewCoord(vec) {
-    return vec.sub(this.offset).scale(1.0 / this.scale);
-  },
-
-  toUnitCoord(vec) {
-    return vec.scale(this.scale).add(this.offset);
-  },
-};
+const canvasViewport = Viewport(ZOOM_FACTOR);
 
 const config = {
   imageFiles: [
@@ -327,9 +147,21 @@ const config = {
 };
 
 const seasonConfig = {
-  isLoaded() { return null !== this.config; },
+  isLoaded () { return null !== this.config; },
 
-  loadSeason(year) {
+  get fieldDims () {
+    if (!this.isLoaded()) {
+      return null;
+    }
+
+    return {
+      ...this.config.fieldDims,
+      xPixels: this.config.image.width,
+      yPixels: this.config.image.height,
+    };
+  },
+
+  loadSeason (year) {
     const self = this;
 
     return Promise.all([
@@ -369,7 +201,7 @@ window.addEventListener('DOMContentLoaded', () => {
       onFieldLoaded(canvas);
 
       if(actionedPose) {
-        drawAllNodes(actionedPose.options.commands);
+        drawAllNodes(actionedPose.commands);
       }
     })
     .catch(err => console.error('dom content loaded', err));
@@ -419,7 +251,7 @@ function updateRobotCommands() {
 function loadImages(onDone) {
   let loadCount = config.imageFiles.length;
 
-  const onImageLoaded = (ev) => {
+  const onImageLoaded = ev => {
     loadCount -= 1;
 
     if (0 == loadCount) {
@@ -460,18 +292,16 @@ function onFieldLoaded(canvas) {
   const LEFT_BUTTON = 0;
   const MIDDLE_BUTTON = 1;
 
-  canvas.addEventListener('click', (ev) => {
+  canvas.addEventListener('click', ev => {
     if (LEFT_BUTTON !== ev.button) {
       return;
     }
 
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
+    // Compute the canvas position of the cursor relative to the canvas.
+    const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
-
-    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+    // Compute field position of cursor with current zoom+pan.
+    const { x, y } = canvasViewport.toViewCoord(clickVec);
 
     switch (toolState) {
       case Tool.NONE:
@@ -483,45 +313,40 @@ function onFieldLoaded(canvas) {
 
       case Tool.POSE:
         // Compute the canvas position of the cursor relative to the canvas.
-        placePointAt(x3, y3);
-        updateMoveSwitchPerms();
+        placePointAt(x, y);
+        poseList.updateMoveSwitchPerms();
 
         redrawCanvas(canvas, poseList);
         break;
       case Tool.DELETE:
-        const nearestPose = findPoseNear(x3, y3);
-        const poseLocation = poseList.indexOf(nearestPose);
-        poseList.splice(poseLocation, 1);
+        const nearestPose = findPoseNear(x, y);
+        poseList.deletePose(nearestPose);
         redrawCanvas(canvas, poseList);
         break;
       case Tool.ACTIONS:
         let target = ev.target;
-        actionedPose = findPoseNear(x3, y3);
+        actionedPose = findPoseNear(x, y);
 
         if(!actionedPose) {
           break;
         }
 
-        drawAllNodes(actionedPose.options.commands);
+        drawAllNodes(actionedPose.commands);
         break;
     }
   });
 
   // Mouse move handler to draw tool icon that follows mouse cursor.
-  canvas.addEventListener('mousemove', (ev) => {
+  canvas.addEventListener('mousemove', ev => {
     const tool = toolStateToName[toolState];
 
-    // Compute the screen position of the cursor relative to the canvas.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
     // Compute the canvas position of the cursor relative to the canvas.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+    const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
-    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+    // Compute field position of cursor with current zoom+pan.
+    const { x, y } = canvasViewport.toViewCoord(clickVec);
 
-    const mousePt = Point(x3, y3);
+    const mousePt = Point(x, y);
 
     switch (toolState) {
       case Tool.SELECT:
@@ -555,8 +380,8 @@ function onFieldLoaded(canvas) {
             break;
 
           case SelectState.NONE:
-            hoveredPose = findPoseNear(x3, y3);
-            hoveredHandle = findHandleNear(x3, y3);
+            hoveredPose = findPoseNear(x, y);
+            hoveredHandle = findHandleNear(x, y);
 
             redrawCanvas(canvas, poseList);
             break;
@@ -570,17 +395,17 @@ function onFieldLoaded(canvas) {
 
       case Tool.POSE:
         // Center tool image on cursor.
-        const x4 = x2 - images[tool].width / 2;
-        const y4 = y2 - images[tool].height / 2;
+        const tx = clickVec.x - images[tool].width / 2;
+        const ty = clickVec.y - images[tool].height / 2;
 
         const context = canvas.getContext('2d');
 
         redrawCanvas(canvas, poseList);
-        drawTool(context, tool, x4, y4);
+        drawTool(context, tool, tx, ty);
         break;
 
       case Tool.DELETE:
-        hoveredPose = findPoseNear(x3, y3);
+        hoveredPose = findPoseNear(x, y);
         redrawCanvas(canvas, poseList);
 
         break;
@@ -596,17 +421,13 @@ function onFieldLoaded(canvas) {
       return;
     }
 
-    // Compute the screen position of the cursor relative to the canvas.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
     // Compute the canvas position of the cursor relative to the canvas.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+    const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
-    const { x: x3, y: y3 } = canvasViewport.toViewCoord(Vector(x2, y2));
+    // Compute field position of cursor with current zoom+pan.
+    const { x, y } = canvasViewport.toViewCoord(clickVec);
 
-    const mousePt = Point(x3, y3);
+    const mousePt = Point(x, y);
 
     switch (toolState) {
       case Tool.POSE:
@@ -680,40 +501,26 @@ function onFieldLoaded(canvas) {
   });
 
   // Mouse down handler to pan the canvas view.
-  canvas.addEventListener('mousedown', (ev) => {
+  canvas.addEventListener('mousedown', ev => {
     if (MIDDLE_BUTTON !== ev.button) {
       return;
     }
 
-    // Compute the screen position of the cursor relative to the canvas.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
     // Compute the canvas position of the cursor relative to the canvas.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
-
-    const startVec = Vector(x2, y2);
+    const startVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
     canvasViewport.startPan(startVec);
     redrawCanvas(canvas, poseList);
   });
 
   // Mouse move handler to pan the canvase.
-  canvas.addEventListener('mousemove', (ev) => {
+  canvas.addEventListener('mousemove', ev => {
     if (MIDDLE_BUTTON !== ev.button) {
       return;
     }
 
-    // Compute the screen position of the cursor relative to the canvas top-left corner.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
-    // Compute the canvas position of the cursor relative to the canvas top-left corner.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
-
-    const endVec = Vector(x2, y2);
+    // Compute the canvas position of the cursor relative to the canvas.
+    const endVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
     canvasViewport.pan(endVec);
     redrawCanvas(canvas, poseList);
@@ -721,18 +528,13 @@ function onFieldLoaded(canvas) {
 
   // Mouse wheel to zoom the canvas view.
   canvas.addEventListener('mousewheel', ev => {
-    // Compute the screen position of the cursor relative to the canvas top-left corner.
-    const x = ev.clientX - canvas.offsetLeft;
-    const y = ev.clientY - canvas.clientTop;
-
-    // Compute the canvas position of the cursor relative to the canvas top-left corner.
-    const x2 = map(x, 0, canvas.offsetWidth, 0, canvas.width);
-    const y2 = map(y, 0, canvas.offsetHeight, 0, canvas.height);
+    // Compute the canvas position of the cursor relative to the canvas.
+    const clickPt = mouseEventToCanvasPoint(ev, canvas);
 
     if (ev.deltaY > 0) {
-      canvasViewport.zoomIn(Point(x2, y2));
+      canvasViewport.zoomIn(clickPt);
     } else if (ev.deltaY < 0) {
-      canvasViewport.zoomOut(Point(x2, y2));
+      canvasViewport.zoomOut(clickPt);
     }
 
     redrawCanvas(canvas, poseList);
@@ -794,7 +596,7 @@ function onFieldLoaded(canvas) {
   });
 
   document.getElementById('export').addEventListener('click', ev => {
-    const payload = exportPoses(poseList);
+    const payload = exportPoses(poseList, seasonConfig.fieldDims);
     const data = JSON.stringify(payload);
 
     console.log('export data', payload);
@@ -837,9 +639,9 @@ function onFieldLoaded(canvas) {
       .then(hasFile => {
         if (hasFile) {
           readTextFile(importFileName)
-            .then((text) => JSON.parse(text))
-            .then(importPoses)
-            .then((poses) => { poseList = poses; })
+            .then(text => JSON.parse(text))
+            .then(data => importPoses(data, seasonConfig.fieldDims, genId))
+            .then(p => { poseList = p; })
             .then(() => redrawCanvas(canvas, poseList));
         }
       })
@@ -901,9 +703,9 @@ function drawPose(context, pose, image) {
 function drawAllPoses(context, poseList) {
   if (poseList.length < 1) return;
 
-  const first = poseList.slice(0, 1);
-  const inner = poseList.slice(1, -1);
-  const last = poseList.slice(-1);
+  const first = poseList.poses.slice(0, 1);
+  const inner = poseList.poses.slice(1, -1);
+  const last = poseList.poses.slice(-1);
 
   drawPose(context, first[0], images[toolStateToName[Tool.POSE]]);
 
@@ -923,14 +725,14 @@ function drawBezier(context, poseList) {
     return;
   }
 
-  let pose1 = poseList[0];
+  let pose1 = poseList.poses[0];
 
   context.save();
   context.lineWidth = 2.0;
   context.beginPath();
   context.moveTo(pose1.point.x, pose1.point.y);
 
-  for (let pose2 of poseList.slice(1)) {
+  for (let pose2 of poseList.poses.slice(1)) {
     const exitPt = pose1.point.addVec(pose1.exitHandle);
     const enterPt = pose2.point.addVec(pose2.enterHandle);
 
@@ -1004,9 +806,21 @@ function drawAllHandleLines(context, poseList) {
     return;
   }
 
-  for (let pose of poseList) {
+  const first = poseList.poses.slice(0, 1);
+  const inner = poseList.poses.slice(1, -1);
+  const last  = poseList.poses.slice(-1);
+
+  for (const pose of first) {
+    drawHandleLine(context, pose.exitHandle, pose.point);
+  }
+
+  for (const pose of inner) {
     drawHandleLine(context, pose.enterHandle, pose.point);
     drawHandleLine(context, pose.exitHandle, pose.point);
+  }
+
+  for (const pose of last) {
+    drawHandleLine(context, pose.enterHandle, pose.point);
   }
 }
 
@@ -1015,7 +829,7 @@ function drawAllHandleDots(context, poseList) {
     return;
   }
 
-  for (let pose of poseList) {
+  const drawEnterDot = pose => {
     const enterColor = isHandleSelected(pose.enterHandle)
       ? colors.handle.enter.selected.color
       : colors.handle.enter.color;
@@ -1025,7 +839,9 @@ function drawAllHandleDots(context, poseList) {
       : 1.0;
 
     drawHandleDot(context, pose.enterHandle, pose.point, enterColor, enterScale);
+  };
 
+  const drawExitDot = pose => {
     const exitColor = isHandleSelected(pose.exitHandle)
       ? colors.handle.exit.selected.color
       : colors.handle.exit.color;
@@ -1035,11 +851,24 @@ function drawAllHandleDots(context, poseList) {
       : 1.0;
 
     drawHandleDot(context, pose.exitHandle, pose.point, exitColor, exitScale);
-  }
-}
+  };
 
-function map(value, x1, w1, x2, w2) {
-  return (value - x1) * w2 / w1 + x2;
+  const first = poseList.poses.slice(0, 1);
+  const inner = poseList.poses.slice(1, -1);
+  const last  = poseList.poses.slice(-1);
+
+  for (const pose of first) {
+    drawExitDot(pose);
+  }
+
+  for (const pose of inner) {
+    drawEnterDot(pose);
+    drawExitDot(pose);
+  }
+
+  for (const pose of last) {
+    drawEnterDot(pose);
+  }
 }
 
 function placePointAt(x, y) {
@@ -1047,20 +876,20 @@ function placePointAt(x, y) {
   let new_pose;
 
   if (0 == poseList.length) {
-    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), {commands: PoseCommandGroup()});
+    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), {commands: PoseCommandGroup(genId())});
   } else {
-    const last_point = poseList.slice(-1)[0].point;
+    const last_point = poseList.poses.slice(-1)[0].point;
     const enterVec = last_point.sub(new_point).unit().scale(100);
     const exitVec = enterVec.scale(-1);
 
-    new_pose = Pose(new_point, enterVec, exitVec, {commands: PoseCommandGroup()});
+    new_pose = Pose(new_point, enterVec, exitVec, {commands: PoseCommandGroup(genId())});
   }
 
-  poseList.push(new_pose)
+  poseList.appendPose(new_pose)
 }
 
 function findPoseNear(x, y) {
-  for (let pose of poseList) {
+  for (let pose of poseList.poses) {
     const distance = Math.pow(x - pose.point.x, 2) + Math.pow(y - pose.point.y, 2);
 
     if (distance < 450) {
@@ -1072,7 +901,7 @@ function findPoseNear(x, y) {
 }
 
 function findHandleNear(x, y) {
-  for (let pose of poseList) {
+  for (let pose of poseList.poses) {
     let pt = pose.point.addVec(pose.enterHandle);
     let distance = Math.pow(x - pt.x, 2) + Math.pow(y - pt.y, 2);
 
@@ -1096,111 +925,6 @@ function findHandleNear(x, y) {
   return null;
 }
 
-function exportPoses(poseList) {
-  /** Export file format
-   *
-   *  Point :: List Float Float
-   *  Segment :: Tuple Point Point Point Point
-   *  Waypoint :: { commands  :: List ??
-   *              , shallHalt :: Boolean
-   *              }
-   *
-   *  Payload :: { segments :: List Segment
-   *             , waypoints :: List Waypoint
-   *             }
-   */
-
-  const payload = Payload();
-
-  if (2 > poseList.length) {
-    return payload;
-  } else {
-    //const result = [];
-    const pointToArray = pt => [pt.x, pt.y];
-    const canvasToMeters = point => Point(
-      point.x / images.field.width * config.fieldDims.xmeters,
-      (1 - (point.y / images.field.height)) * config.fieldDims.ymeters,
-    );
-
-    let pose1 = poseList[0];
-    for (let pose2 of poseList.slice(1)) {
-      const segment = [
-        pose1.point,
-        pose1.point.addVec(pose1.exitHandle),
-        pose2.point.addVec(pose2.enterHandle),
-        pose2.point,
-      ].map(canvasToMeters)
-       .map(pointToArray);
-
-      payload.segments.push(segment);
-
-      const waypoint = {
-        commands: pose1.options.commands.rootNode,
-        shallHalt: pose1.options.commands.moveCondition === 'halt',
-      };
-
-      payload.waypoints.push(waypoint);
-
-      pose1 = pose2;
-    }
-
-    return payload;
-  }
-}
-
-function importPoses(data) {
-  const poseList = [];
-
-  if (!seasonConfig.isLoaded()) {
-    console.error('no season config loaded. unable to import');
-    return postList;
-  }
-
-  if (data.length < 1) {
-    return poseList;
-  }
-
-  const metersToCanvas = point => Point(
-    (point.x * images.field.width / seasonConfig.config.fieldDims.xmeters),
-    (point.y / seasonConfig.config.fieldDims.ymeters - 1) * -1 * images.field.height,
-    []
-  );
-
-  const toPoint = (p) => Point(p[0], p[1]);
-
-  data = data.map((segment) =>
-    segment.map(toPoint).map(metersToCanvas)
-  );
-
-  let pt1 = data[0][0];
-  let cp1 = data[0][1];
-
-  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1), {commands:PoseCommandGroup()});
-  poseList.push(pose);
-
-  pt1 = data[0][3];
-  cp1 = data[0][2];
-
-  for (let segment of data.slice(1)) {
-    const cp2 = segment[1];
-
-    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1), {commands:PoseCommandGroup()});
-
-    poseList.push(pose);
-    pt1 = segment[3];
-    cp1 = segment[2];
-  }
-
-  let segment = data.slice(-1)[0];
-  pt1 = segment[3];
-  cp1 = segment[2];
-  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), {commands:PoseCommandGroup()});
-
-  poseList.push(pose);
-
-  return poseList;
-}
-
 function findNode(passedNode, idTarget) {
   console.log("Node obj: ", passedNode);
 
@@ -1219,7 +943,7 @@ function findNode(passedNode, idTarget) {
     }
 }
 
-document.addEventListener('dragstart', (ev) => {
+document.addEventListener('dragstart', ev => {
 
   let dragTargets = [
     "sequential",
@@ -1238,11 +962,11 @@ document.addEventListener('dragstart', (ev) => {
   }
 });
 
-document.addEventListener('dragend', (ev) => {
+document.addEventListener('dragend', ev => {
   ev.preventDefault();
 });
 
-document.addEventListener('dragenter', (ev) => {
+document.addEventListener('dragenter', ev => {
   ev.preventDefault();
 
   if (ev.target.classList.contains('action-drop-zone')) {
@@ -1259,7 +983,7 @@ document.addEventListener('dragenter', (ev) => {
   }
 });
 
-document.addEventListener('dragover', (ev) => {
+document.addEventListener('dragover', ev => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
     let dragoverTarget = ev.target;
@@ -1272,7 +996,7 @@ function drawAllNodes(rootSomething) {
   const { moveCondition, rootNode } = rootSomething;
 
   const moveConditionContinueClarification = document.createElement("p");
-  if(actionedPose.options.commands.moveConditionCanSwitch) {
+  if(actionedPose.commands.moveConditionCanSwitch) {
     if(moveCondition == "halt") {
       moveConditionContinueClarification.textContent = "Go";
       moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
@@ -1285,7 +1009,12 @@ function drawAllNodes(rootSomething) {
   const moveConditionSwitch = document.createElement("div");
   moveConditionSwitch.classList.add('o-command-moveswitch');
   moveConditionSwitch.addEventListener('click', () => {
-    switchMoveSwitch();
+    if (actionedPose.canSwitch()) {
+      actionedPose.toggleMoveCondition();
+    } else {
+      alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
+    }
+    drawAllNodes(actionedPose.commands);
   });
 
   const childList = Array.prototype.slice.call(rootElement.children, 0);
@@ -1377,7 +1106,7 @@ function drawNodes(node) {
 
     return nodeElem;
   } else {
-    nodeElem = document.createElement("img");
+    const nodeElem = document.createElement("img");
     nodeElem.classList.add('o-command');
     nodeElem.src = commandImages.get(node.name) || "images/command.png";
     nodeElem.title = node.name;
@@ -1391,7 +1120,7 @@ function drawNodes(node) {
 }
 
 function createNode(type, commandName) {
-  return makeNode(type, [], commandName);
+  return ActionNode(type, [], commandName, genId());
 }
 
 function attachNode(child, parent) {
@@ -1443,9 +1172,9 @@ function getCommandImg(commandName) {
 //   targetNode = findNode(initialNode, targetId);
 // }
 
-document.addEventListener('drop', (ev) => {
+document.addEventListener('drop', ev => {
 
-  const targetPoseCommands = actionedPose.options.commands;
+  const targetPoseCommands = actionedPose.commands;
   let target = ev.target;
 
   if(spacerTarget) {
@@ -1454,7 +1183,7 @@ document.addEventListener('drop', (ev) => {
 
   if (ev.target.classList.contains('action-drop-zone')) {
 
-    const targetPoseCommands = actionedPose.options.commands;
+    const targetPoseCommands = actionedPose.commands;
 
     let insertIndex = 0;
 
