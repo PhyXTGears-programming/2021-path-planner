@@ -1234,7 +1234,7 @@ function drawNodes(node) {
 
     return nodeElem;
   } else {
-    nodeElem = document.createElement("img");
+    const nodeElem = document.createElement("img");
     nodeElem.classList.add('o-command');
     nodeElem.src = commandImages.get(node.name) || "images/command.png";
     nodeElem.title = node.name;
