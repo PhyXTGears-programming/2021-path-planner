@@ -7,6 +7,8 @@
 
 // import/export functionality still broken
 
+import Point from './js/geom/point.js';
+
 const { open, save } = window.__TAURI__.dialog;
 const { exists, readTextFile, writeTextFile } = window.__TAURI__.fs;
 const { documentDir } = window.__TAURI__.path;
@@ -19,23 +21,6 @@ const Payload = () => ({
   segments: [],
   waypoints: [],
 });
-
-const PointPrototype = {
-  addVec: function (vec) {
-    return Point(this.x + vec.x, this.y + vec.y);
-  },
-
-  sub: function (other) {
-    return Vector(this.x - other.x, this.y - other.y);
-  },
-};
-
-const Point = (x, y) => {
-  const self = Object.create(PointPrototype);
-  self.x = x;
-  self.y = y;
-  return self;
-};
 
 const VectorPrototype = {
   add: function (other) {
