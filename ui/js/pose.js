@@ -167,10 +167,10 @@ export const importPoses = (data, fieldDims, genId) => {
     []
   );
 
-  const toPoint = (p) => Point(p[0], p[1]);
+  const toPoint = p => Point(p[0], p[1]);
 
   const segments = data.segments.map(
-    (segment) => segment.map(toPoint).map(metersToCanvas)
+    segment => segment.map(toPoint).map(metersToCanvas)
   );
 
   let pt1 = segments[0][0];

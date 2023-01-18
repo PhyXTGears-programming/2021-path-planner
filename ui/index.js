@@ -147,9 +147,9 @@ const config = {
 };
 
 const seasonConfig = {
-  isLoaded() { return null !== this.config; },
+  isLoaded () { return null !== this.config; },
 
-  get fieldDims() {
+  get fieldDims () {
     if (!this.isLoaded()) {
       return null;
     }
@@ -161,7 +161,7 @@ const seasonConfig = {
     };
   },
 
-  loadSeason(year) {
+  loadSeason (year) {
     const self = this;
 
     return Promise.all([
@@ -251,7 +251,7 @@ function updateRobotCommands() {
 function loadImages(onDone) {
   let loadCount = config.imageFiles.length;
 
-  const onImageLoaded = (ev) => {
+  const onImageLoaded = ev => {
     loadCount -= 1;
 
     if (0 == loadCount) {
@@ -292,7 +292,7 @@ function onFieldLoaded(canvas) {
   const LEFT_BUTTON = 0;
   const MIDDLE_BUTTON = 1;
 
-  canvas.addEventListener('click', (ev) => {
+  canvas.addEventListener('click', ev => {
     if (LEFT_BUTTON !== ev.button) {
       return;
     }
@@ -337,7 +337,7 @@ function onFieldLoaded(canvas) {
   });
 
   // Mouse move handler to draw tool icon that follows mouse cursor.
-  canvas.addEventListener('mousemove', (ev) => {
+  canvas.addEventListener('mousemove', ev => {
     const tool = toolStateToName[toolState];
 
     // Compute the canvas position of the cursor relative to the canvas.
@@ -501,7 +501,7 @@ function onFieldLoaded(canvas) {
   });
 
   // Mouse down handler to pan the canvas view.
-  canvas.addEventListener('mousedown', (ev) => {
+  canvas.addEventListener('mousedown', ev => {
     if (MIDDLE_BUTTON !== ev.button) {
       return;
     }
@@ -514,7 +514,7 @@ function onFieldLoaded(canvas) {
   });
 
   // Mouse move handler to pan the canvase.
-  canvas.addEventListener('mousemove', (ev) => {
+  canvas.addEventListener('mousemove', ev => {
     if (MIDDLE_BUTTON !== ev.button) {
       return;
     }
@@ -639,9 +639,9 @@ function onFieldLoaded(canvas) {
       .then(hasFile => {
         if (hasFile) {
           readTextFile(importFileName)
-            .then((text) => JSON.parse(text))
-            .then((data) => importPoses(data, seasonConfig.fieldDims, genId))
-            .then((p) => { poseList = p; })
+            .then(text => JSON.parse(text))
+            .then(data => importPoses(data, seasonConfig.fieldDims, genId))
+            .then(p => { poseList = p; })
             .then(() => redrawCanvas(canvas, poseList));
         }
       })
@@ -912,7 +912,7 @@ function findNode(passedNode, idTarget) {
     }
 }
 
-document.addEventListener('dragstart', (ev) => {
+document.addEventListener('dragstart', ev => {
 
   let dragTargets = [
     "sequential",
@@ -931,11 +931,11 @@ document.addEventListener('dragstart', (ev) => {
   }
 });
 
-document.addEventListener('dragend', (ev) => {
+document.addEventListener('dragend', ev => {
   ev.preventDefault();
 });
 
-document.addEventListener('dragenter', (ev) => {
+document.addEventListener('dragenter', ev => {
   ev.preventDefault();
 
   if (ev.target.classList.contains('action-drop-zone')) {
@@ -952,7 +952,7 @@ document.addEventListener('dragenter', (ev) => {
   }
 });
 
-document.addEventListener('dragover', (ev) => {
+document.addEventListener('dragover', ev => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
     let dragoverTarget = ev.target;
@@ -1141,7 +1141,7 @@ function getCommandImg(commandName) {
 //   targetNode = findNode(initialNode, targetId);
 // }
 
-document.addEventListener('drop', (ev) => {
+document.addEventListener('drop', ev => {
 
   const targetPoseCommands = actionedPose.options.commands;
   let target = ev.target;
