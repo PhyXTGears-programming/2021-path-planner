@@ -10,6 +10,8 @@
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
 
+import { map } from './js/util.js';
+
 import Viewport from './js/viewport.js';
 
 const { open, save } = window.__TAURI__.dialog;
@@ -922,10 +924,6 @@ function drawAllHandleDots(context, poseList) {
 
     drawHandleDot(context, pose.exitHandle, pose.point, exitColor, exitScale);
   }
-}
-
-function map(value, x1, w1, x2, w2) {
-  return (value - x1) * w2 / w1 + x2;
 }
 
 function placePointAt(x, y) {
