@@ -668,9 +668,9 @@ function _redrawCanvas(canvas, poseList) {
 
   // Draw canvas objects in viewport coordinate system.
   clearCanvas(context);
+  drawAllPoses(context, poseList);
   drawBezier(context, poseList);
   drawAllHandleLines(context, poseList);
-  drawAllPoses(context, poseList);
   drawAllHandleDots(context, poseList);
 
   // Draw point on poseList path that is nearest mouse when mouse within 100 units (pixels?).
