@@ -12,6 +12,8 @@ import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
 
+import { throttleLast } from './js/timer.js';
+
 import { map, IdGen } from './js/util.js';
 
 import {
@@ -648,7 +650,9 @@ function onFieldLoaded(canvas) {
   });
 }
 
-function redrawCanvas(canvas, poseList) {
+const redrawCanvas = throttleLast(100, _redrawCanvas);
+
+function _redrawCanvas(canvas, poseList) {
   const context = canvas.getContext('2d');
 
   // Clear previous transform.  Return to unit coordinate system.
