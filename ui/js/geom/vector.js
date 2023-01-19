@@ -15,6 +15,10 @@ const VectorPrototype = {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   },
 
+  lengthSq: function () {
+    return this.x * this.x + this.y * this.y;
+  },
+
   unit: function () {
     const length = this.length();
 
