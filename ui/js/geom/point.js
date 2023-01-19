@@ -1,15 +1,15 @@
 import Vector from './vector.js';
 
 const PointPrototype = {
-  addVec: function (vec) {
+  addVec (vec) {
     return Point(this.x + vec.x, this.y + vec.y);
   },
 
-  vecFromOrigin: function () {
+  vecFromOrigin () {
     return Vector(this.x, this.y);
   },
 
-  sub: function (other) {
+  sub (other) {
     return Vector(this.x - other.x, this.y - other.y);
   },
 };
