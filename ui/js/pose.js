@@ -68,7 +68,7 @@ const PoseListPrototype = {
 
       const t2 = t + a; // Convert t [0, 1), to [a, a + 1).
 
-      if (Math.abs(t2 - prevT) < Math.abs(minT - prevT)) {
+      if (-1 === minT || Math.abs(t2 - prevT) < Math.abs(minT - prevT)) {
         // Keep the point closest to prevT even when it's further away.
         // This let's the user navigate overlaps by sliding along the bezier
         // toward the intersection.
