@@ -2,6 +2,7 @@
  * elsewhere, since they are detail of how the app chooses to use the data structure.
  */
 
+import Bezier from './geom/bezier.js';
 import Point from './geom/point.js';
 
 const PoseListPrototype = {
@@ -21,8 +22,88 @@ const PoseListPrototype = {
     this.poses.splice(index, 1);
   },
 
+  findTNearPoint (pt, maxDist, numSamples = 128) {
+    let minT = -1;
+    let minPt = null;
+    let minD2 = Number.POSITIVE_INFINITY;
+
+    for (let a = 0; a < this.length - 1; a += 1) {
+      const pose1 = this.poses[a];
+      const pose2 = this.poses[a + 1];
+
+      const bez = bezierFromPoses(pose1, pose2);
+
+      const { t, pt: bezPt, dist2 } = bez.findTNearPoint(pt, maxDist, numSamples);
+
+      if (t < 0.0) {
+        continue;
+      }
+
+      if (dist2 < minD2) {
+        minT = t;
+        minPt = bezPt;
+        minD2 = dist2;
+      }
+    }
+
+    return { t: minT, pt: minPt, dist2: minD2 };
+  },
+
+  findNextTNearPoint (pt, prevT, maxDist, numSamples = 128) {
+    let minT = -1;
+    let minPt = null;
+    let minD2 = Number.POSITIVE_INFINITY;
+
+    for (let a = 0; a < this.length - 1; a += 1) {
+      const pose1 = this.poses[a];
+      const pose2 = this.poses[a + 1];
+
+      const bez = bezierFromPoses(pose1, pose2);
+
+      const { t, pt: bezPt, dist2 } = bez.findTNearPoint(pt, maxDist, numSamples);
+
+      if (t < 0.0) {
+        continue;
+      }
+
+      const t2 = t + a; // Convert t [0, 1), to [a, a + 1).
+
+      if (Math.abs(t2 - prevT) < Math.abs(minT - prevT)) {
+        // Keep the point closest to prevT even when it's further away.
+        // This let's the user navigate overlaps by sliding along the bezier
+        // toward the intersection.
+        minT = t2;
+        minPt = bezPt;
+        minD2 = dist2;
+      }
+    }
+
+    return { t: minT, pt: minPt, dist2: minD2 };
+  },
+
   get length() {
     return this.poses.length;
+  },
+
+  pointAt (t) {
+    // 1st bezier of pose list is t = [0.0, 1.0) between pose 0 and 1.
+    // 2nd bezier              is t = [1.0, 2.0) between pose 1 and 2.
+    // etc...
+
+    if (t < 0.0 || t > this.length) {
+      return null;
+    }
+
+    const index = ~~t;   // Javascript trick to convert float to int.
+
+    t -= index;
+
+    const pose1 = this.poses[index];
+    const pose2 = this.poses[index + 1];
+
+    const bez = bezierFromPoses(pose1, pose2);
+
+    return bez.pointAt(t);
   },
 
   updateMoveSwitchPerms() {
@@ -202,3 +283,13 @@ export const importPoses = (data, fieldDims, genId) => {
 
   return poseList;
 }
+
+
+const bezierFromPoses = (pose1, pose2) => {
+  return Bezier(
+    pose1.point,
+    pose1.point.addVec(pose1.exitHandle),
+    pose2.point.addVec(pose2.enterHandle),
+    pose2.point
+  );
+};
