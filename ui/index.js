@@ -111,6 +111,9 @@ let spacerTarget = null;
 
 const genId = IdGen();
 
+let mousePt = Point(0, 0);
+let lastT = -1;
+
 // Example:
 // commandImages.set('lowerIntake', './images/temp-lower.png')
 const commandImages = new Map();
@@ -348,7 +351,7 @@ function onFieldLoaded(canvas) {
     // Compute field position of cursor with current zoom+pan.
     const { x, y } = canvasViewport.toViewCoord(clickVec);
 
-    const mousePt = Point(x, y);
+    mousePt = Point(x, y);
 
     switch (toolState) {
       case Tool.SELECT:
@@ -358,7 +361,6 @@ function onFieldLoaded(canvas) {
 
             movePose.pose.point = posePt;
 
-            redrawCanvas(canvas, poseList);
             break;
 
           case SelectState.MOVE_ENTER_HANDLE:
@@ -368,7 +370,6 @@ function onFieldLoaded(canvas) {
             moveHandle.pose.exitHandle = enterVec.scale(-1).unit().scale(moveHandle.pose.exitHandle.length());
             moveHandle.pose.enterHandle = enterVec;
 
-            redrawCanvas(canvas, poseList);
             break;
 
           case SelectState.MOVE_EXIT_HANDLE:
@@ -378,14 +379,12 @@ function onFieldLoaded(canvas) {
             moveHandle.pose.exitHandle = exitVec;
             moveHandle.pose.enterHandle = exitVec.scale(-1).unit().scale(moveHandle.pose.enterHandle.length());
 
-            redrawCanvas(canvas, poseList);
             break;
 
           case SelectState.NONE:
             hoveredPose = findPoseNear(x, y);
             hoveredHandle = findHandleNear(x, y);
 
-            redrawCanvas(canvas, poseList);
             break;
         }
 
@@ -402,20 +401,16 @@ function onFieldLoaded(canvas) {
 
         const context = canvas.getContext('2d');
 
-        redrawCanvas(canvas, poseList);
         drawTool(context, tool, tx, ty);
         break;
 
       case Tool.DELETE:
         hoveredPose = findPoseNear(x, y);
-        redrawCanvas(canvas, poseList);
 
         break;
     }
 
-    if ('' != tool) {
-
-    }
+    redrawCanvas(canvas, poseList);
   });
 
   canvas.addEventListener('mousedown', ev => {
@@ -678,6 +673,38 @@ function _redrawCanvas(canvas, poseList) {
   drawAllPoses(context, poseList);
   drawAllHandleDots(context, poseList);
 
+  // Draw point on poseList path that is nearest mouse when mouse within 100 units (pixels?).
+  {
+    context.save();
+
+    if (0 < poseList.length) {
+      let nearest;
+
+      const startTime = performance.now();
+
+      if (lastT < 0.0) {
+        nearest = poseList.findTNearPoint(testMouse, 50);
+      } else {
+        nearest = poseList.findNextTNearPoint(testMouse, lastT, 50);
+      }
+
+      if (0.0 <= nearest.t) {
+        // We found a nearest point.
+
+        const { t, pt } = nearest;
+
+        lastT = t;
+
+        drawCircle(context, pt.x, pt.y, 5.0);
+        context.fillStyle = '#f0f';
+        context.fill();
+      }
+    }
+
+    context.restore();
+  }
+
+
   // Restore canvas transform.
   context.restore();
 
@@ -688,6 +715,11 @@ function clearCanvas(context) {
   if (seasonConfig.isLoaded()) {
     context.drawImage(seasonConfig.config.image, 0, 0);
   }
+}
+
+function drawCircle(context, x, y, r) {
+  context.beginPath();
+  context.arc(x, y, r, 0, 2 * Math.PI, false);
 }
 
 function drawTool(context, tool, x, y) {
