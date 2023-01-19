@@ -80,6 +80,8 @@ const toolStateToName = {
 
 // const frog = {attributes : ["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
 
+const noop = () => {};
+
 let toolState = Tool.NONE;
 const images = {};
 let poseList = PoseList();
@@ -353,6 +355,8 @@ function onFieldLoaded(canvas) {
 
     mousePt = Point(x, y);
 
+    let drawToolOnOverlay = noop;
+
     switch (toolState) {
       case Tool.SELECT:
         switch (selectState) {
@@ -401,7 +405,7 @@ function onFieldLoaded(canvas) {
 
         const context = canvas.getContext('2d');
 
-        drawTool(context, tool, tx, ty);
+        drawToolOnOverlay = canvas => drawTool(canvas.getContext('2d'), tool, tx, ty);
         break;
 
       case Tool.DELETE:
@@ -410,7 +414,7 @@ function onFieldLoaded(canvas) {
         break;
     }
 
-    redrawCanvas(canvas, poseList);
+    redrawCanvas(canvas, poseList, { onOverlay: drawToolOnOverlay });
   });
 
   canvas.addEventListener('mousedown', ev => {
@@ -647,7 +651,8 @@ function onFieldLoaded(canvas) {
 
 const redrawCanvas = throttleLast(100, _redrawCanvas);
 
-function _redrawCanvas(canvas, poseList) {
+// options :: { onOverlay :: (canvas) -> Void }
+function _redrawCanvas(canvas, poseList, options = {}) {
   const context = canvas.getContext('2d');
 
   // Clear previous transform.  Return to unit coordinate system.
@@ -709,6 +714,10 @@ function _redrawCanvas(canvas, poseList) {
   context.restore();
 
   // Draw overlays in unit coordinate system here.
+
+  if ('function' == typeof options.onOverlay) {
+    options.onOverlay(canvas);
+  }
 }
 
 function clearCanvas(context) {
