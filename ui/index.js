@@ -319,12 +319,18 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.POSE:
-        // Compute the canvas position of the cursor relative to the canvas.
-        placePointAt(x, y);
-        poseList.updateMoveSwitchPerms();
+        if (ev.shiftKey) {
+          // Insert pose at current bezier `t`.
+          insertPoseAt(lastT);
+        } else {
+          // Append pose.
+          placePointAt(x, y);
+          poseList.updateMoveSwitchPerms();
+        }
 
         redrawCanvas(canvas, poseList);
         break;
+
       case Tool.DELETE:
         const nearestPose = findPoseNear(x, y);
         poseList.deletePose(nearestPose);
@@ -914,6 +920,37 @@ function drawAllHandleDots(context, poseList) {
   for (const pose of last) {
     drawEnterDot(pose);
   }
+}
+
+function insertPoseAt(t) {
+  if (2 > poseList.length) {
+    return;
+  }
+
+  if (-1 == t) {
+    return;
+  }
+
+  const pt = poseList.pointAt(t);
+
+  // Abort if new point is too close to a bezier endpoint.
+  const previous = ~~t;
+  const next     = previous + 1;
+
+  const pt1 = poseList.poses[previous].point;
+  const pt2 = poseList.poses[next].point;
+
+  if (pt1.sub(pt).length() < 100 || pt2.sub(pt).length() < 100) {
+    return;
+  }
+
+  // All is well. Create pose and insert.
+  const enterVec = pt1.sub(pt2).unit().scale(100);
+  const exitVec = enterVec.scale(-1);
+
+  const pose = Pose(pt, enterVec, exitVec, { commands: PoseCommandGroup(genId()) });
+
+  poseList.insertPose(next, pose);
 }
 
 function placePointAt(x, y) {

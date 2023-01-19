@@ -85,6 +85,10 @@ const PoseListPrototype = {
     return this.poses.length;
   },
 
+  insertPose (index, pose) {
+    this.poses.splice(index, 0, pose);
+  },
+
   pointAt (t) {
     // 1st bezier of pose list is t = [0.0, 1.0) between pose 0 and 1.
     // 2nd bezier              is t = [1.0, 2.0) between pose 1 and 2.
