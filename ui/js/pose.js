@@ -142,7 +142,7 @@ const PosePrototype = {
   toggleMoveCondition () {
     const sequence = this.commands;
     if (sequence.moveConditionCanSwitch) {
-      if ('go' == commands.moveCondition) {
+      if ('go' == sequence.moveCondition) {
         sequence.moveCondition = 'halt';
       } else if ('halt' == sequence.moveCondition) {
         sequence.moveCondition = 'go';
