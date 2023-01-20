@@ -694,9 +694,9 @@ function _redrawCanvas(canvas, poseList, options = {}) {
       const startTime = performance.now();
 
       if (lastT < 0.0) {
-        nearest = poseList.findTNearPoint(testMouse, 50);
+        nearest = poseList.findTNearPoint(mousePt, 50);
       } else {
-        nearest = poseList.findNextTNearPoint(testMouse, lastT, 50);
+        nearest = poseList.findNextTNearPoint(mousePt, lastT, 50);
       }
 
       if (0.0 <= nearest.t) {
