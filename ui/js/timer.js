@@ -9,7 +9,7 @@ export const throttleLast = (delayMs, fn) => {
       isInactive = false;
       setTimeout(
         () => {
-          fn(...args);
+          fn(...savedArgs);
           isInactive = true;
         },
         delayMs
