@@ -15,7 +15,7 @@
       },
       {
         "name": "arm: move to hybrid",
-        "image": null
+        "image": "cmd-arm-to-hybrid.png"
       },
       {
         "name": "arm: move to bumper pickup",
