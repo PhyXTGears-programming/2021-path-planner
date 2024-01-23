@@ -28,7 +28,7 @@ const { documentDir } = window.__TAURI__.path;
 
 // Custom types
 
-const FRC_SEASON = "2023";
+const FRC_SEASON = "2024";
 
 // Constants
 
@@ -40,6 +40,7 @@ const Tool = {
   SELECT: 4,
   DELETE: 5,
   ACTIONS: 6,
+  ROTATION: 7,
 };
 
 const SelectState = {
@@ -74,6 +75,7 @@ const toolStateToName = {
   [Tool.SELECT]: 'select',
   [Tool.DELETE]: 'delete',
   [Tool.ACTIONS]: 'actions',
+  [Tool.ROTATION] : 'rotation',
 };
 
 // Global variables
@@ -345,6 +347,10 @@ function onFieldLoaded(canvas) {
         }
 
         drawAllNodes(actionedPose.commands);
+        break;
+
+      case Tool.ROTATION:
+        // TODO
         break;
     }
   });

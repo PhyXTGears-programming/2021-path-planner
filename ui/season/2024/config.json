@@ -1,0 +1,14 @@
+{
+  "fieldDims": {
+    "xmeters": 16.54,
+    "ymeters": 8.21
+  },
+  "robot": {
+    "commands": [
+      {
+        "name": "Example",
+        "image": "cmd-arm-to-top-peg.png"
+      }
+    ]
+  }
+}
