@@ -572,6 +572,10 @@ function onFieldLoaded(canvas) {
       id: 'action-tool',
       state: Tool.ACTIONS,
     },
+    {
+      id: 'rotation-tool',
+      state: Tool.ROTATION,
+    }
   ];
 
   for (let tool of tool_map) {
