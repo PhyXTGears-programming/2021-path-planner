@@ -1347,7 +1347,7 @@ function drawRotations(context, poseList) {
     let arrowpt = Point(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
     context.lineTo(pt.x + arrowpt.x, pt.y + arrowpt.y);
     context.stroke();
-
+    
     context.fill();
     context.save();
   }
@@ -1361,4 +1361,25 @@ function makeRotation(tval, context) {
 
 function calcRotationPos(rotation) {
   return poseList.pointAt(rotation.t);
+}
+
+function getAngleToCursor(pt, mousePt) {
+  let distOpp = pt.y - mousePt.y;
+  let distAdj = pt.x - mousePt.x;
+  return (distOpp / distAdj) * Math.atan;
+}
+
+function findNearestRotationIndex(mousePt) {
+  for(let rotation of rotationList.rotations) {
+
+    let rotationPt = calcRotationPos(rotation);
+    let distance = Math.sqrt(Math.pow(rotationPt.x - mousePt.x, 2) + Math.pow(rotationPt.y - mousePt.y, 2));
+
+    if(distance <= 100) {
+      return rotationList.rotations.indexOf(rotation);
+    }
+
+  }
+
+  return null;
 }

@@ -22,3 +22,7 @@ export function Rotation(tval) {
 RotationList.prototype.insertRotation = function (tval) {
     this.rotations.push( new Rotation(tval) );
 };
+
+Rotation.prototype.setRotVal = function (rotval) {
+    this.rot = rotval;
+};
