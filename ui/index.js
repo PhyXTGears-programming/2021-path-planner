@@ -49,6 +49,7 @@ const SelectState = {
   MOVE_POSE: 1,
   MOVE_ENTER_HANDLE: 2,
   MOVE_EXIT_HANDLE: 3,
+  MOVE_ROTATION: 4,
 }
 
 const colors = {
@@ -320,10 +321,10 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.SELECT:
-        let nearRotationIndex = findNearestRotationIndex(Point(x, y));
-        if(nearRotationIndex >= 0) {
-          console.log(nearRotationIndex);
-        }
+        // let nearRotationIndex = findNearestRotationIndex(Point(x, y));
+        // if(nearRotationIndex >= 0) {
+        //   // TODO : Select, bring up panel for precise edit
+        // }
         break;
 
       case Tool.POSE:
@@ -365,6 +366,8 @@ function onFieldLoaded(canvas) {
   canvas.addEventListener('mousemove', ev => {
     const tool = toolStateToName[toolState];
 
+    const context = canvas.getContext('2d');
+
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
@@ -402,6 +405,7 @@ function onFieldLoaded(canvas) {
             moveHandle.pose.enterHandle = exitVec.scale(-1).unit().scale(moveHandle.pose.enterHandle.length());
 
             break;
+
 
           case SelectState.NONE:
             hoveredPose = findPoseNear(x, y);
@@ -453,6 +457,9 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.SELECT:
+        if(findNearestRotationIndex(mousePt) != null) {
+          selectState = SelectState.MOVE_ROTATION;
+        }
         if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
 
@@ -491,6 +498,16 @@ function onFieldLoaded(canvas) {
       return;
     }
 
+    const context = canvas.getContext('2d');
+
+    // Compute the canvas position of the cursor relative to the canvas.
+    const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
+
+    // Compute field position of cursor with current zoom+pan.
+    const { x, y } = canvasViewport.toViewCoord(clickVec);
+
+    mousePt = Point(x, y);
+
     switch (toolState) {
       case Tool.POSE:
         break;
@@ -511,6 +528,19 @@ function onFieldLoaded(canvas) {
             selectState = SelectState.NONE;
             moveHandle = null;
             break;
+          case SelectState.MOVE_ROTATION:
+            if(findNearestRotationIndex(mousePt) >= 0) {
+              let nearRotationIndex = findNearestRotationIndex(mousePt);
+              console.log(nearRotationIndex);
+              console.log(rotationList.rotations[nearRotationIndex]);
+              console.log(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
+              rotationList.rotations[nearRotationIndex].setRotVal(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
+            }
+
+            drawRotations(canvas.getContext('2d'), poseList);
+
+            break;
+
         }
         break;
 
@@ -1043,6 +1073,12 @@ function findNode(passedNode, idTarget) {
 }
 
 document.addEventListener('dragstart', ev => {
+  console.log("drag");
+  // Compute the canvas position of the cursor relative to the canvas.
+  const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
+
+  // Compute field position of cursor with current zoom+pan.
+  const { x, y } = canvasViewport.toViewCoord(clickVec);
 
   let dragTargets = [
     "sequential",
@@ -1051,6 +1087,7 @@ document.addEventListener('dragstart', ev => {
   ];
 
   if (seasonConfig.isLoaded()) {
+
     // Add robot commands to drag targets.
 
     dragTargets = dragTargets.concat(seasonConfig.config.robot.commands.map(c => c.name));
@@ -1059,6 +1096,7 @@ document.addEventListener('dragstart', ev => {
   if (dragTargets.includes(ev.target.id)) {
     ev.dataTransfer.setData('text/plain', ev.target.id);
   }
+
 });
 
 document.addEventListener('dragend', ev => {
@@ -1368,18 +1406,18 @@ function calcRotationPos(rotation) {
 }
 
 function getAngleToCursor(pt, mousePt) {
-  let distOpp = pt.y - mousePt.y;
+  console.log("pt1 : " + pt + "   CursPt : " + mousePt);
   let distAdj = pt.x - mousePt.x;
-  return (distOpp / distAdj) * Math.atan;
+  let distOpp = pt.y - mousePt.y;
+  return Math.atan(distOpp / distAdj);
 }
 
 function findNearestRotationIndex(mousePt) {
   for(let rotation of rotationList.rotations) {
-
     let rotationPt = calcRotationPos(rotation);
     let distance = Math.sqrt(Math.pow(rotationPt.x - mousePt.x, 2) + Math.pow(rotationPt.y - mousePt.y, 2));
 
-    if(distance <= 15) {
+    if(distance <= 30) {
       return rotationList.rotations.indexOf(rotation);
     }
 
