@@ -320,6 +320,10 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.SELECT:
+        let nearRotationIndex = findNearestRotationIndex(Point(x, y));
+        if(nearRotationIndex >= 0) {
+          console.log(nearRotationIndex);
+        }
         break;
 
       case Tool.POSE:
@@ -1375,7 +1379,7 @@ function findNearestRotationIndex(mousePt) {
     let rotationPt = calcRotationPos(rotation);
     let distance = Math.sqrt(Math.pow(rotationPt.x - mousePt.x, 2) + Math.pow(rotationPt.y - mousePt.y, 2));
 
-    if(distance <= 100) {
+    if(distance <= 15) {
       return rotationList.rotations.indexOf(rotation);
     }
 
