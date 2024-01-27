@@ -352,7 +352,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        makeRotation(lastT);
+        makeRotation(lastT, context);
         break;
     }
   });
@@ -1337,12 +1337,23 @@ document.addEventListener('drop', ev => {
 
 // ====--------------====   ROTATION STUFF   ====--------------====
 
-function drawRotations() {
-  // TODO
+function drawRotations(context, poseList) {
+  for(let rotation of rotationList.rotations) {
+
+    let pt = calcRotationPos(rotation);
+    drawCircle(context, pt.x, pt.y, 7.0);
+    context.fillStyle = '#0af';
+    context.fill();
+    context.save();
+  }
 }
 
-function makeRotation(tval) {
+function makeRotation(tval, context) {
   rotationList.insertRotation(tval);
   console.log(rotationList);
-  drawRotations();
+  drawRotations(context, poseList);
+}
+
+function calcRotationPos(rotation) {
+  return poseList.pointAt(rotation.t);
 }
