@@ -1343,6 +1343,11 @@ function drawRotations(context, poseList) {
     let pt = calcRotationPos(rotation);
     drawCircle(context, pt.x, pt.y, 7.0);
     context.fillStyle = '#0af';
+
+    let arrowpt = Point(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
+    context.lineTo(pt.x + arrowpt.x, pt.y + arrowpt.y);
+    context.stroke();
+
     context.fill();
     context.save();
   }
