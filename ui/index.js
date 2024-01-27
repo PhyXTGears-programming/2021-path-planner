@@ -11,6 +11,7 @@ import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
+import { RotationList, Rotation } from './js/rotation.js';
 
 import { throttleLast } from './js/timer.js';
 
@@ -82,11 +83,12 @@ const toolStateToName = {
 
 // const frog = {attributes : ["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
 
-const noop = () => {};
+const noop = () => {}; // ?????? what is noop? I'm the confused one for once??? (- The Frog Man)
 
 let toolState = Tool.NONE;
 const images = {};
 let poseList = PoseList();
+let rotationList = new RotationList();
 
 let hoveredPose = null;
 let movePose = null;
@@ -350,7 +352,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        // TODO
+        makeRotation(lastT);
         break;
     }
   });
@@ -693,6 +695,7 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   drawBezier(context, poseList);
   drawAllHandleLines(context, poseList);
   drawAllHandleDots(context, poseList);
+  drawRotations(context, poseList);
 
   // Draw point on poseList path that is nearest mouse when mouse within 100 units (pixels?).
   {
@@ -1331,3 +1334,15 @@ document.addEventListener('drop', ev => {
 //   name: 'sequential',
 //   id: 0,
 // }
+
+// ====--------------====   ROTATION STUFF   ====--------------====
+
+function drawRotations() {
+  // TODO
+}
+
+function makeRotation(tval) {
+  rotationList.insertRotation(tval);
+  console.log(rotationList);
+  drawRotations();
+}
