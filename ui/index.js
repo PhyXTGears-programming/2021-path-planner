@@ -1383,6 +1383,8 @@ function drawRotations(context, poseList) {
     drawCircle(context, pt.x, pt.y, 7.0);
     context.fillStyle = '#0af';
 
+    context.moveTo(pt.x, pt.y);
+
     let arrowpt = Point(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
     context.lineTo(pt.x + arrowpt.x, pt.y + arrowpt.y);
     context.stroke();
