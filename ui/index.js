@@ -1423,10 +1423,12 @@ function drawRotations(context, poseList) {
   for (let rotation of rotationList.rotations) {
 
     let rotationOrigin = calcRotationPos(rotation);
-    drawCircle(context, rotationOrigin.x, rotationOrigin.y, 7.0);
-    context.fillStyle = '#0af';
+    drawCircle(context, rotationOrigin.x, rotationOrigin.y, 4.0);
+    context.fillStyle = '#a0a';
 
     context.moveTo(rotationOrigin.x, rotationOrigin.y);
+    context.stroke();
+    context.fill();
 
     let arrowpt = Point(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
     // context.lineTo(pt.x + arrowpt.x, pt.y + arrowpt.y);
@@ -1477,12 +1479,13 @@ function ezOffsetPoint(origin, offx, offy) {
 function arrowPoints() { // Takes canvas point and calcs
   return [                             // relative points to draw arrow
     Point(0, 0),
-    Point(0, -5),
-    Point(25,-5),
-    Point(25, -10),
-    Point(35, -3),
-    Point(25, 5),
+    Point(0, 1),
+    Point(16,1),
+    Point(16, 5),
     Point(25, 0),
+    Point(16, -5),
+    Point(16, -1),
+    Point(0, -1),
     Point(0, 0),
   ];
 }
