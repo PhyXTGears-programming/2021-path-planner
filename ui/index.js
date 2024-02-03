@@ -192,7 +192,6 @@ const seasonConfig = {
         .then(res => res.image)
     ]).then(([ config, image ]) => {
       self.config = Object.assign(config, { image, year });
-      console.log('season config loaded', self.config);
       return self;
     }).catch(err => {
       self.config = null;
@@ -412,8 +411,6 @@ function onFieldLoaded(canvas) {
           case SelectState.NONE:
             hoveredPose = findPoseNear(x, y);
             hoveredHandle = findHandleNear(x, y);
-
-            console.log("Hovered Pose:  ", hoveredPose);
 
             break;
         }
@@ -1009,6 +1006,8 @@ function placePointAt(x, y) {
 
   if (0 == poseList.length) {
     new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), {commands: PoseCommandGroup(genId())});
+    makeRotation(0, canvas.getContext('2d'));
+
   } else {
     const last_point = poseList.poses.slice(-1)[0].point;
     const enterVec = last_point.sub(new_point).unit().scale(100);
@@ -1058,7 +1057,7 @@ function findHandleNear(x, y) {
 }
 
 function findNode(passedNode, idTarget) {
-  console.log("Node obj: ", passedNode);
+  // console.log("Node obj: ", passedNode);
 
     if (passedNode.nodeId == idTarget) {
       return passedNode;
@@ -1112,8 +1111,6 @@ document.addEventListener('dragenter', ev => {
     if(spacerTarget) {
       spacerTarget.classList.remove("is-active-dropzone");
     }
-
-    console.log("enter drop zone", ev.target.id, ev.dataTransfer.getData('text'));
 
     if(ev.target.classList.contains("o-command-group__spacer")) {
       spacerTarget = ev.target;
@@ -1259,15 +1256,7 @@ function drawNodes(node) {
 }
 
 function createNode(type, commandName) {
-  let newId = genId();
-
-  // if(newId == 0) {
-  //   makeRotation(tval, canvas.getContext('2d'));
-  // }
-
-  // console.log(rotationList);
-
-  return ActionNode(type, [], commandName, newId);
+  return ActionNode(type, [], commandName, genId());
 }
 
 function attachNode(child, parent) {
@@ -1340,7 +1329,7 @@ document.addEventListener('drop', ev => {
     }
 
     const commandName = ev.dataTransfer.getData('text/plain');
-    console.log("Target nodeId: ", target.dataset.nodeId, target);
+    // console.log("Target nodeId: ", target.dataset.nodeId, target);
 
     targetNode = findNode(targetPoseCommands.rootNode, target.dataset.nodeId, true);
 
@@ -1358,7 +1347,7 @@ document.addEventListener('drop', ev => {
         insertNode(createNode('command', commandName), targetNode, insertIndex);
     }
   }
-  console.log("Updated Data structure: ", targetPoseCommands, targetNode);
+  // console.log("Updated Data structure: ", targetPoseCommands, targetNode);
   drawAllNodes(targetPoseCommands);
 });
 
@@ -1420,6 +1409,11 @@ function findNearestRotationIndex(mousePt) {
 }
 
 function drawRotations(context, poseList) {
+
+  if(poseList.length < 2) {
+    return;
+  }
+
   for (let rotation of rotationList.rotations) {
 
     let rotationOrigin = calcRotationPos(rotation);
