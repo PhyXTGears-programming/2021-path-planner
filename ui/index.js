@@ -116,6 +116,8 @@ let targetId = null;
 let targetNode = null;
 let spacerTarget = null;
 
+const ORIGIN = Point(0, 0);
+
 const genId = IdGen();
 
 let mousePt = Point(0, 0);
@@ -411,6 +413,8 @@ function onFieldLoaded(canvas) {
             hoveredPose = findPoseNear(x, y);
             hoveredHandle = findHandleNear(x, y);
 
+            console.log("Hovered Pose:  ", hoveredPose);
+
             break;
         }
 
@@ -535,6 +539,8 @@ function onFieldLoaded(canvas) {
             }
 
             drawRotations(canvas.getContext('2d'), poseList);
+
+            selectState = SelectState.NONE;
 
             break;
 
@@ -1070,7 +1076,6 @@ function findNode(passedNode, idTarget) {
 }
 
 document.addEventListener('dragstart', ev => {
-  console.log("drag");
   // Compute the canvas position of the cursor relative to the canvas.
   const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
@@ -1254,7 +1259,15 @@ function drawNodes(node) {
 }
 
 function createNode(type, commandName) {
-  return ActionNode(type, [], commandName, genId());
+  let newId = genId();
+
+  // if(newId == 0) {
+  //   makeRotation(tval, canvas.getContext('2d'));
+  // }
+
+  // console.log(rotationList);
+
+  return ActionNode(type, [], commandName, newId);
 }
 
 function attachNode(child, parent) {
@@ -1376,24 +1389,6 @@ document.addEventListener('drop', ev => {
 
 // ====--------------====   ROTATION STUFF   ====--------------====
 
-function drawRotations(context, poseList) {
-  for(let rotation of rotationList.rotations) {
-
-    let pt = calcRotationPos(rotation);
-    drawCircle(context, pt.x, pt.y, 7.0);
-    context.fillStyle = '#0af';
-
-    context.moveTo(pt.x, pt.y);
-
-    let arrowpt = Point(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
-    context.lineTo(pt.x + arrowpt.x, pt.y + arrowpt.y);
-    context.stroke();
-    
-    context.fill();
-    context.save();
-  }
-}
-
 function makeRotation(tval, context) {
   rotationList.insertRotation(tval);
   console.log(rotationList);
@@ -1411,7 +1406,7 @@ function getAngleToCursor(pt, mousePt) {
 }
 
 function findNearestRotationIndex(mousePt) {
-  for(let rotation of rotationList.rotations) {
+  for (let rotation of rotationList.rotations) {
     let rotationPt = calcRotationPos(rotation);
     let distance = Math.sqrt(Math.pow(rotationPt.x - mousePt.x, 2) + Math.pow(rotationPt.y - mousePt.y, 2));
 
@@ -1422,4 +1417,72 @@ function findNearestRotationIndex(mousePt) {
   }
 
   return null;
+}
+
+function drawRotations(context, poseList) {
+  for (let rotation of rotationList.rotations) {
+
+    let rotationOrigin = calcRotationPos(rotation);
+    drawCircle(context, rotationOrigin.x, rotationOrigin.y, 7.0);
+    context.fillStyle = '#0af';
+
+    context.moveTo(rotationOrigin.x, rotationOrigin.y);
+
+    let arrowpt = Point(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
+    // context.lineTo(pt.x + arrowpt.x, pt.y + arrowpt.y);
+
+    const vector = arrowpt.vecFromOrigin();
+    const initialArrowPoints = arrowPoints();
+    const rotatedArrowPoints = initialArrowPoints.map(
+      pt => calcPointOnVector(pt, vector).addVec(rotationOrigin.vecFromOrigin())
+    );
+
+    for (let point of rotatedArrowPoints) {
+
+      context.lineTo(point.x, point.y);
+
+    }
+
+    context.stroke();
+    context.fill();
+    context.save();
+  }
+}
+
+// function calcVectorUnit(pt1, pt2) {
+  // let lena = pt2.x - pt1.x;
+  // let lenb = pt2.y - pt2.y;
+//
+  // let vectorLen = Math.sqrt(Math.pow(lena, 2) + Math.pow(lenb, 2));
+//
+  // return Vector(lena / vectorLen, lenb / vectorLen);
+//
+// }
+
+function calcPointOnVector(pt, vector) {
+  const va = vector.unit();
+  const vb = Vector(-va.y, va.x);
+  const v1 = va.scale(pt.x);
+  const v2 = vb.scale(pt.y);
+
+  const v3 = v1.add(v2);
+
+  return ORIGIN.addVec(v3);
+}
+
+function ezOffsetPoint(origin, offx, offy) {
+  return Point(origin.x + offx, origin.y + offy);
+}
+
+function arrowPoints() { // Takes canvas point and calcs
+  return [                             // relative points to draw arrow
+    Point(0, 0),
+    Point(0, -5),
+    Point(25,-5),
+    Point(25, -10),
+    Point(35, -3),
+    Point(25, 5),
+    Point(25, 0),
+    Point(0, 0),
+  ];
 }
