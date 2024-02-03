@@ -355,6 +355,12 @@ function onFieldLoaded(canvas) {
         }
 
         drawAllNodes(actionedPose.commands);
+
+        if(poseList.poses.indexOf(actionedPose) == 0) {
+          setEditHeadingVisible(true);
+        } else {
+          setEditHeadingVisible(false);
+        }
         break;
 
       case Tool.ROTATION:
@@ -533,6 +539,7 @@ function onFieldLoaded(canvas) {
             if(findNearestRotationIndex(mousePt) >= 0) {
               let nearRotationIndex = findNearestRotationIndex(mousePt);
               rotationList.rotations[nearRotationIndex].setRotVal(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
+              console.log(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
             }
 
             drawRotations(canvas.getContext('2d'), poseList);
@@ -1482,4 +1489,34 @@ function arrowPoints() { // Takes canvas point and calcs
     Point(0, -1),
     Point(0, 0),
   ];
+}
+
+function setEditHeadingVisible(visibool) {
+  const headingElem = document.getElementById("rotation-heading-area");
+
+  if(visibool) {
+    headingElem.style.visibility = "visible";
+  } else {
+    headingElem.style.visibility = "collapse";
+  }
+
+}
+
+function getHeadingInput() {
+  const inputElem = document.getElementById("o-heading-input");
+
+  return inputElem.value;
+}
+
+document.getElementById("o-heading-input").addEventListener("input", (ev) => {
+  rotationList.rotations[0].rot = toRadians(getHeadingInput());
+  redrawCanvas(document.getElementById('canvas'), poseList);
+});
+
+function toDegrees(rad) {
+  return rad * (180/Math.PI);
+}
+
+function toRadians(deg) {
+  return deg * (Math.PI/180);
 }
