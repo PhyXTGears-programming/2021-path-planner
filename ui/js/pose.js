@@ -4,6 +4,7 @@
 
 import Bezier from './geom/bezier.js';
 import Point from './geom/point.js';
+import { Rotation, toRadians, toDegrees } from './rotation.js';
 
 const PoseListPrototype = {
   appendPose (pose) {
@@ -181,10 +182,23 @@ export const ActionNode = (kind, children, name, nodeId) => ({
 const Payload = () => ({
   segments: [],
   waypoints: [],
+  rotations: [],
 });
 
+export function alignAnglesWithHeading(rotationsList) {
+  let alignedRotations = [];
+  const headingOffset = rotationsList[0].rot;
 
-export const exportPoses = (poseList, fieldDims) => {
+  for(let r in rotationsList) {
+    let alignedRotation = new Rotation(rotationsList[r].t);
+    alignedRotation.setRotVal(toDegrees(rotationsList[r].rot - headingOffset))
+    alignedRotations.push(alignedRotation);
+  }
+
+  return alignedRotations;
+}
+
+export const exportPoses = (poseList, fieldDims, rotationList) => {
   /** Export file format
    *
    *  Point :: List Float Float
@@ -233,6 +247,8 @@ export const exportPoses = (poseList, fieldDims) => {
 
       pose1 = pose2;
     }
+
+    payload.rotations = alignAnglesWithHeading(rotationList.rotations);
 
     return payload;
   }
@@ -284,6 +300,8 @@ export const importPoses = (data, fieldDims, genId) => {
   pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), { commands: PoseCommandGroup(genId()) });
 
   poseList.appendPose(pose);
+
+  rotationList.rotations = data.rotations;
 
   return poseList;
 }

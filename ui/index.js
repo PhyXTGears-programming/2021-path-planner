@@ -5,20 +5,18 @@
 // selectively enable features needed in the rendering
 // process.
 
-// import/export functionality still broken
-
 import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
-import { RotationList, Rotation } from './js/rotation.js';
+import { RotationList, Rotation, toRadians, toDegrees} from './js/rotation.js';
 
 import { throttleLast } from './js/timer.js';
 
 import { map, IdGen } from './js/util.js';
 
 import {
-  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList
+  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, alignAnglesWithHeading
 } from './js/pose.js';
 
 import Viewport from './js/viewport.js';
@@ -656,7 +654,7 @@ function onFieldLoaded(canvas) {
   });
 
   document.getElementById('export').addEventListener('click', ev => {
-    const payload = exportPoses(poseList, seasonConfig.fieldDims);
+    const payload = exportPoses(poseList, seasonConfig.fieldDims, rotationList);
     const data = JSON.stringify(payload);
 
     console.log('export data', payload);
@@ -1513,10 +1511,4 @@ document.getElementById("o-heading-input").addEventListener("input", (ev) => {
   redrawCanvas(document.getElementById('canvas'), poseList);
 });
 
-function toDegrees(rad) {
-  return rad * (180/Math.PI);
-}
-
-function toRadians(deg) {
-  return deg * (Math.PI/180);
-}
+// function convertFro

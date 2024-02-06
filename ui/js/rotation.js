@@ -19,6 +19,14 @@ export function Rotation(tval) {
     this.rot = 0;
 }
 
+export function toDegrees(rad) {
+  return rad * (180/Math.PI);
+}
+
+export function toRadians(deg) {
+  return deg * (Math.PI/180);
+}
+
 RotationList.prototype.insertRotation = function (tval) {
     this.rotations.push( new Rotation(tval) );
 };
