@@ -1399,7 +1399,7 @@ function calcRotationPos(rotation) {
 function getAngleToCursor(pt, mousePt) {
   let distAdj = mousePt.x - pt.x;
   let distOpp = mousePt.y - pt.y;
-  return Math.round(Math.atan2(distOpp, distAdj));
+  return Math.atan2(distOpp, distAdj);
 }
 
 function findNearestRotationIndex(mousePt) {
