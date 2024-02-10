@@ -6,8 +6,16 @@
   "robot": {
     "commands": [
       {
-        "name": "Example",
-        "image": "cmd-arm-to-top-peg.png"
+        "name": "Shoot Speaker",
+        "image": "cmd-shoot-speaker.png"
+      },
+      {
+        "name": "Shoot Amp",
+        "image": "cmd-shoot-amp.png"
+      },
+      {
+        "name": "Intake Note",
+        "image": "cmd-intake-note.png"
       }
     ]
   }
