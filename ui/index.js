@@ -698,11 +698,14 @@ function onFieldLoaded(canvas) {
         if (hasFile) {
           readTextFile(importFileName)
             .then(text => JSON.parse(text))
-            .then(data => importPoses(data, seasonConfig.fieldDims, genId))
-            .then(p => { poseList = p; })
+            .then(data => importPoses(data, seasonConfig.fieldDims, genId) )
+            .then(p => { poseList = p.poseList; return p; })
+            .then(r1 => { return revertRotOffset(r1.rotationList.rotations, r1.rotationOffset); })
+            .then(r2 => { rotationList = r2 })
             .then(() => redrawCanvas(canvas, poseList));
         }
       })
+
   });
 }
 
@@ -1511,4 +1514,15 @@ document.getElementById("o-heading-input").addEventListener("input", (ev) => {
   redrawCanvas(document.getElementById('canvas'), poseList);
 });
 
-// function convertFro
+function revertRotOffset(rotations, offset) {
+  let processedRotations = new RotationList;
+  let processingRotation;
+
+  for (let r of rotations) {
+    processingRotation = new Rotation(r.t);
+    processingRotation.setRotVal(r.rot - offset);
+    processedRotations.rotations.push(processingRotation);
+  }
+
+  return processedRotations;
+}

@@ -4,7 +4,7 @@
 
 import Bezier from './geom/bezier.js';
 import Point from './geom/point.js';
-import { Rotation, toRadians, toDegrees } from './rotation.js';
+import { RotationList, Rotation, toRadians, toDegrees } from './rotation.js';
 
 const PoseListPrototype = {
   appendPose (pose) {
@@ -186,16 +186,18 @@ const Payload = () => ({
 });
 
 export function alignAnglesWithHeading(rotationsList) {
-  let alignedRotations = [];
+  let alignedRotationPayload = {rotations: [], rotationOffset: 0};
   const headingOffset = rotationsList[0].rot;
+
+  alignedRotationPayload.rotationOffset = headingOffset;
 
   for(let r in rotationsList) {
     let alignedRotation = new Rotation(rotationsList[r].t);
     alignedRotation.setRotVal(toDegrees(rotationsList[r].rot - headingOffset))
-    alignedRotations.push(alignedRotation);
+    alignedRotationPayload.rotations.push(alignedRotation);
   }
 
-  return alignedRotations;
+  return alignedRotationPayload;
 }
 
 export const exportPoses = (poseList, fieldDims, rotationList) => {
@@ -248,7 +250,10 @@ export const exportPoses = (poseList, fieldDims, rotationList) => {
       pose1 = pose2;
     }
 
-    payload.rotations = alignAnglesWithHeading(rotationList.rotations);
+    let rotationPayload = alignAnglesWithHeading(rotationList.rotations);
+
+    payload.rotations = rotationPayload.rotations;
+    payload.rotationOffset = rotationPayload.rotationOffset;
 
     return payload;
   }
@@ -258,6 +263,7 @@ export const exportPoses = (poseList, fieldDims, rotationList) => {
 
 export const importPoses = (data, fieldDims, genId) => {
   const poseList = PoseList();
+  const rotationsImported = new RotationList();
 
   if (data.length < 1) {
     return poseList;
@@ -301,9 +307,24 @@ export const importPoses = (data, fieldDims, genId) => {
 
   poseList.appendPose(pose);
 
-  rotationList.rotations = data.rotations;
+  // rotationsImported.rotations = data.rotations;
 
-  return poseList;
+  let rotationOffset = data.rotationOffset;
+
+  for (let r in data.rotations) {
+
+    let newRotation = new Rotation(data.rotations[r].t);
+    newRotation.setRotVal(toRadians(data.rotations[r].rot));
+    rotationsImported.rotations.push(newRotation);
+
+  }
+
+
+  return {
+    poseList: poseList,
+    rotationList: rotationsImported,
+    rotationOffset: rotationOffset
+  };
 }
 
 
