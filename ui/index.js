@@ -701,7 +701,7 @@ function onFieldLoaded(canvas) {
             .then(data => importPoses(data, seasonConfig.fieldDims, genId) )
             .then(p => { poseList = p.poseList; return p; })
             .then(r1 => { return revertRotOffset(r1.rotationList.rotations, r1.rotationOffset); })
-            .then(r2 => { rotationList = r2 })
+            .then(r2 => { rotationList.rotations = convertAllRotDegToRad(r2.rotations) })
             .then(() => redrawCanvas(canvas, poseList));
         }
       })
@@ -1520,9 +1520,30 @@ function revertRotOffset(rotations, offset) {
 
   for (let r of rotations) {
     processingRotation = new Rotation(r.t);
-    processingRotation.setRotVal(r.rot - offset);
+    processingRotation.setRotVal(r.rot + offset);
     processedRotations.rotations.push(processingRotation);
   }
+
+  console.log("revertRotOffset, passed rotations: ", rotations);
+  console.log("revertRotOffset, passed offset: ", offset);
+  console.log("Post-revertRotOffset: ", processedRotations);
+
+  return processedRotations;
+}
+
+function convertAllRotDegToRad(rotations) {
+  let processedRotations = [];
+  let processingRot;
+
+
+  for (let r of rotations) {
+    processingRot = new Rotation(r.t);
+    processingRot.setRotVal(toRadians(r.rot));
+    processedRotations.push(processingRot);
+  }
+
+  console.log("convertDegRad, passed rotations: ", rotations);
+  console.log("Post-convertDegRad: ", processedRotations);
 
   return processedRotations;
 }

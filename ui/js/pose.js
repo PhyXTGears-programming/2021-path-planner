@@ -189,7 +189,7 @@ export function alignAnglesWithHeading(rotationsList) {
   let alignedRotationPayload = {rotations: [], rotationOffset: 0};
   const headingOffset = rotationsList[0].rot;
 
-  alignedRotationPayload.rotationOffset = headingOffset;
+  alignedRotationPayload.rotationOffset = toDegrees(headingOffset);
 
   for(let r in rotationsList) {
     let alignedRotation = new Rotation(rotationsList[r].t);
@@ -307,17 +307,18 @@ export const importPoses = (data, fieldDims, genId) => {
 
   poseList.appendPose(pose);
 
-  // rotationsImported.rotations = data.rotations;
 
   let rotationOffset = data.rotationOffset;
 
-  for (let r in data.rotations) {
+  // for (let r in data.rotations) {
 
-    let newRotation = new Rotation(data.rotations[r].t);
-    newRotation.setRotVal(toRadians(data.rotations[r].rot));
-    rotationsImported.rotations.push(newRotation);
+  //   // let newRotation = new Rotation(data.rotations[r].t);
+  //   // newRotation.setRotVal(toRadians(data.rotations[r].rot));
+  //   rotationsImported.rotations.push(r);
 
-  }
+  // }
+
+  rotationsImported.rotations = data.rotations;
 
 
   return {
