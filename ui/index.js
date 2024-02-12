@@ -547,9 +547,9 @@ function onFieldLoaded(canvas) {
               console.log(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
             }
 
-            drawRotations(canvas.getContext('2d'), poseList);
-
             selectState = SelectState.NONE;
+
+            redrawCanvas(canvas, poseList);
 
             break;
 
