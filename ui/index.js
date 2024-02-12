@@ -723,7 +723,7 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   context.scale(canvasViewport.scale, canvasViewport.scale);
 
   // Draw canvas objects in viewport coordinate system.
-  clearCanvas(context);
+  drawField(context);
   drawAllPoses(context, poseList);
   drawBezier(context, poseList);
   drawAllHandleLines(context, poseList);
@@ -770,7 +770,7 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   }
 }
 
-function clearCanvas(context) {
+function drawField(context) {
   if (seasonConfig.isLoaded()) {
     context.drawImage(seasonConfig.config.image, 0, 0);
   }
