@@ -287,8 +287,7 @@ function onFieldLoaded(canvas) {
   canvas.width = seasonConfig.config.image.width;
   canvas.height = seasonConfig.config.image.height;
 
-  const context = canvas.getContext('2d');
-  clearCanvas(context);
+  redrawCanvas(canvas, poseList);
 
   // Mouse buttons.
   const LEFT_BUTTON = 0;
