@@ -16,7 +16,7 @@ import { throttleLast } from './js/timer.js';
 import { map, IdGen } from './js/util.js';
 
 import {
-  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, alignAnglesWithHeading
+  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, alignAnglesWithHeading,
 } from './js/pose.js';
 
 import Viewport from './js/viewport.js';
@@ -27,7 +27,7 @@ const { documentDir } = window.__TAURI__.path;
 
 // Custom types
 
-const FRC_SEASON = "2024";
+const FRC_SEASON = '2024';
 
 // Constants
 
@@ -53,15 +53,15 @@ const SelectState = {
 const colors = {
   handle: {
     enter: {
-      color: "#03a9f4",
+      color: '#03a9f4',
       selected: {
-        color: "#76ff03",
+        color: '#76ff03',
       },
     },
     exit: {
-      color: "#ff9800",
+      color: '#ff9800',
       selected: {
-        color: "#76ff03",
+        color: '#76ff03',
       },
     },
   },
@@ -133,29 +133,29 @@ const config = {
   imageFiles: [
     {
       name: 'pose',
-      file: './images/start.png'
+      file: './images/start.png',
     },
     {
       name: 'waypoint',
-      file: './images/waypoint.png'
+      file: './images/waypoint.png',
     },
     {
       name: 'finish',
-      file: './images/finish.png'
+      file: './images/finish.png',
     },
     {
       name: 'select',
-      file: './images/finish.png'
+      file: './images/finish.png',
     },
     {
       name: 'delete',
-      file: './images/delete.png'
+      file: './images/delete.png',
     },
     {
       name: 'actions',
-      file: './images/temp-lower.png'
+      file: './images/temp-lower.png',
     },
-  ]
+  ],
 };
 
 const seasonConfig = {
@@ -187,7 +187,7 @@ const seasonConfig = {
           return resp.json();
         }),
       loadImage('field', `./season/${year}/field.png`)
-        .then(res => res.image)
+        .then(res => res.image),
     ]).then(([ config, image ]) => {
       self.config = Object.assign(config, { image, year });
       return self;
@@ -278,13 +278,13 @@ function loadImages(onDone) {
 }
 
 function loadImage(name, filename) {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      const onLoad = () => resolve({ name, image });
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const onLoad = () => resolve({ name, image });
 
-      image.src = filename;
-      image.addEventListener('load', onLoad, { once: true });
-    });
+    image.src = filename;
+    image.addEventListener('load', onLoad, { once: true });
+  });
 }
 
 function onFieldLoaded(canvas) {
@@ -344,6 +344,7 @@ function onFieldLoaded(canvas) {
         poseList.deletePose(nearestPose);
         redrawCanvas(canvas, poseList);
         break;
+
       case Tool.ACTIONS:
         let target = ev.target;
         actionedPose = findPoseNear(x, y);
@@ -616,7 +617,7 @@ function onFieldLoaded(canvas) {
     {
       id: 'rotation-tool',
       state: Tool.ROTATION,
-    }
+    },
   ];
 
   for (let tool of tool_map) {
@@ -1013,7 +1014,7 @@ function placePointAt(x, y) {
   let new_pose;
 
   if (0 == poseList.length) {
-    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), {commands: PoseCommandGroup(genId())});
+    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), { commands: PoseCommandGroup(genId()) });
     makeRotation(0, canvas.getContext('2d'));
 
   } else {
@@ -1067,19 +1068,20 @@ function findHandleNear(x, y) {
 function findNode(passedNode, idTarget) {
   // console.log("Node obj: ", passedNode);
 
-    if (passedNode.nodeId == idTarget) {
-      return passedNode;
-    }
-    else {
-      for (let child of passedNode.children) {
-        let node = findNode(child, idTarget, false);
+  if (passedNode.nodeId == idTarget) {
+    return passedNode;
+  }
+  else {
+    for (let child of passedNode.children) {
+      let node = findNode(child, idTarget, false);
 
-        if (node !== null) {
-          return node;
-        }
+      if (node !== null) {
+        return node;
       }
       return null;
     }
+    return null;
+  }
 }
 
 document.addEventListener('dragstart', ev => {
@@ -1212,7 +1214,7 @@ function drawNodes(node) {
   if (node.kind == 'group') {
     const nodeElem = document.createElement("div");
     nodeElem.classList.add('o-command-group');
-    
+
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
     nodeElem.dataset.nodeKind = node.kind;
