@@ -541,9 +541,14 @@ function onFieldLoaded(canvas) {
             moveHandle = null;
             break;
           case SelectState.MOVE_ROTATION:
-            if(findNearestRotationIndex(mousePt) >= 0) {
+            if (findNearestRotationIndex(mousePt) >= 0) {
               let nearRotationIndex = findNearestRotationIndex(mousePt);
-              rotationList.rotations[nearRotationIndex].setRotVal(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
+              rotationList.rotations[nearRotationIndex].setRotVal(
+                getAngleToCursor(
+                  calcRotationPos(rotationList.rotations[nearRotationIndex]),
+                  mousePt
+                )
+              );
               console.log(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
             }
 
