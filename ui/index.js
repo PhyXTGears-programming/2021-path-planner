@@ -9,14 +9,14 @@ import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
-import { RotationList, Rotation, toRadians, toDegrees} from './js/rotation.js';
+import { RotationList, Rotation, toRadians } from './js/rotation.js';
 
 import { throttleLast } from './js/timer.js';
 
-import { map, IdGen } from './js/util.js';
+import { IdGen } from './js/util.js';
 
 import {
-  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, alignAnglesWithHeading,
+  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList,
 } from './js/pose.js';
 
 import Viewport from './js/viewport.js';
@@ -101,16 +101,7 @@ let selectState = SelectState.NONE;
 
 let importFileName = '';
 let saveFileName = '';
-let saveData = '';
 
-let yoinked = null; // For dragging of commands
-
-let draggedId = null; // Keeps track of id of dragged to define nodeUi
-let nodeUi = null; // Defines what will be placed into work area of command sequencer
-let workArea = document.getElementById('c-action-work-area__sequence');
-let textNodeHolder = null; // For creating text dynamically
-let titleTop = null; // to hold the text node for the title (:
-let targetId = null;
 let targetNode = null;
 let spacerTarget = null;
 
@@ -747,8 +738,6 @@ function _redrawCanvas(canvas, poseList, options = {}) {
     if (0 < poseList.length) {
       let nearest;
 
-      const startTime = performance.now();
-
       if (lastT < 0.0) {
         nearest = poseList.findTNearPoint(mousePt, 50);
       } else {
@@ -1078,19 +1067,12 @@ function findNode(passedNode, idTarget) {
       if (node !== null) {
         return node;
       }
-      return null;
     }
     return null;
   }
 }
 
 document.addEventListener('dragstart', ev => {
-  // Compute the canvas position of the cursor relative to the canvas.
-  const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
-
-  // Compute field position of cursor with current zoom+pan.
-  const { x, y } = canvasViewport.toViewCoord(clickVec);
-
   let dragTargets = [
     "sequential",
     "parallel",
@@ -1269,22 +1251,10 @@ function createNode(type, commandName) {
   return ActionNode(type, [], commandName, genId());
 }
 
-function attachNode(child, parent) {
-  parent.children.push(child);
-}
-
 function insertNode(child, parent, index) {
   parent.children = parent.children.slice(0, index)
     .concat([child])
     .concat(parent.children.slice(index));
-}
-
-function getCommandImg(commandName) {
-  commandImgs.forEach(element => {
-    if (element == commandName) {
-      return commandImgs.element;
-    }
-  });
 }
 
 //createNode(initialNode, document.getElementById('c-action-work-area__sequence'))
@@ -1455,16 +1425,6 @@ function drawRotations(context, poseList) {
   }
 }
 
-// function calcVectorUnit(pt1, pt2) {
-  // let lena = pt2.x - pt1.x;
-  // let lenb = pt2.y - pt2.y;
-//
-  // let vectorLen = Math.sqrt(Math.pow(lena, 2) + Math.pow(lenb, 2));
-//
-  // return Vector(lena / vectorLen, lenb / vectorLen);
-//
-// }
-
 function calcPointOnVector(pt, vector) {
   const va = vector.unit();
   const vb = Vector(-va.y, va.x);
@@ -1474,10 +1434,6 @@ function calcPointOnVector(pt, vector) {
   const v3 = v1.add(v2);
 
   return ORIGIN.addVec(v3);
-}
-
-function ezOffsetPoint(origin, offx, offy) {
-  return Point(origin.x + offx, origin.y + offy);
 }
 
 function arrowPoints() { // Takes canvas point and calcs
