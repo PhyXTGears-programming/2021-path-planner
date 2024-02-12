@@ -1089,7 +1089,7 @@ function findPoseNear(x, y) {
   for (let pose of poseList.poses) {
     const distance = Math.pow(x - pose.point.x, 2) + Math.pow(y - pose.point.y, 2);
 
-    if (distance < 450) {
+    if (distance < 300) {
       return pose;
     }
   }
@@ -1102,7 +1102,7 @@ function findHandleNear(x, y) {
     let pt = pose.point.addVec(pose.enterHandle);
     let distance = Math.pow(x - pt.x, 2) + Math.pow(y - pt.y, 2);
 
-    if (distance < 450) {
+    if (distance < 300) {
       return {
         pose,
         isEnter: true,
@@ -1111,7 +1111,7 @@ function findHandleNear(x, y) {
 
     pt = pose.point.addVec(pose.exitHandle);
     distance = Math.pow(x - pt.x, 2) + Math.pow(y - pt.y, 2);
-    if (distance < 450) {
+    if (distance < 300) {
       return {
         pose,
         isEnter: false,
