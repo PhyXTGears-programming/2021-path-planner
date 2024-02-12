@@ -110,7 +110,7 @@ const ORIGIN = Point(0, 0);
 const genId = IdGen();
 
 let mousePt = Point(0, 0);
-let lastT = -1;
+let nearestPt = { t: -1, pt: Point(0, 0) }
 
 // Example:
 // commandImages.set('lowerIntake', './images/temp-lower.png')
@@ -319,7 +319,7 @@ function onFieldLoaded(canvas) {
       case Tool.POSE:
         if (ev.shiftKey) {
           // Insert pose at current bezier `t`.
-          insertPoseAt(lastT);
+          insertPoseAt(nearestPt.t);
         } else {
           // Append pose.
           placePointAt(x, y);
@@ -353,7 +353,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        makeRotation(lastT);
+        makeRotation(nearestPt.t);
         break;
     }
   });
@@ -704,6 +704,30 @@ const redrawCanvas = throttleLast(100, _redrawCanvas);
 
 // options :: { onOverlay :: (canvas) -> Void }
 function _redrawCanvas(canvas, poseList, options = {}) {
+  // Calculate the t value nearest to the mouse.
+  // Do this before any drawing, so that anything drawn that needs the nearestPt will have a correct value.
+  // Would prefer to calculate outside of the draw function, but we must compute just before every redraw, so here we be.
+  {
+    if (0 < poseList.length) {
+      let nearest;
+
+      if (nearestPt.t < 0.0) {
+        nearest = poseList.findTNearPoint(mousePt, 50);
+      } else {
+        nearest = poseList.findNextTNearPoint(mousePt, nearestPt.t - 1, 50);
+      }
+
+      if (0.0 <= nearest.t) {
+        // We found a nearest point.
+        const { t , pt } = nearest; // Discard distance squared.
+        nearestPt = { t, pt };
+      } else {
+        // No point found, invalidate the value.
+        nearestPt = { t: -1, pt: Point(0, 0) };
+      }
+    }
+  }
+
   const context = canvas.getContext('2d');
 
   // Clear previous transform.  Return to unit coordinate system.
@@ -730,35 +754,7 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   drawAllHandleDots(context, poseList);
   drawRotations(context, poseList);
 
-  // Draw point on poseList path that is nearest mouse when mouse within 100 units (pixels?).
-  {
-    context.save();
-
-    if (0 < poseList.length) {
-      let nearest;
-
-      if (lastT < 0.0) {
-        nearest = poseList.findTNearPoint(mousePt, 50);
-      } else {
-        nearest = poseList.findNextTNearPoint(mousePt, lastT, 50);
-      }
-
-      if (0.0 <= nearest.t) {
-        // We found a nearest point.
-
-        const { t, pt } = nearest;
-
-        lastT = t;
-
-        drawCircle(context, pt.x, pt.y, 5.0);
-        context.fillStyle = '#f0f';
-        context.fill();
-      }
-    }
-
-    context.restore();
-  }
-
+  drawNearestPoint(context);
 
   // Restore canvas transform.
   context.restore();
@@ -963,6 +959,19 @@ function drawAllHandleDots(context, poseList) {
 
   for (const pose of last) {
     drawEnterDot(pose);
+  }
+}
+
+function drawNearestPoint(context) {
+  // Draw point on poseList path that is nearest mouse.
+  if (0.0 <= nearestPt.t) {
+    context.save();
+
+    drawCircle(context, nearestPt.pt.x, nearestPt.pt.y, 5.0);
+    context.fillStyle = '#f0f';
+    context.fill();
+
+    context.restore();
   }
 }
 
