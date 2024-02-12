@@ -770,7 +770,9 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   drawAllHandleDots(context, poseList);
   drawRotations(context, poseList);
 
-  drawNearestPoint(context);
+  if (shallDrawNearestPoint()) {
+    drawNearestPoint(context);
+  }
 
   // Restore canvas transform.
   context.restore();
@@ -857,6 +859,25 @@ function drawBezier(context, poseList) {
 
   context.stroke();
   context.restore();
+}
+
+function shallDrawNearestPoint() {
+  // Only draw when:
+  // 1. nothing is hovered, and
+  // 2. tool is waypoint or rotation
+
+  const isNothingHovered = (
+    null === hoveredHandle
+    && null === hoveredPose
+    && null === hoveredRotation
+  );
+
+  const isProperTool = (
+    toolState === Tool.WAYPOINT
+    || toolState === Tool.ROTATION
+  );
+
+  return isNothingHovered && isProperTool;
 }
 
 function isHandleSelected(handle) {
