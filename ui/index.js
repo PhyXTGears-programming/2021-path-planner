@@ -1418,7 +1418,6 @@ function drawRotations(context, poseList) {
 
     context.stroke();
     context.fill();
-    context.save();
   }
 }
 
