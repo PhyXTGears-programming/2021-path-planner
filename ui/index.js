@@ -354,7 +354,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        makeRotation(lastT, context);
+        makeRotation(lastT);
         break;
     }
   });
@@ -1004,7 +1004,7 @@ function placePointAt(x, y) {
 
   if (0 == poseList.length) {
     new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), { commands: PoseCommandGroup(genId()) });
-    makeRotation(0, canvas.getContext('2d'));
+    makeRotation(0);
 
   } else {
     const last_point = poseList.poses.slice(-1)[0].point;
@@ -1205,7 +1205,7 @@ function drawNodes(node) {
     const groupName = document.createTextNode(capitalizedCommandName);
     titleTop.classList.add('o-command-label');
 
-    function createSpacer(insertIndex) {
+    const createSpacer = insertIndex => {
       const spacerElem = document.createElement("div");
 
       spacerElem.classList.add("action-drop-zone");
@@ -1358,10 +1358,8 @@ document.addEventListener('drop', ev => {
 
 // ====--------------====   ROTATION STUFF   ====--------------====
 
-function makeRotation(tval, context) {
+function makeRotation(tval) {
   rotationList.insertRotation(tval);
-  console.log(rotationList);
-  drawRotations(context, poseList);
 }
 
 function calcRotationPos(rotation) {
