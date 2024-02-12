@@ -469,7 +469,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.SELECT:
-        if(findNearestRotationIndex(mousePt) != null) {
+        if(hoveredRotation != null) {
           selectState = SelectState.MOVE_ROTATION;
         }
         if (hoveredPose != null) {
