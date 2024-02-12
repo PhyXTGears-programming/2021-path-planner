@@ -471,8 +471,7 @@ function onFieldLoaded(canvas) {
       case Tool.SELECT:
         if(hoveredRotation != null) {
           selectState = SelectState.MOVE_ROTATION;
-        }
-        if (hoveredPose != null) {
+        } else if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
 
           movePose = {
