@@ -95,6 +95,8 @@ let movePose = null;
 let hoveredHandle = null;
 let moveHandle = null;
 
+let hoveredRotation = null;
+
 let actionedPose = null;
 
 let selectState = SelectState.NONE;
@@ -362,6 +364,11 @@ function onFieldLoaded(canvas) {
   canvas.addEventListener('mousemove', ev => {
     const tool = toolStateToName[toolState];
 
+    // Reset ui state variables.  Make sure to reaquire hovered widget before event ends.
+    hoveredHandle = null;
+    hoveredPose = null;
+    hoveredRotation = null;
+
     const context = canvas.getContext('2d');
 
     // Compute the canvas position of the cursor relative to the canvas.
@@ -382,6 +389,8 @@ function onFieldLoaded(canvas) {
 
             movePose.pose.point = posePt;
 
+            hoveredPose = findPoseNear(x, y);
+
             break;
 
           case SelectState.MOVE_ENTER_HANDLE:
@@ -390,6 +399,8 @@ function onFieldLoaded(canvas) {
 
             moveHandle.pose.exitHandle = enterVec.scale(-1).unit().scale(moveHandle.pose.exitHandle.length());
             moveHandle.pose.enterHandle = enterVec;
+
+            hoveredHandle = findHandleNear(x, y);
 
             break;
 
@@ -400,12 +411,17 @@ function onFieldLoaded(canvas) {
             moveHandle.pose.exitHandle = exitVec;
             moveHandle.pose.enterHandle = exitVec.scale(-1).unit().scale(moveHandle.pose.enterHandle.length());
 
+            hoveredHandle = findHandleNear(x, y);
+
             break;
 
+          case SelectState.MOVE_ROTATION:
+            hoveredRotation = findRotationNear(x, y);
+
+            break;
 
           case SelectState.NONE:
-            hoveredPose = findPoseNear(x, y);
-            hoveredHandle = findHandleNear(x, y);
+            updateElementNear(x, y);
 
             break;
         }
@@ -1025,6 +1041,24 @@ function placePointAt(x, y) {
   poseList.appendPose(new_pose)
 }
 
+function updateElementNear(x, y) {
+  // Find element nearest to the given point.  Only hover one element.
+
+  hoveredHandle = findHandleNear(x, y);
+
+  if (null !== hoveredHandle) {
+    return;
+  }
+
+  hoveredPose = findPoseNear(x, y);
+
+  if (null !== hoveredPose) {
+    return;
+  }
+
+  hoveredRotation = findRotationNear(x, y);
+}
+
 function findPoseNear(x, y) {
   for (let pose of poseList.poses) {
     const distance = Math.pow(x - pose.point.x, 2) + Math.pow(y - pose.point.y, 2);
@@ -1055,6 +1089,32 @@ function findHandleNear(x, y) {
       return {
         pose,
         isEnter: false,
+      };
+    }
+  }
+
+  return null;
+}
+
+function findRotationNear(x, y) {
+  for (let a = 0; a < rotationList.rotations.length; a += 1) {
+    const { t } = rotationList.rotations[a];
+
+    const i = Math.floor(t);
+
+    if (i > poseList.poses.length - 1) {
+      console.error("found rotation with tVal beyond last bezier segment.", a, rotationList.rotations[a]);
+      continue;
+    }
+
+    const pt = poseList.pointAt(t);
+
+    const distance = Math.pow(x - pt.x, 2) + Math.pow(y - pt.y, 2);
+
+    if (distance < 800) {
+      return {
+        index: a,
+        pt,
       };
     }
   }
@@ -1395,39 +1455,70 @@ function findNearestRotationIndex(mousePt) {
 }
 
 function drawRotations(context, poseList) {
-
   if(poseList.length < 2) {
     return;
   }
 
-  for (let rotation of rotationList.rotations) {
+  context.save();
+
+  const drawArrowPath = (context, pos, dirVec) => {
+    const rotatedArrowPoints = arrowPoints().map(
+      pt => calcPointOnVector(pt, dirVec).addVec(pos.vecFromOrigin())
+    );
+
+    context.moveTo(pos.x, pos.y);
+
+    for (let point of rotatedArrowPoints) {
+      context.lineTo(point.x, point.y);
+    }
+  };
+
+  for (let a = 0; a < rotationList.rotations.length; a += 1) {
+    const rotation = rotationList.rotations[a];
 
     let rotationOrigin = calcRotationPos(rotation);
-    drawCircle(context, rotationOrigin.x, rotationOrigin.y, 4.0);
+
+    // Draw hover elements.
+    if (null !== hoveredRotation && a == hoveredRotation.index) {
+      context.save();
+
+      const mouseArrowVec = mousePt.sub(rotationOrigin);
+
+
+      context.beginPath();
+      drawArrowPath(context, rotationOrigin, mouseArrowVec);
+
+      context.arc(rotationOrigin.x, rotationOrigin.y, 14.0, 0, 2 * Math.PI, true);
+      context.arc(rotationOrigin.x, rotationOrigin.y, 25.0, 0, 2 * Math.PI, false);
+
+      context.clip()
+
+      context.beginPath();
+      context.arc(rotationOrigin.x, rotationOrigin.y, 30.0, 0, 2 * Math.PI, false);
+
+      context.fillStyle = "#ccc5";
+      context.fill();
+
+      context.restore();
+    }
+
     context.fillStyle = '#a0a';
 
-    context.moveTo(rotationOrigin.x, rotationOrigin.y);
+    drawCircle(context, rotationOrigin.x, rotationOrigin.y, 4.0);
+
     context.stroke();
     context.fill();
 
-    let arrowpt = Point(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
-    // context.lineTo(pt.x + arrowpt.x, pt.y + arrowpt.y);
+    const arrowVec = Vector(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
 
-    const vector = arrowpt.vecFromOrigin();
-    const initialArrowPoints = arrowPoints();
-    const rotatedArrowPoints = initialArrowPoints.map(
-      pt => calcPointOnVector(pt, vector).addVec(rotationOrigin.vecFromOrigin())
-    );
-
-    for (let point of rotatedArrowPoints) {
-
-      context.lineTo(point.x, point.y);
-
-    }
+    context.beginPath();
+    drawArrowPath(context, rotationOrigin, arrowVec);
 
     context.stroke();
     context.fill();
   }
+
+  context.restore();
 }
 
 function calcPointOnVector(pt, vector) {
