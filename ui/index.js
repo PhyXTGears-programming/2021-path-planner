@@ -47,13 +47,13 @@ const SelectState = {
   MOVE_POSE: 1,
   MOVE_ENTER_HANDLE: 2,
   MOVE_EXIT_HANDLE: 3,
-  CHANGE_ROTATION: 4,
 }
 
 const RotationState = {
   NONE: 0,
   NEW: 1,
   MOVE: 2,
+  ROTATE: 3,
 }
 
 const colors = {
@@ -101,8 +101,7 @@ let movePose = null;
 let hoveredHandle = null;
 let moveHandle = null;
 
-let hoveredRotation = null;
-let moveRotation = null;
+let modifyRotation = null;
 let rotationState = null;
 
 let actionedPose = null;
@@ -367,7 +366,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        if (rotationState = RotationState.NEW) {
+        if (rotationState == RotationState.NEW) {
           makeRotation(nearestPt.t);
         }
         rotationState = RotationState.NONE;
@@ -382,7 +381,6 @@ function onFieldLoaded(canvas) {
     // Reset ui state variables.  Make sure to reaquire hovered widget before event ends.
     hoveredHandle = null;
     hoveredPose = null;
-    hoveredRotation = null;
 
     const context = canvas.getContext('2d');
 
@@ -430,17 +428,11 @@ function onFieldLoaded(canvas) {
 
             break;
 
-          case SelectState.CHANGE_ROTATION:
-            hoveredRotation = findRotationNear(x, y);
-
-            break;
-
           case SelectState.NONE:
             updateElementNear(x, y);
 
             break;
         }
-
         break;
 
       case Tool.NONE:
@@ -468,10 +460,14 @@ function onFieldLoaded(canvas) {
             rotationState = RotationState.NONE;
             break;
           case RotationState.MOVE:
-            if(poseList.findTNearPoint(Point(x, y), 50).t == -1) {// abort move if mouse moves off of valid t vals
+            if(poseList.findTNearPoint(Point(x, y), 50).t == -1) {// don't move when mouse moves off of valid t vals
               break;
             }
-            rotationList.rotations[moveRotation.index].t = poseList.findTNearPoint(Point(x, y), 50).t;
+            rotationList.rotations[modifyRotation.index].t = poseList.findTNearPoint(Point(x, y), 50).t;
+            break;
+          case RotationState.ROTATE:
+            const rotPt = calcRotationPos(rotationList.rotations[modifyRotation.index]);
+            rotationList.rotations[modifyRotation.index].setRotVal(getAngleToCursor(rotPt, Point(x, y)));
             break;
         }
         break;
@@ -498,9 +494,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.SELECT:
-        if(hoveredRotation != null) {
-          selectState = SelectState.CHANGE_ROTATION;
-        } else if (hoveredPose != null) {
+        if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
 
           movePose = {
@@ -527,9 +521,12 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        moveRotation = findRotationNear(x, y);
-        if (moveRotation != null) {
+        modifyRotation = findRotationNear(x, y);
+
+        if (modifyRotation != null && innerOrOuterRadius(Point(x, y), modifyRotation.pt) == 'inner') {
           rotationState = RotationState.MOVE;
+        } else if (modifyRotation != null && innerOrOuterRadius(Point(x, y), modifyRotation.pt) == 'outer') {
+          rotationState = RotationState.ROTATE;
         } else {
           rotationState = RotationState.NEW;
         }
@@ -576,24 +573,7 @@ function onFieldLoaded(canvas) {
             selectState = SelectState.NONE;
             moveHandle = null;
             break;
-          case SelectState.CHANGE_ROTATION:
-            if (findNearestRotationIndex(mousePt) >= 0) {
-              let nearRotationIndex = findNearestRotationIndex(mousePt);
-              rotationList.rotations[nearRotationIndex].setRotVal(
-                getAngleToCursor(
-                  calcRotationPos(rotationList.rotations[nearRotationIndex]),
-                  mousePt
-                )
-              );
-              console.log(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
-            }
 
-            selectState = SelectState.NONE;
-            rotationState = RotationState.NONE;
-
-            redrawCanvas(canvas, poseList);
-
-            break;
 
         }
         break;
@@ -601,6 +581,25 @@ function onFieldLoaded(canvas) {
       default:
         break;
     }
+    if (toolState == Tool.ROTATE && rotationState == RotationState.ROTATE) {
+      if (findNearestRotationIndex(mousePt) >= 0) {
+        let nearRotationIndex = findNearestRotationIndex(mousePt);
+        rotationList.rotations[nearRotationIndex].setRotVal(
+          getAngleToCursor(
+            calcRotationPos(rotationList.rotations[nearRotationIndex]),
+            mousePt
+          )
+        );
+        console.log(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
+      }
+
+      selectState = SelectState.NONE;
+      rotationState = RotationState.NONE;
+      modifyRotation = null;
+
+      redrawCanvas(canvas, poseList);
+    }
+
   });
 
   // Mouse down handler to pan the canvas view.
@@ -911,7 +910,7 @@ function shallDrawNearestPoint() {
   const isNothingHovered = (
     null === hoveredHandle
     && null === hoveredPose
-    && null === hoveredRotation
+    && null === modifyRotation
   );
 
   const isProperTool = (
@@ -1120,7 +1119,7 @@ function updateElementNear(x, y) {
     return;
   }
 
-  hoveredRotation = findRotationNear(x, y);
+  modifyRotation = findRotationNear(x, y);
 }
 
 function findPoseNear(x, y) {
@@ -1549,7 +1548,7 @@ function drawRotations(context, poseList) {
     let rotationOrigin = calcRotationPos(rotation);
 
     // Draw hover elements.
-    if (null !== hoveredRotation && a == hoveredRotation.index) {
+    if (null !== modifyRotation && a == modifyRotation.index) {
       context.save();
 
       const mouseArrowVec = mousePt.sub(rotationOrigin);
@@ -1734,4 +1733,16 @@ function pruneInvalidRotPts() {
 
 function popsicle(data) { // temporary function for debugging. Just deep clones.
   return JSON.parse(JSON.stringify(data));
+}
+
+function ezPtDistance(a, b) {
+  return Math.abs(Math.sqrt(Math.pow(a.x - b.x, 2) - Math.pow(a.y - b.y, 2)));
+}
+
+function innerOrOuterRadius(mousePt, rotPt) {
+  if(ezPtDistance(mousePt, rotPt) <= 14) {
+    return 'inner';
+  } else {
+    return 'outer';
+  }
 }
