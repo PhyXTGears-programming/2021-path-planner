@@ -34,3 +34,7 @@ RotationList.prototype.insertRotation = function (tval) {
 Rotation.prototype.setRotVal = function (rotval) {
     this.rot = rotval;
 };
+
+Rotation.prototype.setTVal = function (tval) {
+  this.t = tval;
+};

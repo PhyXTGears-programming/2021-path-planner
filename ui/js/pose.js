@@ -40,8 +40,10 @@ const PoseListPrototype = {
         continue;
       }
 
+      const t2 = t + a;
+
       if (dist2 < minD2) {
-        minT = t;
+        minT = t2;
         minPt = bezPt;
         minD2 = dist2;
       }
@@ -70,8 +72,10 @@ const PoseListPrototype = {
       const t2 = t + a; // Convert t [0, 1), to [a, a + 1).
 
       if (-1 === minT
-        || (1 < Math.abs(t2 - minT) && Math.abs(t2 - prevT) < Math.abs(minT - prevT))
-        || (1 >= Math.abs(t2 - minT) && dist2 < minD2)
+        || (1 < Math.abs(t2 - minT)
+          && Math.abs(t2 - prevT) < Math.abs(minT - prevT))
+        || (1 >= Math.abs(t2 - minT)
+          && dist2 < minD2)
       ) {
         // Keep the point closest to prevT even when it's further away.
         // This let's the user navigate overlaps by sliding along the bezier

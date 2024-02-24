@@ -320,8 +320,9 @@ function onFieldLoaded(canvas) {
 
       case Tool.POSE:
         if (ev.shiftKey) {
-          // Insert pose at current bezier `t`.
-          insertPoseAt(nearestPt.t);
+
+          repositionRotsAndDo('insert', "testing");
+
         } else {
           // Append pose.
           placePointAt(x, y);
@@ -332,9 +333,9 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.DELETE:
-        const nearestPose = findPoseNear(x, y);
-        poseList.deletePose(nearestPose);
-        redrawCanvas(canvas, poseList);
+
+        repositionRotsAndDo('delete', Point(x, y));
+
         break;
 
       case Tool.ACTIONS:
@@ -1625,4 +1626,48 @@ function convertAllRotDegToRad(rotations) {
   console.log("Post-convertDegRad: ", processedRotations);
 
   return processedRotations;
+}
+
+function repositionRotsAndDo(task, data = 'none') {
+  // TASK OPTIONS: 'insert' (Inserting Waypoint) || 'delete' (Deleting a waypoint)
+
+  // Get all rot pts repositioned in place:
+  let rotPosList = [];
+
+  for (let r of rotationList.rotations) {
+    rotPosList.push(calcRotationPos(r));
+  }
+
+  if (task == 'insert') {//                                 Task Insert
+    // Insert pose at current bezier `t`
+
+    if (data != 'none') {console.log("Just noting that you passed data into repositionRotsAndDo when inserting. This is not necessary.");}
+
+    insertPoseAt(nearestPt.t);
+
+  } else if (task == 'delete' && data == 'none') {//        Task Delete
+
+    console.warn("You did not pass the needed data (the mouse point) into repositionRotsAndDo() while attempting to delete a waypoint.");
+
+  } else if (task == 'delete' && data != 'none') {
+    // ! ! ! ADD DELETE POINTS AT END SOON ! ! !
+    const nearestPose = findPoseNear(data.x, data.y);
+
+    poseList.deletePose(nearestPose);
+    redrawCanvas(canvas, poseList);
+
+  } else {//                                                Invalid/No Task
+    console.warn("You passed ", task, " to repositionRotsAndDo; this is not a valid task. Valid tasks are 'insert' and 'delete.' Did not perform task in any capacity.");
+  }
+
+  console.log("Post-Pose count: ", poseList.poses.length, JSON.parse(JSON.stringify(poseList)));
+
+  // Cont. repositioning rot pts
+  for (let i = 0; i < rotPosList.length; i++) {
+    const nearestT = poseList.findTNearPoint(rotPosList[i], 200);
+    console.log("rot new t: ", nearestT);
+    rotationList.rotations[i].t = nearestT.t;
+  }
+
+  console.log("Post-Ins rotationList: ", rotationList);
 }
