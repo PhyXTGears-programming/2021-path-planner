@@ -1675,6 +1675,8 @@ function pruneInvalidRotPts() {
   for (let i = 1; i < rotationList.rotations.length; i++) {
     if (rotationList.rotations[i].t == -1) { // Check points
       rotationList.rotations.splice(i, 1);
+      console.log("i = ", i, "  :  ", JSON.parse(JSON.stringify(rotationList.rotations)));
+      i = 0;
     }
   }
   if (rotationList.rotations[0].t != 0) { // Ensure first rotation is on start point again
