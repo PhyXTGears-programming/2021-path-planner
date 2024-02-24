@@ -1659,25 +1659,23 @@ function repositionRotsAndDo(task, data = 'none') {
     console.warn("You passed ", task, " to repositionRotsAndDo; this is not a valid task. Valid tasks are 'insert' and 'delete.' Did not perform task in any capacity.");
   }
 
-  console.log("Post-Pose count: ", poseList.poses.length, JSON.parse(JSON.stringify(poseList)));
-
-  // Cont. repositioning rot pts
+  // Cont. repositioning rot pts:
   for (let i = 0; i < rotPosList.length; i++) {
-    const nearestT = poseList.findTNearPoint(rotPosList[i], 150);
+    const nearestT = poseList.findTNearPoint(rotPosList[i], 70);
     rotationList.rotations[i].t = nearestT.t;
   }
+
   console.log("rotationList post - reposition, pre-null-filter: ", JSON.parse(JSON.stringify(rotationList)));
-  for (let i = 0; i < rotationList.rotations.length; i++) {
-    if (rotationList.rotations[i].t == -1) {
-      rotationList.rotations = rotationList.rotations.splice(i, 1);
-    }
-    if (rotationList.rotations[0].t == -1) {
+
+  // Filter invalid rot pt locations:
+  for (let i = 1; i < rotationList.rotations.length; i++) {
+    if (rotationList.rotations[i].t == -1) { // Check points
       rotationList.rotations.splice(i, 1);
     }
+    console.log("rotationList during null-filter: ", JSON.parse(JSON.stringify(rotationList)));
   }
-
-  if (rotationList.rotations.length == 0) {
-    makeRotation(0);
+  if (rotationList.rotations[0].t != 0) { // Ensure first rotation is on start point again
+    rotationList.rotations[0].t = 0;
   }
 
   console.log("rotationList post-null-filter: ", rotationList);
