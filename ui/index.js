@@ -321,7 +321,7 @@ function onFieldLoaded(canvas) {
       case Tool.POSE:
         if (ev.shiftKey) {
 
-          repositionRotsAndDo('insert', "testing");
+          repositionRotsAndDo('insert');
 
         } else {
           // Append pose.
@@ -1654,7 +1654,6 @@ function repositionRotsAndDo(task, data = 'none') {
     const nearestPose = findPoseNear(data.x, data.y);
 
     poseList.deletePose(nearestPose);
-    redrawCanvas(canvas, poseList);
 
   } else {//                                                Invalid/No Task
     console.warn("You passed ", task, " to repositionRotsAndDo; this is not a valid task. Valid tasks are 'insert' and 'delete.' Did not perform task in any capacity.");
@@ -1664,10 +1663,24 @@ function repositionRotsAndDo(task, data = 'none') {
 
   // Cont. repositioning rot pts
   for (let i = 0; i < rotPosList.length; i++) {
-    const nearestT = poseList.findTNearPoint(rotPosList[i], 200);
-    console.log("rot new t: ", nearestT);
+    const nearestT = poseList.findTNearPoint(rotPosList[i], 150);
     rotationList.rotations[i].t = nearestT.t;
   }
+  console.log("rotationList post - reposition, pre-null-filter: ", JSON.parse(JSON.stringify(rotationList)));
+  for (let i = 0; i < rotationList.rotations.length; i++) {
+    if (rotationList.rotations[i].t == -1) {
+      rotationList.rotations = rotationList.rotations.splice(i, 1);
+    }
+    if (rotationList.rotations[0].t == -1) {
+      rotationList.rotations.splice(i, 1);
+    }
+  }
 
-  console.log("Post-Ins rotationList: ", rotationList);
+  if (rotationList.rotations.length == 0) {
+    makeRotation(0);
+  }
+
+  console.log("rotationList post-null-filter: ", rotationList);
+
+  redrawCanvas(canvas, poseList);
 }
