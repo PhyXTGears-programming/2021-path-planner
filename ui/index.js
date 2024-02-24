@@ -47,7 +47,13 @@ const SelectState = {
   MOVE_POSE: 1,
   MOVE_ENTER_HANDLE: 2,
   MOVE_EXIT_HANDLE: 3,
-  MOVE_ROTATION: 4,
+  CHANGE_ROTATION: 4,
+}
+
+const RotationState = {
+  NONE: 0,
+  NEW: 1,
+  MOVE: 2,
 }
 
 const colors = {
@@ -96,6 +102,8 @@ let hoveredHandle = null;
 let moveHandle = null;
 
 let hoveredRotation = null;
+let moveRotation = null;
+let rotationState = null;
 
 let actionedPose = null;
 
@@ -312,10 +320,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.SELECT:
-        // let nearRotationIndex = findNearestRotationIndex(Point(x, y));
-        // if(nearRotationIndex >= 0) {
-        //   // TODO : Select, bring up panel for precise edit
-        // }
+        //Do nothing?
         break;
 
       case Tool.POSE:
@@ -362,7 +367,10 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        makeRotation(nearestPt.t);
+        if (rotationState = RotationState.NEW) {
+          makeRotation(nearestPt.t);
+        }
+        rotationState = RotationState.NONE;
         break;
     }
   });
@@ -422,7 +430,7 @@ function onFieldLoaded(canvas) {
 
             break;
 
-          case SelectState.MOVE_ROTATION:
+          case SelectState.CHANGE_ROTATION:
             hoveredRotation = findRotationNear(x, y);
 
             break;
@@ -453,6 +461,20 @@ function onFieldLoaded(canvas) {
         hoveredPose = findPoseNear(x, y);
 
         break;
+
+      case Tool.ROTATION:
+        switch (rotationState) {
+          case RotationState.NEW:
+            rotationState = RotationState.NONE;
+            break;
+          case RotationState.MOVE:
+            if(poseList.findTNearPoint(Point(x, y), 50).t == -1) {// abort move if mouse moves off of valid t vals
+              break;
+            }
+            rotationList.rotations[moveRotation.index].t = poseList.findTNearPoint(Point(x, y), 50).t;
+            break;
+        }
+        break;
     }
 
     redrawCanvas(canvas, poseList, { onOverlay: drawToolOnOverlay });
@@ -477,7 +499,7 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
         if(hoveredRotation != null) {
-          selectState = SelectState.MOVE_ROTATION;
+          selectState = SelectState.CHANGE_ROTATION;
         } else if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
 
@@ -504,6 +526,14 @@ function onFieldLoaded(canvas) {
         }
         break;
 
+      case Tool.ROTATION:
+        moveRotation = findRotationNear(x, y);
+        if (moveRotation != null) {
+          rotationState = RotationState.MOVE;
+        } else {
+          rotationState = RotationState.NEW;
+        }
+        break;
       default:
         break;
     }
@@ -546,7 +576,7 @@ function onFieldLoaded(canvas) {
             selectState = SelectState.NONE;
             moveHandle = null;
             break;
-          case SelectState.MOVE_ROTATION:
+          case SelectState.CHANGE_ROTATION:
             if (findNearestRotationIndex(mousePt) >= 0) {
               let nearRotationIndex = findNearestRotationIndex(mousePt);
               rotationList.rotations[nearRotationIndex].setRotVal(
@@ -559,6 +589,7 @@ function onFieldLoaded(canvas) {
             }
 
             selectState = SelectState.NONE;
+            rotationState = RotationState.NONE;
 
             redrawCanvas(canvas, poseList);
 
@@ -1061,6 +1092,7 @@ function placePointAt(x, y) {
   if (0 == poseList.length) {
     new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), { commands: PoseCommandGroup(genId()) });
     makeRotation(0);
+    rotationState = RotationState.NONE;
 
   } else {
     const last_point = poseList.poses.slice(-1)[0].point;
