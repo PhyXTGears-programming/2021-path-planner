@@ -382,7 +382,7 @@ function onFieldLoaded(canvas) {
     // Reset ui state variables.  Make sure to reaquire hovered widget before event ends.
     hoveredHandle = null;
     hoveredPose = null;
-    drawingNearestPoint = false;
+    drawingNearestPoint = true;
 
     const context = canvas.getContext('2d');
 
@@ -461,6 +461,7 @@ function onFieldLoaded(canvas) {
             rotationState = RotationState.NONE;
             break;
           case RotationState.MOVE:
+            drawingNearestPoint = false;
             if(poseList.findTNearPoint(Point(x, y), 50).t == -1) {// don't move when mouse moves off of valid t vals
               break;
             }
@@ -469,6 +470,7 @@ function onFieldLoaded(canvas) {
           case RotationState.ROTATE:
             const rotPt = calcRotationPos(rotationList.rotations[modifyRotation.index]);
             rotationList.rotations[modifyRotation.index].setRotVal(getAngleToCursor(rotPt, Point(x, y)));
+            drawingNearestPoint = false;
             break;
         }
         break;
