@@ -105,6 +105,7 @@ let modifyRotation = null;
 let rotationState = null;
 
 let actionedPose = null;
+let drawingNearestPoint = true;
 
 let selectState = SelectState.NONE;
 
@@ -381,6 +382,7 @@ function onFieldLoaded(canvas) {
     // Reset ui state variables.  Make sure to reaquire hovered widget before event ends.
     hoveredHandle = null;
     hoveredPose = null;
+    drawingNearestPoint = false;
 
     const context = canvas.getContext('2d');
 
@@ -451,7 +453,6 @@ function onFieldLoaded(canvas) {
 
       case Tool.DELETE:
         hoveredPose = findPoseNear(x, y);
-
         break;
 
       case Tool.ROTATION:
@@ -810,6 +811,7 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   drawAllHandleLines(context, poseList);
   drawAllHandleDots(context, poseList);
   drawRotations(context, poseList);
+  drawRotationHighlight(context);
 
   if (shallDrawNearestPoint()) {
     drawNearestPoint(context);
@@ -1042,7 +1044,7 @@ function drawAllHandleDots(context, poseList) {
 
 function drawNearestPoint(context) {
   // Draw point on poseList path that is nearest mouse.
-  if (0.0 <= nearestPt.t) {
+  if (0.0 <= nearestPt.t && drawingNearestPoint) {
     context.save();
 
     drawCircle(context, nearestPt.pt.x, nearestPt.pt.y, 5.0);
@@ -1665,9 +1667,6 @@ function convertAllRotDegToRad(rotations) {
     processedRotations.push(processingRot);
   }
 
-  console.log("convertDegRad, passed rotations: ", rotations);
-  console.log("Post-convertDegRad: ", processedRotations);
-
   return processedRotations;
 }
 
@@ -1744,5 +1743,21 @@ function innerOrOuterRadius(mousePt, rotPt) {
     return 'inner';
   } else {
     return 'outer';
+  }
+}
+
+function drawRotationHighlight(context) {
+  if (rotationList.rotations.length >= 2) {
+    const hoveredRot = findNearestRotationIndex(mousePt);
+
+    if (hoveredRot != null) {
+      drawingNearestPoint = false;
+      const rotPos = calcRotationPos(rotationList.rotations[hoveredRot]);
+
+      context.fillStyle = '#2F2';
+      drawCircle(context, rotPos.x, rotPos.y, 4);
+      context.stroke();
+      context.fill();
+    }
   }
 }
