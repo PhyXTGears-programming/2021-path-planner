@@ -9,7 +9,7 @@ import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
-import { RotationList, Rotation, toRadians } from './js/rotation.js';
+import { RotationList, Rotation, DetailRotation, toRadians } from './js/rotation.js';
 
 import { throttleLast } from './js/timer.js';
 
@@ -303,8 +303,9 @@ function onFieldLoaded(canvas) {
   const LEFT_BUTTON = 0;
   const MIDDLE_BUTTON = 1;
 
-  canvas.addEventListener('click', ev => {
+  canvas.addEventListener('click', ev => {// BOOKMARK
     if (LEFT_BUTTON !== ev.button) {
+      bakeAdvancedExport(poseList, rotationList.rotations);
       return;
     }
 
@@ -1732,14 +1733,6 @@ function pruneInvalidRotPts() {
   }
 }
 
-function popsicle(data) { // temporary function for debugging. Just deep clones.
-  return JSON.parse(JSON.stringify(data));
-}
-
-function ezPtDistance(a, b) {
-  return Math.abs(Math.sqrt(Math.pow(a.x - b.x, 2) - Math.pow(a.y - b.y, 2)));
-}
-
 function innerOrOuterRadius(mousePt, rotPt) {
   if(ezPtDistance(mousePt, rotPt) <= 14) {
     return 'inner';
@@ -1762,4 +1755,229 @@ function drawRotationHighlight(context) {
       context.fill();
     }
   }
+}
+
+// ====--------------====   NEW EXPORT THING   ====--------------====
+
+// function isTLowestOption(origin, t, iterations = 8) {
+  //   console.log("Checking if t ", t, " is lowest option");
+  //   const initialDist = ezPtDistance(origin, poseList.pointAt(t));
+  //   const integral = ezTestIntegral(t, iterations);
+
+//   for (let i = 1; i < iterations; i++) {
+  //     const newDist = ezPtDistance(origin, poseList.pointAt(t - (integral * i)));
+  //     console.log("Comparing t dist to new t: ", t - (integral * i));
+//     if(newDist < initialDist && newDist > initialDist * 0.8) {
+  //       console.log("It wasn't");
+  //       return false;
+  //     }
+  //   }
+  //   console.log("It was");
+  //   return true;
+
+  // }
+
+function findIdealTIntegral(lowT, hiT, i = 0, maxTries = 20) {
+  // console.log("reiterating with lowT, hiT:", lowT, hiT);
+  const ideal = 0.1;
+
+  const midT = (lowT + hiT) / 2;
+  i++;
+
+  const lowPt = poseList.pointAt(lowT);
+  const midPt = poseList.pointAt(midT);
+  const sampleDistance = pxToMeters(ezPtDistance(lowPt, midPt));
+
+  if (i >= maxTries) {
+    console.warn("While finding ideal t integral, had to iterate more than ", maxTries, " times. Returning the following t value despite it not being as accurate as wanted: ", midT);
+    return midT;
+
+  } else if ((ideal * 0.9) > sampleDistance) {
+    // console.log("To reiterate up for precision from t ", midT, " as sample Dist (m) is ", sampleDistance);
+    return findIdealTIntegral(lowT, midT + ((midT - lowT) / 0.8), i, maxTries);
+
+  } else if (sampleDistance > (ideal * 1.1)
+  //|| !isTLowestOption(poseList.pointAt(lowT), midT)
+  // && midT > 0.05
+  ) {
+    // console.log("Going to reiterate from t ", midT, " as Sample Dist (m) is ", sampleDistance);
+    return findIdealTIntegral(lowT, midT, i, maxTries);
+
+  } else {
+    return midT - lowT;
+
+  }
+}
+
+/* payload = {
+  poses: [Point, Point, Point, Point],
+  rots: [DetailRotation, DetailRotation, DetailRotation, DetailRotation]
+  }
+
+HAVE TO CALCULATE MORE ACCURATE OF INTERPOLATION
+function makeAdvanceExport(poseList, rotations) {
+      let detailedRotations = [];
+      for (rot of rotations) {
+      detailedRotations.push(DetailRotation(rot, calcRotationPos(rot)));
+    }
+    ^^ This won't work; calculate at certain t vals.
+}
+
+*/
+/*
+
+- - - - - - - - TODO LIST - - - - - - - -
+    [X] Interpolate Pose pts
+    [X] Interpolate Rot pts
+    [ ] Assign Commands to New Pose pts
+    [-] Put all of these together [No loonger necessary]
+    [ ] Actually export it
+
+*/
+
+function bakeAdvancedExport(poseList, rotations) {
+  let payload = [];
+
+  // Building initial interpolated list
+  let currentIntegral = 0;
+  let lowT = 0;
+  let endT = poseList.findTNearPoint(poseList.poses[poseList.poses.length - 1].point, 30).t;
+  // console.log("Low and End ts: ", lowT, endT);
+
+  // console.log("Start and End pose pts for reference: ", poseList.poses[0].point, poseList.poses[poseList.poses.length - 1].point);
+
+  // Interpolating poses:
+  while (lowT + 1 <= endT) {
+    // console.log("Iterating with lowT and integral: ", lowT, currentIntegral);
+    currentIntegral = findIdealTIntegral(lowT, lowT + 1);
+
+    payload.push({
+      type: "unbaked",
+      rot: null,
+      x: poseList.pointAt(lowT).x,
+      y: poseList.pointAt(lowT).y,
+      commands: [],
+      t: lowT,
+    });
+
+    lowT = lowT + currentIntegral;
+  }
+  while (lowT <= endT - 0.05) {
+    // console.log("Late-stage iterating with lowT and integral: ", lowT, currentIntegral);
+    currentIntegral = findIdealTIntegral(lowT, endT, 0, 15);
+
+    payload.push({
+      type: "unbaked",
+      rot: null,
+      x: poseList.pointAt(lowT).x,
+      y: poseList.pointAt(lowT).y,
+      commands: [],
+      t: lowT,
+    });
+
+    lowT = lowT + currentIntegral;
+  }
+  payload.push({
+    type: "unbaked",
+    rot: null,
+    x: poseList.pointAt(endT).x,
+    y: poseList.pointAt(endT).y,
+    commands: [],
+    t: endT,
+  });
+
+  // console.log("End space coagulated into final pt (m): ", pxToMeters(ezPtDistance(poseList.pointAt(lowT - currentIntegral), poseList.pointAt(endT))));
+
+  //            Interpolating rotations:
+
+  for (let r of rotations) {
+    let attatchedPoseIndex = findNearestIndexToFromByT(r, payload);
+    payload[attatchedPoseIndex].rot = r.rot;
+    payload[attatchedPoseIndex].type = "unbakedRotationHead";
+  } // Assign rotation points certain poses
+
+  let rotationHeads = filterPayloadToIndexListByType(payload, "unbakedRotationHead");
+
+  for (let i in rotationHeads) {
+    const i2 = Number(i);
+
+    if (i < rotationHeads.length - 1) {
+      const iUp = i2 + 1;
+      const indexDist = rotationHeads[iUp] - rotationHeads[i2];
+      console.log("IndexDist, i: ", indexDist, i2);
+      const avgChange = (payload[rotationHeads[i2]].rot + payload[rotationHeads[iUp]].rot) / indexDist;
+
+      console.log("AvgChange: ", avgChange);
+
+      for (let x = 1; x <= indexDist; x++) {
+        console.log("Iterating through poses; using x: ", x);
+        payload[x + rotationHeads[i]].rot = avgChange * x;
+      }
+    } else {
+      const howManyAtEnd = payload.length - rotationHeads[i2];
+      for (let x = 1; x < howManyAtEnd; x++) {
+        payload[x +  rotationHeads[i2]].rot =  payload[rotationHeads[i2]].rot;
+      }
+    }
+  }
+
+  console.log("Done. payload: ", popsicle(payload));
+}
+
+function findNearestIndexToFromByT(origin, ptList) {
+  let near = {dist: 9999, pt: null};
+
+  if (ptList == [] || ptList == null) {
+    console.error("You passed an empty or null list into findNearestIndexToFromByT");
+  }
+
+  for(let pt of ptList) {
+    const dist = Math.abs(origin.t - pt.t);
+    if (dist < near.dist) {
+      near = {
+        dist: dist,
+        pt: pt,
+      };
+    }
+  }
+
+  return ptList.indexOf(near.pt);
+}
+
+function filterPayloadToIndexListByType(payload, type) {
+  let filteredList = [];
+  for (let pose of payload) {
+    if (pose.type == type) {
+      filteredList.push(
+        payload.indexOf(pose),
+      );
+    }
+  }
+
+  return filteredList;
+}
+
+//  Debugging/QOL tools:
+function ezIntpolVal(val, iterations) {
+  return val * (iterations / 100);// wait this is just val / interpolations
+}
+
+function ezPtDistance(a, b) {
+  return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+}
+
+function ezPtAvg(a, b) {
+  return Point((a.x + b.x) / 2, (a.y + b.y) / 2);
+}
+
+function pxToMeters(px) {
+  return (seasonConfig.fieldDims.xmeters / seasonConfig.fieldDims.xPixels) * px;
+}
+
+function metersToPx(m) {
+  return (seasonConfig.fieldDims.xPixels / seasonConfig.fieldDims.xmeters) * m;
+}
+
+function popsicle(data) { // temporary function for debugging. Just deep clones.
+  return JSON.parse(JSON.stringify(data));
 }

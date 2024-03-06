@@ -4,7 +4,7 @@
 
 import Bezier from './geom/bezier.js';
 import Point from './geom/point.js';
-import { RotationList, Rotation, toRadians, toDegrees } from './rotation.js';
+import { RotationList, Rotation,  toDegrees } from './rotation.js';
 
 const PoseListPrototype = {
   appendPose (pose) {

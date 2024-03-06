@@ -19,6 +19,12 @@ export function Rotation(tval) {
     this.rot = 0;
 }
 
+export function DetailRotation(rotation, pt) {
+    this.t = rotation.t;
+    this.rot = toDegrees(rotation.rot);
+    this.pt = pt;
+}
+
 export function toDegrees(rad) {
   return rad * (180/Math.PI);
 }
