@@ -1673,7 +1673,7 @@ function convertAllRotDegToRad(rotations) {
   return processedRotations;
 }
 
-function repositionRotsAndDo(task, data = 'none') {
+function repositionRotsAndDo(task, data = undefined) {
   // TASK OPTIONS: 'insert' (Inserting Waypoint) || 'deleteWaypoint' || 'deleteRotation'
 
   // Get all rot pts repositioned in place:
@@ -1685,22 +1685,22 @@ function repositionRotsAndDo(task, data = 'none') {
 
   // Detect and perform requested task.
   if (task == 'insert') {//                                         Task Insert
-    if (data != 'none') {console.log("Just noting that you passed data into repositionRotsAndDo when inserting. This is not necessary.");}
+    if (data !== undefined) {console.log("Just noting that you passed data into repositionRotsAndDo when inserting. This is not necessary.");}
 
     insertPoseAt(nearestPt.t);
 
-  } else if (task == 'deleteWaypoint' && data == 'none') {//        Task Delete Waypoint
+  } else if (task == 'deleteWaypoint' && data === undefined) {//        Task Delete Waypoint
     console.warn("You did not pass the needed data (the mouse point) into repositionRotsAndDo() while attempting to delete a waypoint.");
 
-  } else if (task == 'deleteWaypoint' && data != 'none') {
+  } else if (task == 'deleteWaypoint' && data !== undefined) {
     const nearestPose = findPoseNear(data.x, data.y);
 
     poseList.deletePose(nearestPose);
-
-  } else if (task == 'deleteRotation' && data == 'none') {//        Task Delete Rotation
+    
+  } else if (task == 'deleteRotation' && data === undefined) {//        Task Delete Rotation
     console.warn("You did not pass the needed data (the Rotation) into repositionRotsAndDo() while attempting to delete a rotation.");
-
-  } else if (task == 'deleteRotation' && data != 'none') {
+    
+  } else if (task == 'deleteRotation' && data !== undefined) {
     rotPosList.splice(rotationList.rotations.indexOf(data), 1);
     deleteRotation(data);
 
