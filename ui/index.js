@@ -1829,8 +1829,8 @@ function makeAdvanceExport(poseList, rotations) {
 - - - - - - - - TODO LIST - - - - - - - -
     [X] Interpolate Pose pts
     [X] Interpolate Rot pts
-    [ ] Assign Commands to New Pose pts
-    [-] Put all of these together [No loonger necessary]
+    [X] Assign Commands to New Pose pts
+    [-] Put all of these together [No longer necessary]
     [ ] Actually export it
 
 */
@@ -1852,7 +1852,7 @@ function bakeAdvancedExport(poseList, rotations) {
     currentIntegral = findIdealTIntegral(lowT, lowT + 1);
 
     payload.push({
-      type: "unbaked",
+      type: "unbakedUnrotated",
       rot: null,
       x: poseList.pointAt(lowT).x,
       y: poseList.pointAt(lowT).y,
@@ -1862,12 +1862,13 @@ function bakeAdvancedExport(poseList, rotations) {
 
     lowT = lowT + currentIntegral;
   }
+
   while (lowT <= endT - 0.05) {
     // console.log("Late-stage iterating with lowT and integral: ", lowT, currentIntegral);
     currentIntegral = findIdealTIntegral(lowT, endT, 0, 15);
 
     payload.push({
-      type: "unbaked",
+      type: "unbakedUnrotated",
       rot: null,
       x: poseList.pointAt(lowT).x,
       y: poseList.pointAt(lowT).y,
@@ -1878,7 +1879,7 @@ function bakeAdvancedExport(poseList, rotations) {
     lowT = lowT + currentIntegral;
   }
   payload.push({
-    type: "unbaked",
+    type: "unbakedUnrotated",
     rot: null,
     x: poseList.pointAt(endT).x,
     y: poseList.pointAt(endT).y,
@@ -1904,21 +1905,41 @@ function bakeAdvancedExport(poseList, rotations) {
     if (i < rotationHeads.length - 1) {
       const iUp = i2 + 1;
       const indexDist = rotationHeads[iUp] - rotationHeads[i2];
-      console.log("IndexDist, i: ", indexDist, i2);
       const avgChange = (payload[rotationHeads[i2]].rot + payload[rotationHeads[iUp]].rot) / indexDist;
 
-      console.log("AvgChange: ", avgChange);
-
       for (let x = 1; x <= indexDist; x++) {
-        console.log("Iterating through poses; using x: ", x);
         payload[x + rotationHeads[i]].rot = avgChange * x;
+        payload[x + rotationHeads[i]].type = "unbaked";
       }
     } else {
       const howManyAtEnd = payload.length - rotationHeads[i2];
       for (let x = 1; x < howManyAtEnd; x++) {
         payload[x +  rotationHeads[i2]].rot =  payload[rotationHeads[i2]].rot;
+        payload[x +  rotationHeads[i2]].type = "unbaked";
       }
     }
+  }
+
+  // Baking commands into the payload:
+
+  console.log("Pre-command-baking payload: ", popsicle(payload));
+
+  let commandHeads = [];
+
+  for (let pose of poseList.poses) {
+    const tEncased = poseList.findTNearPoint(pose.point);
+    const commandHeadIndex = findNearestIndexToFromByT(tEncased, payload);
+
+    commandHeads.push({
+      index: commandHeadIndex,
+      commands: pose.commands,
+    });
+  }
+
+  console.log("Initial poseList, commandHeads: ", popsicle(poseList), popsicle(commandHeads));
+
+  for (h of commandHeads) {
+    payload[h.index].commands = h.commands;
   }
 
   console.log("Done. payload: ", popsicle(payload));
