@@ -337,6 +337,14 @@ export const importPoses = (data, fieldDims, genId) => {
   };
 }
 
+export const botExport = (poseList, rotations, func = () => {console.warn("Passed no function to botExport?"); return null;}) => {
+
+  // Space for any other processes we want added to the export
+
+  console.log("exporting bot");
+  return func(poseList, rotations);
+}
+
 
 const bezierFromPoses = (pose1, pose2) => {
   return Bezier(

@@ -5,6 +5,18 @@
 // selectively enable features needed in the rendering
 // process.
 
+// I'm adding _* spots around the code to make easy bookmarks. Listed w/ - to prevent trigger:
+/*
+  -C - Constants
+  -SU - "Setup;" background and setup functions for the app
+  -CL - Click
+  -CA - Canvas (Specifically drawing)
+  -P0 - Pose Stuff
+  -COM - Commands Stuff
+  -ROT - Rotation Stuff
+  -BEXP - Bot Export Stuff
+*/
+
 import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 
 import Point from './js/geom/point.js';
@@ -16,7 +28,7 @@ import { throttleLast } from './js/timer.js';
 import { IdGen } from './js/util.js';
 
 import {
-  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList,
+  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, botExport,
 } from './js/pose.js';
 
 import Viewport from './js/viewport.js';
@@ -29,7 +41,7 @@ const { documentDir } = window.__TAURI__.path;
 
 const FRC_SEASON = '2024';
 
-// Constants
+// Constants _C
 
 const Tool = {
   POSE: 0,
@@ -174,6 +186,7 @@ const seasonConfig = {
     };
   },
 
+  // _SU
   loadSeason (year) {
     const self = this;
 
@@ -303,9 +316,8 @@ function onFieldLoaded(canvas) {
   const LEFT_BUTTON = 0;
   const MIDDLE_BUTTON = 1;
 
-  canvas.addEventListener('click', ev => {// BOOKMARK
+  canvas.addEventListener('click', ev => {// _CL
     if (LEFT_BUTTON !== ev.button) {
-      bakeAdvancedExport(poseList, rotationList.rotations);
       return;
     }
 
@@ -714,6 +726,15 @@ function onFieldLoaded(canvas) {
     writeTextFile(saveFileName, data);
   });
 
+  document.getElementById('export-for-bot').addEventListener('click', () => {//BOOKMARK
+    const payload = botExport(poseList, rotationList.rotations, bakeAdvancedExport);
+    const data = JSON.stringify(payload);
+
+    console.log('Bot export payload: ', payload);
+
+    writeTextFile(saveFileName, data);
+  });
+
   document.getElementById('load-file').addEventListener('click', ev => {
     documentDir()
       .then(docDir =>
@@ -761,6 +782,7 @@ function onFieldLoaded(canvas) {
   });
 }
 
+// _CA
 const redrawCanvas = throttleLast(100, _redrawCanvas);
 
 // options :: { onOverlay :: (canvas) -> Void }
@@ -1058,6 +1080,7 @@ function drawNearestPoint(context) {
   }
 }
 
+// _P0
 function insertPoseAt(t) {
   if (2 > poseList.length) {
     return;
@@ -1207,7 +1230,7 @@ function findNode(passedNode, idTarget) {
     return null;
   }
 }
-
+// _COM
 document.addEventListener('dragstart', ev => {
   let dragTargets = [
     "sequential",
@@ -1492,7 +1515,7 @@ document.addEventListener('drop', ev => {
 //   id: 0,
 // }
 
-// ====--------------====   ROTATION STUFF   ====--------------====
+// ====--------------====   ROTATION STUFF   ====--------------==== _ROT
 
 function makeRotation(tval) {
   rotationList.insertRotation(tval);
@@ -1757,7 +1780,7 @@ function drawRotationHighlight(context) {
   }
 }
 
-// ====--------------====   NEW EXPORT THING   ====--------------====
+// ====--------------====   NEW EXPORT THING   ====--------------==== _BEXP
 
 // function isTLowestOption(origin, t, iterations = 8) {
   //   console.log("Checking if t ", t, " is lowest option");
@@ -1938,11 +1961,12 @@ function bakeAdvancedExport(poseList, rotations) {
 
   console.log("Initial poseList, commandHeads: ", popsicle(poseList), popsicle(commandHeads));
 
-  for (h of commandHeads) {
+  for (let h of commandHeads) {
     payload[h.index].commands = h.commands;
   }
 
   console.log("Done. payload: ", popsicle(payload));
+  return payload;
 }
 
 function findNearestIndexToFromByT(origin, ptList) {
