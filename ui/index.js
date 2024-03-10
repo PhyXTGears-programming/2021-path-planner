@@ -28,7 +28,7 @@ import { throttleLast } from './js/timer.js';
 import { IdGen } from './js/util.js';
 
 import {
-  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, botExport,
+  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, botExport, ExportChunk
 } from './js/pose.js';
 
 import Viewport from './js/viewport.js';
@@ -726,7 +726,7 @@ function onFieldLoaded(canvas) {
     writeTextFile(saveFileName, data);
   });
 
-  document.getElementById('export-for-bot').addEventListener('click', () => {//BOOKMARK
+  document.getElementById('export-for-bot').addEventListener('click', () => {
     const payload = botExport(poseList, rotationList.rotations, bakeAdvancedExport);
     const data = JSON.stringify(payload);
 
@@ -1117,7 +1117,7 @@ function placePointAt(x, y) {
   let new_pose;
 
   if (0 == poseList.length) {
-    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), { commands: PoseCommandGroup(genId()) });
+    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), { commands: PoseCommandGroup(genId()) }, 0, 1);
     makeRotation(0);
     rotationState = RotationState.NONE;
 
@@ -1854,7 +1854,8 @@ function makeAdvanceExport(poseList, rotations) {
     [X] Interpolate Rot pts
     [X] Assign Commands to New Pose pts
     [-] Put all of these together [No longer necessary]
-    [ ] Actually export it
+    [X] Actually export it
+    [ ] Velocity
 
 */
 
@@ -1874,14 +1875,14 @@ function bakeAdvancedExport(poseList, rotations) {
     // console.log("Iterating with lowT and integral: ", lowT, currentIntegral);
     currentIntegral = findIdealTIntegral(lowT, lowT + 1);
 
-    payload.push({
-      type: "unbakedUnrotated",
-      rot: null,
-      x: poseList.pointAt(lowT).x,
-      y: poseList.pointAt(lowT).y,
-      commands: [],
-      t: lowT,
-    });
+    payload.push(ExportChunk(
+      "unbakedUnrotated",
+      null,
+      poseList.pointAt(lowT).x,
+      poseList.pointAt(lowT).y,
+      [],
+      lowT,
+    ));
 
     lowT = lowT + currentIntegral;
   }
@@ -1890,25 +1891,25 @@ function bakeAdvancedExport(poseList, rotations) {
     // console.log("Late-stage iterating with lowT and integral: ", lowT, currentIntegral);
     currentIntegral = findIdealTIntegral(lowT, endT, 0, 15);
 
-    payload.push({
-      type: "unbakedUnrotated",
-      rot: null,
-      x: poseList.pointAt(lowT).x,
-      y: poseList.pointAt(lowT).y,
-      commands: [],
-      t: lowT,
-    });
+    payload.push(ExportChunk(
+      "unbakedUnrotated",
+      null,
+      poseList.pointAt(lowT).x,
+      poseList.pointAt(lowT).y,
+      [],
+      lowT,
+    ));
 
     lowT = lowT + currentIntegral;
   }
-  payload.push({
-    type: "unbakedUnrotated",
-    rot: null,
-    x: poseList.pointAt(endT).x,
-    y: poseList.pointAt(endT).y,
-    commands: [],
-    t: endT,
-  });
+  payload.push(ExportChunk(
+    "unbakedUnrotated",
+    null,
+    poseList.pointAt(endT).x,
+    poseList.pointAt(endT).y,
+    [],
+    endT,
+  ));
 
   // console.log("End space coagulated into final pt (m): ", pxToMeters(ezPtDistance(poseList.pointAt(lowT - currentIntegral), poseList.pointAt(endT))));
 
@@ -1923,22 +1924,22 @@ function bakeAdvancedExport(poseList, rotations) {
   let rotationHeads = filterPayloadToIndexListByType(payload, "unbakedRotationHead");
 
   for (let i in rotationHeads) {
-    const i2 = Number(i);
 
     if (i < rotationHeads.length - 1) {
-      const iUp = i2 + 1;
-      const indexDist = rotationHeads[iUp] - rotationHeads[i2];
-      const avgChange = (payload[rotationHeads[i2]].rot + payload[rotationHeads[iUp]].rot) / indexDist;
+      i = Number(i);
+      const iUp = i + 1;
+      const indexDist = rotationHeads[iUp] - rotationHeads[i];
+      const avgChange = (payload[rotationHeads[i]].rot + payload[rotationHeads[iUp]].rot) / indexDist;
 
       for (let x = 1; x <= indexDist; x++) {
         payload[x + rotationHeads[i]].rot = avgChange * x;
         payload[x + rotationHeads[i]].type = "unbaked";
       }
     } else {
-      const howManyAtEnd = payload.length - rotationHeads[i2];
+      const howManyAtEnd = payload.length - rotationHeads[i];
       for (let x = 1; x < howManyAtEnd; x++) {
-        payload[x +  rotationHeads[i2]].rot =  payload[rotationHeads[i2]].rot;
-        payload[x +  rotationHeads[i2]].type = "unbaked";
+        payload[x +  rotationHeads[i]].rot =  payload[rotationHeads[i]].rot;
+        payload[x +  rotationHeads[i]].type = "unbaked";
       }
     }
   }
@@ -1959,16 +1960,51 @@ function bakeAdvancedExport(poseList, rotations) {
     });
   }
 
-  console.log("Initial poseList, commandHeads: ", popsicle(poseList), popsicle(commandHeads));
-
   for (let h of commandHeads) {
     payload[h.index].commands = h.commands;
+
+    if (h.commands.moveCondition == 'halt') {
+      payload[h.index].type = 'stop';
+      payload[h.index].vel = 0.0;
+    }
+  }
+
+  // Calculate and apply velocities:
+
+  const stopIndexList = filterPayloadToIndexListByType(payload, 'stop');
+
+  console.log("Pre-bake payload, stopIndexList: ", popsicle(payload), popsicle(stopIndexList));
+
+  for (let i in stopIndexList) {//BOOKMARK
+    let avgChange = null;
+    let preemptiveIndex = null;
+
+    if (stopIndexList[i] - 10 >= 0) {// (To prevent attempting to slow before valid path)
+      preemptiveIndex = stopIndexList[i] - 10;
+      avgChange = avgVelChangeIndexToIndex(preemptiveIndex, stopIndexList[i], payload);
+
+    } else {
+      preemptiveIndex = 0;
+      avgChange = avgVelChangeIndexToIndex(preemptiveIndex, stopIndexList[i], payload);
+
+    }
+
+    console.log("i, preemptiveIndex, avgChange: ", stopIndexList[i], preemptiveIndex, avgChange);
+
+    let count = 0;
+
+    for (let c = preemptiveIndex; c < stopIndexList[i]; c++) {
+      payload[c].vel = payload[c].vel - (count * avgChange);
+      payload[c].type = 'baked';
+      count++;
+    }
   }
 
   console.log("Done. payload: ", popsicle(payload));
   return payload;
 }
 
+// Sub-processes for exporting
 function findNearestIndexToFromByT(origin, ptList) {
   let near = {dist: 9999, pt: null};
 
@@ -1994,7 +2030,7 @@ function filterPayloadToIndexListByType(payload, type) {
   for (let pose of payload) {
     if (pose.type == type) {
       filteredList.push(
-        payload.indexOf(pose),
+        Number(payload.indexOf(pose)),
       );
     }
   }
@@ -2002,7 +2038,23 @@ function filterPayloadToIndexListByType(payload, type) {
   return filteredList;
 }
 
-//  Debugging/QOL tools:
+function avgVelChangeIndexToIndex(i0, i1, payload) {
+  const sampleList = [];
+
+  for (let c in payload) {
+    if (c >= i0 && c <= i1) {
+      sampleList.push(c);
+    }
+  }
+
+  let dist = payload[i0].vel - payload[i1].vel;
+
+  console.log("Avgvelchange sampleList: ", sampleList);
+
+  return dist / sampleList.length;
+}
+
+//  Debugging/QOL tools: [|87^^--||  <-- plague doctor is sleeping no wake them
 function ezIntpolVal(val, iterations) {
   return val * (iterations / 100);// wait this is just val / interpolations
 }
@@ -2026,3 +2078,25 @@ function metersToPx(m) {
 function popsicle(data) { // temporary function for debugging. Just deep clones.
   return JSON.parse(JSON.stringify(data));
 }
+// The Following Is A Secret Frog:
+  /*
+                      █████████████████
+                 █████████      ██████████
+               ███ █████  ██ ████       ███
+               █  ███████   ██      █████ ██
+              █   ████████   █     ██████████
+              █   ████████   ██    ████████ ██
+             ███   ██████     █    ████████  ██
+             █ ██            ███     █████   ██
+             █  ███   ████████ ████         ███
+             █    █████            ████████████
+             ██                             ██
+              █                            ██
+              ███                        ██
+            ██  ██████                  ██
+           ██    ██  ██████████████████████
+          █      █          ███           ██
+                 █            ██           ██
+                                ██          ██
+                                 █           █
+  */

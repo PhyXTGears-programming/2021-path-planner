@@ -161,7 +161,7 @@ const PosePrototype = {
   },
 };
 
-export const Pose = (point, enterHandle, exitHandle, options) => {
+export const Pose = (point, enterHandle, exitHandle, options, enterVel = 1, exitVel = 1) => {
   const self = Object.create(PosePrototype);
   const { commands } = options;
   return Object.assign(self, {
@@ -169,6 +169,8 @@ export const Pose = (point, enterHandle, exitHandle, options) => {
     enterHandle,
     exitHandle,
     commands,
+    enterVel,
+    exitVel,
   });
 };
 
@@ -337,6 +339,15 @@ export const importPoses = (data, fieldDims, genId) => {
   };
 }
 
+const bezierFromPoses = (pose1, pose2) => {
+  return Bezier(
+    pose1.point,
+    pose1.point.addVec(pose1.exitHandle),
+    pose2.point.addVec(pose2.enterHandle),
+    pose2.point
+    );
+};
+
 export const botExport = (poseList, rotations, func = () => {console.warn("Passed no function to botExport?"); return null;}) => {
 
   // Space for any other processes we want added to the export
@@ -345,12 +356,14 @@ export const botExport = (poseList, rotations, func = () => {console.warn("Passe
   return func(poseList, rotations);
 }
 
-
-const bezierFromPoses = (pose1, pose2) => {
-  return Bezier(
-    pose1.point,
-    pose1.point.addVec(pose1.exitHandle),
-    pose2.point.addVec(pose2.enterHandle),
-    pose2.point
-  );
-};
+export function ExportChunk(type = "unassigned", rot = null, x, y, commands = [], t, vel = 1.0) {
+  return {
+    type: type,
+    vel: vel,
+    rot: rot,
+    x: x,
+    y: y,
+    commands: commands,
+    t: t,
+  };
+}
