@@ -728,7 +728,7 @@ function onFieldLoaded(canvas) {
 
   document.getElementById('export-for-bot').addEventListener('click', () => {
     const payload = botExport(poseList, rotationList.rotations, bakeAdvancedExport);
-    const data = JSON.stringify(payload);
+    const data = JSON.stringify(payload, null, 4);
 
     console.log('Bot export payload: ', payload);
 
