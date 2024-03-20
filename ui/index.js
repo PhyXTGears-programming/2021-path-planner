@@ -1911,6 +1911,12 @@ function bakeAdvancedExport(poseList, rotations) {
     endT,
   ));
 
+  // Convert pixel units to meters and set origin to bottom left corner - Linus D
+  for (let pose of payload) {
+    pose.x =                                  pose.x / seasonConfig.fieldDims.xPixels * seasonConfig.fieldDims.xmeters;
+    pose.y = seasonConfig.fieldDims.ymeters - pose.y / seasonConfig.fieldDims.yPixels * seasonConfig.fieldDims.ymeters;
+  }
+
   // console.log("End space coagulated into final pt (m): ", pxToMeters(ezPtDistance(poseList.pointAt(lowT - currentIntegral), poseList.pointAt(endT))));
 
   //            Interpolating rotations:
