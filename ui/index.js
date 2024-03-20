@@ -1938,7 +1938,7 @@ function bakeAdvancedExport(poseList, rotations) {
       const avgChange = (payload[rotationHeads[i]].rot + payload[rotationHeads[iUp]].rot) / indexDist;
 
       for (let x = 1; x <= indexDist; x++) {
-        payload[x + rotationHeads[i]].rot = avgChange * x;
+        payload[x + rotationHeads[i]].rot = payload[rotationHeads[i]].rot + avgChange * x;
         payload[x + rotationHeads[i]].type = "unbaked";
       }
     } else {
