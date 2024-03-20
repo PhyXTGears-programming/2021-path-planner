@@ -7,15 +7,43 @@
     "commands": [
       {
         "name": "Shoot Speaker",
-        "image": "cmd-shoot-speaker.png"
+        "image": "cmd-shoot-speaker.png",
+        "tags": ["a", "b"]
       },
       {
         "name": "Shoot Amp",
-        "image": "cmd-shoot-amp.png"
+        "image": "cmd-shoot-amp.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "Shoot Trap",
+        "image": "null.png",
+        "tags": ["b"]
       },
       {
         "name": "Intake Note",
-        "image": "cmd-intake-note.png"
+        "image": "cmd-intake-note.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "Preheat Speaker",
+        "image": "null.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "Preheat Amp",
+        "image": "null.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "Preheat Trap",
+        "image": "null.png",
+        "tags": ["b"]
+      },
+      {
+        "name": "Seek Note",
+        "image": "null.png",
+        "tags": ["Not Real"]
       }
     ]
   }

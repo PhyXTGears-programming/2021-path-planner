@@ -1981,7 +1981,7 @@ function bakeAdvancedExport(poseList, rotations) {
 
   console.log("Pre-bake payload, stopIndexList: ", popsicle(payload), popsicle(stopIndexList));
 
-  for (let i in stopIndexList) {//BOOKMARK
+  for (let i in stopIndexList) {
     let avgChange = null;
     let preemptiveIndex = null;
 
