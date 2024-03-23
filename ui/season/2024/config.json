@@ -48,6 +48,11 @@
         "name": "Seek Note",
         "image": "null.png",
         "tags": ["Not Real"]
+      },
+      {
+        "name": "Wait 5s",
+        "image": "null.png",
+        "tags": ["a", "b"]
       }
     ]
   }
