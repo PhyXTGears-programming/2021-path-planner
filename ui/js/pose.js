@@ -158,6 +158,9 @@ const PosePrototype = {
         sequence.moveCondition = 'go';
       }
     }
+
+    // Enable method chaining.
+    return this;
   },
 
   setMoveCondition (condition) {
