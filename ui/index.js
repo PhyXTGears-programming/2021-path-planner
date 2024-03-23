@@ -33,7 +33,7 @@ import {
 
 import Viewport from './js/viewport.js';
 
-import { simple } from './js/robot/distanceToVelocity.js';
+import { accelerate } from './js/robot/distanceToVelocity.js';
 
 const { open, save } = window.__TAURI__.dialog;
 const { exists, readTextFile, writeTextFile } = window.__TAURI__.fs;
@@ -1978,7 +1978,7 @@ function bakeAdvancedExport(poseList, rotations) {
   }
 
   // Calculate and apply velocities:
-  const distanceToVelocity = simple(seasonConfig.config.robot.parameters);
+  const distanceToVelocity = accelerate(seasonConfig.config.robot.parameters);
   const maxVelocity = seasonConfig.config.robot.parameters.maxVelocityMetersPerSecond;
 
   {
@@ -2001,11 +2001,13 @@ function bakeAdvancedExport(poseList, rotations) {
     // Compute velocities for acceleration from rest.
     let distance = 0.0;
     let prevPt = Point(0.0, 0.0);
+    let prevVel = 0.0;
 
     payload = payload.map(chunk => {
       if ('stop' === chunk.type) {
         distance = 0.0;
         prevPt = Point(chunk.x, chunk.y);
+        prevVel = 0.0;
 
         return chunk;
       } else {
@@ -2013,7 +2015,8 @@ function bakeAdvancedExport(poseList, rotations) {
         distance += herePt.sub(prevPt).length();
         prevPt = herePt;
 
-        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(distance));
+        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(distance, prevVel));
+        prevVel = vel;
 
         const newChunk = Object.assign({}, chunk, { vel });
 
@@ -2029,11 +2032,13 @@ function bakeAdvancedExport(poseList, rotations) {
 
     let distance = 0.0;
     let prevPt = Point(0.0, 0.0);
+    let prevVel = 0.0;
 
     payload = payload.map(chunk => {
       if ('stop' === chunk.type) {
         distance = 0.0;
         prevPt = Point(chunk.x, chunk.y);
+        prevVel = 0.0;
 
         return chunk;
       } else {
@@ -2041,7 +2046,8 @@ function bakeAdvancedExport(poseList, rotations) {
         distance += herePt.sub(prevPt).length();
         prevPt = herePt;
 
-        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(distance));
+        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(distance, prevVel));
+        prevVel = vel;
 
         const newChunk = Object.assign({}, chunk, { vel });
 
