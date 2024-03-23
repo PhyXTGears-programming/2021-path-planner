@@ -25,13 +25,15 @@ import { RotationList, Rotation, DetailRotation, toRadians } from './js/rotation
 
 import { throttleLast } from './js/timer.js';
 
-import { IdGen } from './js/util.js';
+import { IdGen, clamp } from './js/util.js';
 
 import {
   ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, botExport, ExportChunk
 } from './js/pose.js';
 
 import Viewport from './js/viewport.js';
+
+import { accelerate } from './js/robot/distanceToVelocity.js';
 
 const { open, save } = window.__TAURI__.dialog;
 const { exists, readTextFile, writeTextFile } = window.__TAURI__.fs;
@@ -1976,34 +1978,85 @@ function bakeAdvancedExport(poseList, rotations) {
   }
 
   // Calculate and apply velocities:
+  const distanceToVelocity = accelerate(seasonConfig.config.robot.parameters);
+  const maxVelocity = seasonConfig.config.robot.parameters.maxVelocityMetersPerSecond;
 
-  const stopIndexList = filterPayloadToIndexListByType(payload, 'stop');
+  {
+    // Assign zero velocities to stop positions.
+    // Assign max velocity to all other positions.
+    payload = payload.map(chunk => {
+      if ('stop' === chunk.type) {
+        const newChunk = Object.assign({}, chunk, { vel: 0.0 });
 
-  console.log("Pre-bake payload, stopIndexList: ", popsicle(payload), popsicle(stopIndexList));
+        return newChunk;
+      } else {
+        const newChunk = Object.assign({}, chunk, { vel: maxVelocity });
 
-  for (let i in stopIndexList) {
-    let avgChange = null;
-    let preemptiveIndex = null;
+        return newChunk;
+      }
+    });
+  }
 
-    if (stopIndexList[i] - 10 >= 0) {// (To prevent attempting to slow before valid path)
-      preemptiveIndex = stopIndexList[i] - 10;
-      avgChange = avgVelChangeIndexToIndex(preemptiveIndex, stopIndexList[i], payload);
+  {
+    // Compute velocities for acceleration from rest.
+    let distance = 0.0;
+    let prevPt = Point(0.0, 0.0);
+    let prevVel = 0.0;
 
-    } else {
-      preemptiveIndex = 0;
-      avgChange = avgVelChangeIndexToIndex(preemptiveIndex, stopIndexList[i], payload);
+    payload = payload.map(chunk => {
+      if ('stop' === chunk.type) {
+        distance = 0.0;
+        prevPt = Point(chunk.x, chunk.y);
+        prevVel = 0.0;
 
-    }
+        return chunk;
+      } else {
+        const herePt = Point(chunk.x, chunk.y);
+        distance += herePt.sub(prevPt).length();
+        prevPt = herePt;
 
-    console.log("i, preemptiveIndex, avgChange: ", stopIndexList[i], preemptiveIndex, avgChange);
+        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(distance, prevVel));
+        prevVel = vel;
 
-    let count = 0;
+        const newChunk = Object.assign({}, chunk, { vel });
 
-    for (let c = preemptiveIndex; c < stopIndexList[i]; c++) {
-      payload[c].vel = payload[c].vel - (count * avgChange);
-      payload[c].type = 'baked';
-      count++;
-    }
+        return newChunk;
+      }
+    });
+  }
+
+  {
+    // Reverse payload, and compute velocities for deceleration to rest.
+    // Because the list is reversed, the code looks identical to acceleration above.
+    payload = payload.toReversed();
+
+    let distance = 0.0;
+    let prevPt = Point(0.0, 0.0);
+    let prevVel = 0.0;
+
+    payload = payload.map(chunk => {
+      if ('stop' === chunk.type) {
+        distance = 0.0;
+        prevPt = Point(chunk.x, chunk.y);
+        prevVel = 0.0;
+
+        return chunk;
+      } else {
+        const herePt = Point(chunk.x, chunk.y);
+        distance += herePt.sub(prevPt).length();
+        prevPt = herePt;
+
+        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(distance, prevVel));
+        prevVel = vel;
+
+        const newChunk = Object.assign({}, chunk, { vel });
+
+        return newChunk;
+      }
+    });
+
+    // Restore payload to original order.
+    payload = payload.toReversed();
   }
 
   console.log("Done. payload: ", popsicle(payload));
@@ -2042,22 +2095,6 @@ function filterPayloadToIndexListByType(payload, type) {
   }
 
   return filteredList;
-}
-
-function avgVelChangeIndexToIndex(i0, i1, payload) {
-  const sampleList = [];
-
-  for (let c in payload) {
-    if (c >= i0 && c <= i1) {
-      sampleList.push(c);
-    }
-  }
-
-  let dist = payload[i0].vel - payload[i1].vel;
-
-  console.log("Avgvelchange sampleList: ", sampleList);
-
-  return dist / sampleList.length;
 }
 
 //  Debugging/QOL tools: [|87^^--||  <-- plague doctor is sleeping no wake them
