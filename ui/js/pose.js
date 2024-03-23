@@ -159,6 +159,21 @@ const PosePrototype = {
       }
     }
   },
+
+  setMoveCondition (condition) {
+    const sequence = this.commands;
+
+    if (sequence.moveConditionCanSwitch) {
+      if ('go' == condition.toLowerCase()) {
+        sequence.moveCondition = 'go';
+      } else if ('halt' === condition.toLowerCase()) {
+        sequence.moveCondition = 'halt';
+      }
+    }
+
+    // Enable method chaining.
+    return this;
+  },
 };
 
 export const Pose = (point, enterHandle, exitHandle, options, enterVel = 1, exitVel = 1) => {

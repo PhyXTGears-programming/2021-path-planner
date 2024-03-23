@@ -1109,7 +1109,10 @@ function insertPoseAt(t) {
   const enterVec = pt1.sub(pt2).unit().scale(100);
   const exitVec = enterVec.scale(-1);
 
-  const pose = Pose(pt, enterVec, exitVec, { commands: PoseCommandGroup(genId()) });
+  const pose = (
+    Pose(pt, enterVec, exitVec, { commands: PoseCommandGroup(genId()) })
+      .setMoveCondition('go')
+  );
 
   poseList.insertPose(next, pose);
 }
