@@ -1288,7 +1288,7 @@ function drawAllNodes(rootSomething) {
   const { moveCondition, rootNode } = rootSomething;
 
   const moveConditionContinueClarification = document.createElement("p");
-  if(actionedPose.commands.moveConditionCanSwitch) {
+  if(actionedPose.canSwitch()) {
     if(moveCondition == "halt") {
       moveConditionContinueClarification.textContent = "Go";
       moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
