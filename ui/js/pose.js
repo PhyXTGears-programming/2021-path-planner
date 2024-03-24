@@ -338,6 +338,17 @@ export const importPoses = (data, fieldDims, genId) => {
 
   poseList.appendPose(pose);
 
+  poseList.updateMoveSwitchPerms();
+
+  // Load move conditions.
+  for (let i = 0; i < poseList.length; i += 1) {
+    const moveCondition = (data.waypoints[i].shallHalt
+      ? 'halt'
+      : 'go'
+    );
+
+    poseList.poses[i].setMoveCondition(moveCondition);
+  }
 
   let rotationOffset = data.rotationOffset;
 
