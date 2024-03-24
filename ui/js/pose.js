@@ -350,6 +350,11 @@ export const importPoses = (data, fieldDims, genId) => {
     poseList.poses[i].setMoveCondition(moveCondition);
   }
 
+  // Load commands
+  for (let i = 0; i < poseList.length; i += 1) {
+    poseList.poses[i].commands.rootNode = data.waypoints[i].commands;
+  }
+
   let rotationOffset = data.rotationOffset;
 
   // for (let r in data.rotations) {
