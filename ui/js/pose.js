@@ -269,14 +269,16 @@ export const exportPoses = (poseList, fieldDims, rotationList) => {
 
       payload.segments.push(segment);
 
+      pose1 = pose2;
+    }
+
+    for (let pose of poseList.poses) {
       const waypoint = {
-        commands: pose1.commands.rootNode,
-        shallHalt: pose1.commands.moveCondition === 'halt',
+        commands: pose.commands.rootNode,
+        shallHalt: pose.commands.moveCondition === 'halt',
       };
 
       payload.waypoints.push(waypoint);
-
-      pose1 = pose2;
     }
 
     let rotationPayload = alignAnglesWithHeading(rotationList.rotations);
