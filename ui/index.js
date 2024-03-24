@@ -721,7 +721,7 @@ function onFieldLoaded(canvas) {
 
   document.getElementById('export').addEventListener('click', ev => {
     const payload = exportPoses(poseList, seasonConfig.fieldDims, rotationList);
-    const data = JSON.stringify(payload);
+    const data = JSON.stringify(payload, null, 4);
 
     console.log('export data', payload);
 
