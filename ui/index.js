@@ -1238,7 +1238,7 @@ function findNode(passedNode, idTarget) {
 // _COM
 document.addEventListener('dragstart', ev => {
   let dragTargets = [
-    "sequential",
+    "sequence",
     "parallel",
     "race",
   ];
@@ -1478,7 +1478,7 @@ document.addEventListener('drop', ev => {
     targetNode = findNode(targetPoseCommands.rootNode, target.dataset.nodeId, true);
 
     switch (commandName) {
-      case 'sequential':
+      case 'sequence':
       case 'race':
       case 'parallel':
         if (targetNode === null) {
@@ -1516,7 +1516,7 @@ document.addEventListener('drop', ev => {
 //       id: 2,
 //     }
 //   ],
-//   name: 'sequential',
+//   name: 'sequence',
 //   id: 0,
 // }
 
