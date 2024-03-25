@@ -6,7 +6,7 @@
   "robot": {
     "parameters": {
       "maxVelocityMetersPerSecond": 1.5,
-      "maxAccelerationMetersPerSecondSecond": 0.1
+      "maxAccelerationMetersPerSecondSecond": 0.2
     },
     "commands": [
       {
