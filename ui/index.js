@@ -457,13 +457,7 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.POSE:
-        // Center tool image on cursor.
-        const tx = clickVec.x - images[tool].width / 2;
-        const ty = clickVec.y - images[tool].height / 2;
-
-        const context = canvas.getContext('2d');
-
-        drawToolOnOverlay = canvas => drawTool(canvas.getContext('2d'), tool, tx, ty);
+        drawToolOnOverlay = canvas => drawTool(canvas.getContext('2d'), tool, clickVec.x, clickVec.y);
         break;
 
       case Tool.DELETE:
@@ -866,7 +860,17 @@ function drawCircle(context, x, y, r) {
 }
 
 function drawTool(context, tool, x, y) {
-  context.drawImage(images[tool], x, y);
+  // Center tool image on cursor.
+  const tx = -images[tool].width / 2;
+  const ty = -images[tool].height / 2;
+
+  context.save();
+  context.translate(x, y);
+  context.scale(0.5, 0.5);
+  context.translate(tx, ty);
+  context.globalCompositeOperation = 'overlay';
+  context.drawImage(images[tool], 0, 0);
+  context.restore();
 }
 
 function drawPose(context, pose, image) {
