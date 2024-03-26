@@ -196,7 +196,7 @@ export const Pose = (point, enterHandle, exitHandle, options, enterVel = 1, exit
 export const PoseCommandGroup = nodeId => ({
   moveConditionCanSwitch: false,
   moveCondition: "halt",
-  rootNode: ActionNode("group", [], 'sequential', nodeId),
+  rootNode: ActionNode("group", [], 'sequence', nodeId),
 });
 
 
