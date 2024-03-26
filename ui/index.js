@@ -21,7 +21,7 @@ import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
-import { RotationList, Rotation, DetailRotation, toRadians } from './js/rotation.js';
+import { RotationList, Rotation, toRadians } from './js/rotation.js';
 
 import { throttleLast } from './js/timer.js';
 
@@ -371,7 +371,6 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ACTIONS:
-        let target = ev.target;
         actionedPose = findPoseNear(x, y);
 
         if(!actionedPose) {
@@ -398,14 +397,10 @@ function onFieldLoaded(canvas) {
 
   // Mouse move handler to draw tool icon that follows mouse cursor.
   canvas.addEventListener('mousemove', ev => {
-    const tool = toolStateToName[toolState];
-
     // Reset ui state variables.  Make sure to reaquire hovered widget before event ends.
     hoveredHandle = null;
     hoveredPose = null;
     drawingNearestPoint = true;
-
-    const context = canvas.getContext('2d');
 
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
@@ -559,8 +554,6 @@ function onFieldLoaded(canvas) {
     if (LEFT_BUTTON != ev.button) {
       return;
     }
-
-    const context = canvas.getContext('2d');
 
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
@@ -1318,7 +1311,6 @@ document.addEventListener('dragenter', ev => {
 document.addEventListener('dragover', ev => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
-    let dragoverTarget = ev.target;
   } // frog  (._.)
 });
 
@@ -2140,25 +2132,12 @@ function filterPayloadToIndexListByType(payload, type) {
   return filteredList;
 }
 
-//  Debugging/QOL tools: [|87^^--||  <-- plague doctor is sleeping no wake them
-function ezIntpolVal(val, iterations) {
-  return val * (iterations / 100);// wait this is just val / interpolations
-}
-
 function ezPtDistance(a, b) {
   return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 }
 
-function ezPtAvg(a, b) {
-  return Point((a.x + b.x) / 2, (a.y + b.y) / 2);
-}
-
 function pxToMeters(px) {
   return (seasonConfig.fieldDims.xmeters / seasonConfig.fieldDims.xPixels) * px;
-}
-
-function metersToPx(m) {
-  return (seasonConfig.fieldDims.xPixels / seasonConfig.fieldDims.xmeters) * m;
 }
 
 function popsicle(data) { // temporary function for debugging. Just deep clones.
