@@ -231,7 +231,7 @@ const seasonConfig = {
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('canvas');
 
-  (new Promise((ok, err) => loadImages(ok)))
+  (new Promise((ok, _err) => loadImages(ok)))
     .then(() => seasonConfig.loadSeason(FRC_SEASON))
     .then(updateRobotCommands)
     .then(() => {
@@ -288,7 +288,7 @@ function updateRobotCommands() {
 function loadImages(onDone) {
   let loadCount = config.imageFiles.length;
 
-  const onImageLoaded = ev => {
+  const onImageLoaded = _ev => {
     loadCount -= 1;
 
     if (0 == loadCount) {
@@ -304,7 +304,7 @@ function loadImages(onDone) {
 }
 
 function loadImage(name, filename) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _reject) => {
     const image = new Image();
     const onLoad = () => resolve({ name, image });
 
@@ -710,7 +710,7 @@ function onFieldLoaded(canvas) {
     });
   }
 
-  document.getElementById('save-file').addEventListener('click', ev => {
+  document.getElementById('save-file').addEventListener('click', _ev => {
     documentDir()
       .then(docDir =>
         save({
@@ -734,7 +734,7 @@ function onFieldLoaded(canvas) {
       });
   });
 
-  document.getElementById('export').addEventListener('click', ev => {
+  document.getElementById('export').addEventListener('click', _ev => {
     const payload = exportPoses(poseList, seasonConfig.fieldDims, rotationList);
     const data = JSON.stringify(payload, null, 4);
 
@@ -752,7 +752,7 @@ function onFieldLoaded(canvas) {
     writeTextFile(saveFileName, data);
   });
 
-  document.getElementById('load-file').addEventListener('click', ev => {
+  document.getElementById('load-file').addEventListener('click', _ev => {
     documentDir()
       .then(docDir =>
         open({
@@ -779,7 +779,7 @@ function onFieldLoaded(canvas) {
       })
   });
 
-  document.getElementById('import').addEventListener('click', ev => {
+  document.getElementById('import').addEventListener('click', _ev => {
     if (null === importFileName) return;
     if ("" === importFileName) return;
 
@@ -1701,7 +1701,7 @@ function getHeadingInput() {
   return inputElem.value;
 }
 
-document.getElementById("o-heading-input").addEventListener("input", (ev) => {
+document.getElementById("o-heading-input").addEventListener("input", (_ev) => {
   rotationList.rotations[0].rot = toRadians(getHeadingInput());
   redrawCanvas(document.getElementById('canvas'), poseList);
 });
