@@ -136,6 +136,12 @@ const genId = IdGen();
 let mousePt = Point(0, 0);
 let nearestPt = { t: -1, pt: Point(0, 0) }
 
+let drawToolPt = Point(0, 0);
+
+let keyState = {
+  isShiftDown: false,
+};
+
 // Example:
 // commandImages.set('lowerIntake', './images/temp-lower.png')
 const commandImages = new Map();
@@ -404,12 +410,12 @@ function onFieldLoaded(canvas) {
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
+    drawToolPt = clickVec;
+
     // Compute field position of cursor with current zoom+pan.
     const { x, y } = canvasViewport.toViewCoord(clickVec);
 
     mousePt = Point(x, y);
-
-    let drawToolOnOverlay = noop;
 
     switch (toolState) {
       case Tool.SELECT:
@@ -457,7 +463,6 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.POSE:
-        drawToolOnOverlay = canvas => drawTool(canvas.getContext('2d'), tool, clickVec.x, clickVec.y);
         break;
 
       case Tool.DELETE:
@@ -485,7 +490,7 @@ function onFieldLoaded(canvas) {
         break;
     }
 
-    redrawCanvas(canvas, poseList, { onOverlay: drawToolOnOverlay });
+    redrawCanvas(canvas, poseList);
   });
 
   canvas.addEventListener('mousedown', ev => {
@@ -652,6 +657,25 @@ function onFieldLoaded(canvas) {
     }
 
     redrawCanvas(canvas, poseList);
+  });
+
+  // Shift key handlers
+  window.addEventListener('keyup', ev => {
+    if ('Shift' === ev.key) {
+      keyState.isShiftDown = false;
+      redrawCanvas(canvas, poseList);
+    }
+  });
+
+  window.addEventListener('keydown', ev => {
+    if ('Shift' == ev.key) {
+      keyState.isShiftDown = true;
+      redrawCanvas(canvas, poseList);
+    }
+  });
+
+  canvas.addEventListener('mousemove', ev => {
+    keyState.isShiftDown = ev.shiftKey;
   });
 
   // Adding event handlers for toolbar icons
@@ -843,6 +867,10 @@ function _redrawCanvas(canvas, poseList, options = {}) {
 
   // Draw overlays in unit coordinate system here.
 
+  if (shallDrawTool()) {
+    drawTool(context, toolStateToName[toolState], drawToolPt.x, drawToolPt.y);
+  }
+
   if ('function' == typeof options.onOverlay) {
     options.onOverlay(canvas);
   }
@@ -938,7 +966,9 @@ function drawBezier(context, poseList) {
 function shallDrawNearestPoint() {
   // Only draw when:
   // 1. nothing is hovered, and
-  // 2. tool is waypoint or rotation
+  // 2. tool is:
+  //  a. pose (aka add waypoint) + shift key, or
+  //  b. rotation
 
   const isNothingHovered = (
     null === hoveredHandle
@@ -947,11 +977,17 @@ function shallDrawNearestPoint() {
   );
 
   const isProperTool = (
-    toolState === Tool.WAYPOINT
+    (toolState === Tool.POSE && keyState.isShiftDown)
     || toolState === Tool.ROTATION
   );
 
   return isNothingHovered && isProperTool;
+}
+
+function shallDrawTool() {
+  // Only draw when pose tool selected.
+
+  return toolState === Tool.POSE;
 }
 
 function isHandleSelected(handle) {
