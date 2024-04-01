@@ -19,6 +19,8 @@
 
 import { mouseEventToCanvasPoint } from './js/canvas-util.js';
 
+import { tintStyle } from './js/color.js';
+
 import Point from './js/geom/point.js';
 import Vector from './js/geom/vector.js';
 import { RotationList, Rotation, toRadians } from './js/rotation.js';
@@ -1008,7 +1010,7 @@ function drawMoveWidget(context) {
   drawArrowPath(context, Vector.j.scale(-1));
 }
 
-function drawPose(context, pose) {
+function drawPose(context, pose, options = {}) {
   const isHovered = pose === hoveredPose;
   const canMove = isHovered && toolState == Tool.SELECT;
   const isMoving = isHovered && selectState == SelectState.MOVE_POSE;
@@ -1024,9 +1026,13 @@ function drawPose(context, pose) {
     const h = size.ymeters * seasonConfig.fieldDims.yPixels / seasonConfig.fieldDims.ymeters;
     const viewSize = Vector(w, h);
 
-    const style = (canMove || isMoving)
+    const base = (canMove || isMoving)
       ? styles.robotHovered
       : styles.robotNormal;
+
+    const style = (options.hasOwnProperty('robotTint'))
+      ? tintStyle(base, options.robotTint)
+      : base;
 
     drawRobot(context, viewSize.x, viewSize.y, style);
   }
@@ -1054,14 +1060,14 @@ function drawAllPoses(context, poseList) {
   const inner = poseList.poses.slice(1, -1);
   const last = poseList.poses.slice(-1);
 
-  drawPose(context, first[0]);
+  drawPose(context, first[0], { robotTint: '#0f0' });
 
   for (let pose of inner) {
-    drawPose(context, pose);
+    drawPose(context, pose, { robotTint: '#ff0' });
   }
 
   if (poseList.length > 1) {
-    drawPose(context, last[0]);
+    drawPose(context, last[0], { robotTint: '#f00' });
   }
 }
 
