@@ -875,6 +875,12 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   // Draw overlays in unit coordinate system here.
 
   if (shallDrawTool()) {
+    const { size } = seasonConfig.config.robot.parameters;
+    const w = size.xmeters * seasonConfig.fieldDims.xPixels / seasonConfig.fieldDims.xmeters;
+    const h = size.ymeters * seasonConfig.fieldDims.yPixels / seasonConfig.fieldDims.ymeters;
+    const viewSize = Vector(w, h).scale(canvasViewport.scale);
+    drawRobot(context, drawToolPt.x, drawToolPt.y, viewSize.x, viewSize.y);
+
     drawTool(context, toolStateToName[toolState], drawToolPt.x, drawToolPt.y);
   }
 
@@ -892,6 +898,25 @@ function drawField(context) {
 function drawCircle(context, x, y, r) {
   context.beginPath();
   context.arc(x, y, r, 0, 2 * Math.PI, false);
+}
+
+function drawRobot(context, x, y, w, h) {
+  if (w < 0 || h < 0) {
+    return;
+  }
+
+  context.save();
+
+  context.fillStyle = '#5558';
+  context.beginPath();
+  context.rect(x - w / 2, y - h / 2, w, h);
+  context.fill();
+
+  context.fillStyle = '#ccc8';
+  context.arc(x, y, Math.max(w, h) / 2, 0, 2 * Math.PI, true);
+  context.fill();
+
+  context.restore();
 }
 
 function drawTool(context, tool, x, y) {

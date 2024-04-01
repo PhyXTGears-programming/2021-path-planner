@@ -5,6 +5,10 @@
   },
   "robot": {
     "parameters": {
+      "size": {
+        "xmeters": 0.762,
+        "ymeters": 0.762
+      },
       "maxVelocityMetersPerSecond": 1.5,
       "maxAccelerationMetersPerSecondSecond": 0.2
     },
