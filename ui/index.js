@@ -988,6 +988,18 @@ function drawTool(context, tool) {
   context.restore();
 }
 
+function drawArrowPath(context, dirVec) {
+  const rotatedArrowPoints = arrowPoints().map(
+    pt => calcPointOnVector(pt, dirVec)
+  );
+
+  context.moveTo(0.0, 0.0);
+
+  for (let point of rotatedArrowPoints) {
+    context.lineTo(point.x, point.y);
+  }
+};
+
 function drawPose(context, pose) {
   const selected = pose === hoveredPose;
 
@@ -1699,18 +1711,6 @@ function drawRotations(context, poseList) {
     return;
   }
 
-  const drawArrowPath = (context, dirVec) => {
-    const rotatedArrowPoints = arrowPoints().map(
-      pt => calcPointOnVector(pt, dirVec)
-    );
-
-    context.moveTo(0.0, 0.0);
-
-    for (let point of rotatedArrowPoints) {
-      context.lineTo(point.x, point.y);
-    }
-  };
-
   for (let a = 0; a < rotationList.rotations.length; a += 1) {
     const rotation = rotationList.rotations[a];
 
@@ -1725,7 +1725,6 @@ function drawRotations(context, poseList) {
       const mouseArrowVec = mousePt.sub(rotationOrigin);
 
       context.save();
-
 
       context.beginPath();
       drawArrowPath(context, mouseArrowVec);
