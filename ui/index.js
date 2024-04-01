@@ -1748,6 +1748,9 @@ function drawRotations(context, poseList) {
 
       context.save();
 
+      context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
+      context.scale(4.0, 4.0);
+
       context.beginPath();
       drawArrowPath(context, mouseArrowVec);
 
