@@ -486,24 +486,32 @@ function onFieldLoaded(canvas) {
 
       case Tool.DELETE:
         hoveredPose = findPoseNear(x, y);
+
         break;
 
       case Tool.ROTATION:
         switch (rotationState) {
           case RotationState.NEW:
             rotationState = RotationState.NONE;
+
             break;
+
           case RotationState.MOVE:
             drawingNearestPoint = false;
-            if(poseList.findTNearPoint(Point(x, y), 50).t == -1) {// don't move when mouse moves off of valid t vals
-              break;
+
+            // don't move when mouse moves off of valid t vals
+            if(poseList.findTNearPoint(Point(x, y), 50).t != -1) {
+              rotationList.rotations[modifyRotation.index].t = poseList.findTNearPoint(Point(x, y), 50).t;
             }
-            rotationList.rotations[modifyRotation.index].t = poseList.findTNearPoint(Point(x, y), 50).t;
+
             break;
+
           case RotationState.ROTATE:
+            drawingNearestPoint = false;
+
             const rotPt = calcRotationPos(rotationList.rotations[modifyRotation.index]);
             rotationList.rotations[modifyRotation.index].setRotVal(getAngleToCursor(rotPt, Point(x, y)));
-            drawingNearestPoint = false;
+
             break;
         }
         break;
@@ -567,6 +575,7 @@ function onFieldLoaded(canvas) {
           rotationState = RotationState.NEW;
         }
         break;
+
       default:
         break;
     }
