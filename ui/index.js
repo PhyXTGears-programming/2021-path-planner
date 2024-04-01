@@ -37,6 +37,16 @@ import Viewport from './js/viewport.js';
 
 import { accelerate } from './js/robot/distanceToVelocity.js';
 
+// JSDoc types
+
+/** @external {object} Canvas */
+
+/** @external {object} Context2d */
+
+/** @typedef {import('./js/pose.js').Pose} Pose */
+
+/** @typedef {import('./js/pose.js').PoseList} PoseList */
+
 const { open, save } = window.__TAURI__.dialog;
 const { exists, readTextFile, writeTextFile } = window.__TAURI__.fs;
 const { documentDir } = window.__TAURI__.path;
@@ -818,10 +828,21 @@ function onFieldLoaded(canvas) {
   });
 }
 
-// _CA
+/**
+ * @function
+ * @param {Canvas} canvas
+ * @param {PoseList} poseList
+ */
 const redrawCanvas = throttleLast(100, _redrawCanvas);
 
-// options :: { onOverlay :: (canvas) -> Void }
+/**
+ * @function
+ * @param {Canvas} canvas
+ * @param {PoseList} poseList
+ * @param {object} options
+ *
+ * options :: { onOverlay :: (canvas) -> Void }
+ */
 function _redrawCanvas(canvas, poseList, options = {}) {
   // Calculate the t value nearest to the mouse.
   // Do this before any drawing, so that anything drawn that needs the nearestPt will have a correct value.
@@ -1010,6 +1031,13 @@ function drawMoveWidget(context) {
   drawArrowPath(context, Vector.j.scale(-1));
 }
 
+/**
+ * @param {Context2d} context
+ * @param {Pose} pose
+ * @param {object} [options={}]
+ *
+ * options = { robotTint : HexColor }
+ */
 function drawPose(context, pose, options = {}) {
   const isHovered = pose === hoveredPose;
   const canMove = isHovered && toolState == Tool.SELECT;

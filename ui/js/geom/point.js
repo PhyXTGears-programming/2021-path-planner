@@ -1,5 +1,11 @@
 import Vector from './vector.js';
 
+/**
+ * @typedef {object} Point
+ * @property {number} x
+ * @property {number} y
+ */
+
 const PointPrototype = {
   addVec (vec) {
     return Point(this.x + vec.x, this.y + vec.y);
@@ -14,6 +20,11 @@ const PointPrototype = {
   },
 };
 
+/**
+ * @constructor
+ * @param {number} x
+ * @param {number} y
+ */
 const Point = (x, y) => {
   const self = Object.create(PointPrototype);
   self.x = x;

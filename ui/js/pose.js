@@ -6,6 +6,26 @@ import Bezier from './geom/bezier.js';
 import Point from './geom/point.js';
 import { RotationList, Rotation,  toDegrees } from './rotation.js';
 
+/** @module pose */
+
+/** @typedef {import('./geom/point.js').Point} Point */
+/** @typedef {import('./geom/vector.js').Vector} Vector */
+
+/**
+ * @typedef {object} Pose
+ * @property {Point} point
+ * @property {Vector} enterHandle
+ * @property {Vector} exitHandle
+ * @property {object} options
+ * @property {number} enterVel
+ * @property {number} exitVel
+ */
+
+/**
+ * @typedef {object} PoseList
+ * @property {Pose[]} poses
+ */
+
 const PoseListPrototype = {
   appendPose (pose) {
     this.poses.push(pose);
@@ -137,6 +157,10 @@ const PoseListPrototype = {
 
 };
 
+/**
+ * @constructor
+ * @param {Pose[]} poses
+ */
 export const PoseList = (poses = []) => {
   const self = Object.create(PoseListPrototype);
   self.poses = [];
@@ -179,6 +203,15 @@ const PosePrototype = {
   },
 };
 
+/**
+ * @constructor
+ * @param {Point} point
+ * @param {Handle} enterHandle
+ * @param {Handle} exitHandle
+ * @param {object} options
+ * @param {number} enterVel
+ * @param {number} exitVel
+ */
 export const Pose = (point, enterHandle, exitHandle, options, enterVel = 1, exitVel = 1) => {
   const self = Object.create(PosePrototype);
   const { commands } = options;
