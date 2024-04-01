@@ -1699,14 +1699,12 @@ function drawRotations(context, poseList) {
     return;
   }
 
-  context.save();
-
-  const drawArrowPath = (context, pos, dirVec) => {
+  const drawArrowPath = (context, dirVec) => {
     const rotatedArrowPoints = arrowPoints().map(
-      pt => calcPointOnVector(pt, dirVec).addVec(pos.vecFromOrigin())
+      pt => calcPointOnVector(pt, dirVec)
     );
 
-    context.moveTo(pos.x, pos.y);
+    context.moveTo(0.0, 0.0);
 
     for (let point of rotatedArrowPoints) {
       context.lineTo(point.x, point.y);
@@ -1718,23 +1716,27 @@ function drawRotations(context, poseList) {
 
     let rotationOrigin = calcRotationPos(rotation);
 
+    context.save();
+
+    context.translate(rotationOrigin.x, rotationOrigin.y);
+
     // Draw hover elements.
     if (null !== modifyRotation && a == modifyRotation.index) {
-      context.save();
-
       const mouseArrowVec = mousePt.sub(rotationOrigin);
+
+      context.save();
 
 
       context.beginPath();
-      drawArrowPath(context, rotationOrigin, mouseArrowVec);
+      drawArrowPath(context, mouseArrowVec);
 
-      context.arc(rotationOrigin.x, rotationOrigin.y, 14.0, 0, 2 * Math.PI, true);
-      context.arc(rotationOrigin.x, rotationOrigin.y, 25.0, 0, 2 * Math.PI, false);
+      context.arc(0.0, 0.0, 14.0, 0, 2 * Math.PI, true);
+      context.arc(0.0, 0.0, 25.0, 0, 2 * Math.PI, false);
 
       context.clip()
 
       context.beginPath();
-      context.arc(rotationOrigin.x, rotationOrigin.y, 30.0, 0, 2 * Math.PI, false);
+      context.arc(0.0, 0.0, 30.0, 0, 2 * Math.PI, false);
 
       context.fillStyle = "#ccc5";
       context.fill();
@@ -1744,7 +1746,7 @@ function drawRotations(context, poseList) {
 
     context.fillStyle = '#a0a';
 
-    drawCircle(context, rotationOrigin.x, rotationOrigin.y, 4.0);
+    drawCircle(context, 0.0, 0.0, 4.0);
 
     context.stroke();
     context.fill();
@@ -1752,13 +1754,13 @@ function drawRotations(context, poseList) {
     const arrowVec = Vector(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
 
     context.beginPath();
-    drawArrowPath(context, rotationOrigin, arrowVec);
+    drawArrowPath(context, arrowVec);
 
     context.stroke();
     context.fill();
-  }
 
-  context.restore();
+    context.restore();
+  }
 }
 
 function calcPointOnVector(pt, vector) {
