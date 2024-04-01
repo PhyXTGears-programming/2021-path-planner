@@ -411,6 +411,7 @@ function onFieldLoaded(canvas) {
     // Reset ui state variables.  Make sure to reaquire hovered widget before event ends.
     hoveredHandle = null;
     hoveredPose = null;
+    modifyRotation = null;
     drawingNearestPoint = true;
 
     // Compute the canvas position of the cursor relative to the canvas.
