@@ -736,6 +736,8 @@ function onFieldLoaded(canvas) {
 
       document.querySelectorAll('.toolbar .tool').forEach(item => item.classList.remove('active'));
       elem.classList.add('active');
+
+      redrawCanvas(canvas, poseList);
     });
   }
 
