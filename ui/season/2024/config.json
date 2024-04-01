@@ -14,7 +14,7 @@
     },
     "commands": [
       {
-        "name": "Shoot Speaker",
+        "name": "Shoot Speaker Near",
         "image": "cmd-shoot-speaker.png",
         "tags": ["a", "b"]
       },
@@ -34,7 +34,7 @@
         "tags": ["a", "b"]
       },
       {
-        "name": "Preheat Speaker",
+        "name": "Preheat Speaker Near",
         "image": "null.png",
         "tags": ["a", "b"]
       },
