@@ -1000,8 +1000,17 @@ function drawArrowPath(context, dirVec) {
   }
 };
 
+function drawMoveWidget(context) {
+  drawArrowPath(context, Vector.i);
+  drawArrowPath(context, Vector.i.scale(-1));
+  drawArrowPath(context, Vector.j);
+  drawArrowPath(context, Vector.j.scale(-1));
+}
+
 function drawPose(context, pose) {
-  const selected = pose === hoveredPose;
+  const isHovered = pose === hoveredPose;
+  const canMove = isHovered && toolState == Tool.SELECT;
+  const isMoving = isHovered && selectState == SelectState.MOVE_POSE;
 
   context.save();
 
@@ -1014,11 +1023,24 @@ function drawPose(context, pose) {
     const h = size.ymeters * seasonConfig.fieldDims.yPixels / seasonConfig.fieldDims.ymeters;
     const viewSize = Vector(w, h);
 
-    const style = (selected)
+    const style = (canMove || isMoving)
       ? styles.robotHovered
       : styles.robotNormal;
 
     drawRobot(context, viewSize.x, viewSize.y, style);
+  }
+
+  if (canMove || isMoving) {
+
+    context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
+    context.scale(2.0, 2.0);
+
+    context.beginPath();
+    drawMoveWidget(context);
+
+    context.fillStyle = "#ccc8";
+    context.fill();
+
   }
 
   context.restore();

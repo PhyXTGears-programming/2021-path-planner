@@ -38,4 +38,7 @@ const Vector = (x, y) => {
   return self;
 };
 
+Vector.i = Vector(1, 0);
+Vector.j = Vector(0, 1);
+
 export default Vector;
