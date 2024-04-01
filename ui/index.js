@@ -879,9 +879,16 @@ function _redrawCanvas(canvas, poseList, options = {}) {
     const w = size.xmeters * seasonConfig.fieldDims.xPixels / seasonConfig.fieldDims.xmeters;
     const h = size.ymeters * seasonConfig.fieldDims.yPixels / seasonConfig.fieldDims.ymeters;
     const viewSize = Vector(w, h).scale(canvasViewport.scale);
-    drawRobot(context, drawToolPt.x, drawToolPt.y, viewSize.x, viewSize.y);
 
-    drawTool(context, toolStateToName[toolState], drawToolPt.x, drawToolPt.y);
+    context.save();
+
+    context.translate(drawToolPt.x, drawToolPt.y);
+
+    drawRobot(context, w, h);
+
+    drawTool(context, toolStateToName[toolState]);
+
+    context.restore();
   }
 
   if ('function' == typeof options.onOverlay) {
@@ -900,7 +907,7 @@ function drawCircle(context, x, y, r) {
   context.arc(x, y, r, 0, 2 * Math.PI, false);
 }
 
-function drawRobot(context, x, y, w, h) {
+function drawRobot(context, w, h) {
   if (w < 0 || h < 0) {
     return;
   }
@@ -909,23 +916,22 @@ function drawRobot(context, x, y, w, h) {
 
   context.fillStyle = '#5558';
   context.beginPath();
-  context.rect(x - w / 2, y - h / 2, w, h);
+  context.rect(-w / 2, -h / 2, w, h);
   context.fill();
 
   context.fillStyle = '#ccc8';
-  context.arc(x, y, Math.max(w, h) / 2, 0, 2 * Math.PI, true);
+  context.arc(0.0, 0.0, Math.max(w, h) / 2, 0, 2 * Math.PI, true);
   context.fill();
 
   context.restore();
 }
 
-function drawTool(context, tool, x, y) {
+function drawTool(context, tool) {
   // Center tool image on cursor.
   const tx = -images[tool].width / 2;
   const ty = -images[tool].height / 2;
 
   context.save();
-  context.translate(x, y);
   context.scale(0.5, 0.5);
   context.translate(tx, ty);
   context.globalCompositeOperation = 'overlay';
