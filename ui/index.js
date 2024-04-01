@@ -98,6 +98,12 @@ const toolStateToName = {
   [Tool.ROTATION] : 'rotation',
 };
 
+const styles = {
+  default:      { primary: '#ccc',  secondary: '#282828' },
+  robotNormal:  { primary: '#aaaa', secondary: '#555a' },
+  robotHovered: { primary: '#cccc', secondary: '#555c' },
+};
+
 // Global variables
 
 // const frog = {attributes : ["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
@@ -885,7 +891,7 @@ function _redrawCanvas(canvas, poseList, options = {}) {
 
     context.save();
     context.scale(canvasViewport.scale, canvasViewport.scale);
-    drawRobot(context, w, h);
+    drawRobot(context, w, h, styles.robotNormal);
     context.restore();
 
     drawTool(context, toolStateToName[toolState]);
@@ -909,7 +915,7 @@ function drawCircle(context, x, y, r) {
   context.arc(x, y, r, 0, 2 * Math.PI, false);
 }
 
-function drawRobot(context, w, h) {
+function drawRobot(context, w, h, style = styles.default) {
   if (w < 0 || h < 0) {
     return;
   }
@@ -947,7 +953,7 @@ function drawRobot(context, w, h) {
   context.lineTo( adx,  ady);
   context.closePath();
 
-  context.fillStyle = '#ccca';
+  context.fillStyle = style.primary;
   context.fill();
 
   context.beginPath();
@@ -963,7 +969,7 @@ function drawRobot(context, w, h) {
   context.lineTo( adx,  ady);
   context.closePath();
 
-  context.fillStyle = '#888a';
+  context.fillStyle = style.secondary;
   context.fill();
 
   context.restore();
@@ -982,14 +988,28 @@ function drawTool(context, tool) {
   context.restore();
 }
 
-function drawPose(context, pose, image) {
+function drawPose(context, pose) {
   const selected = pose === hoveredPose;
-  const size = selected ? 40 : 32;
+
+  context.save();
+
+  context.translate(pose.point.x, pose.point.y);
 
   // Center tool image on cursor.
-  const x = pose.point.x - size / 2;
-  const y = pose.point.y - size / 2;
-  context.drawImage(image, x, y, size, size);
+  {
+    const { size } = seasonConfig.config.robot.parameters;
+    const w = size.xmeters * seasonConfig.fieldDims.xPixels / seasonConfig.fieldDims.xmeters;
+    const h = size.ymeters * seasonConfig.fieldDims.yPixels / seasonConfig.fieldDims.ymeters;
+    const viewSize = Vector(w, h);
+
+    const style = (selected)
+      ? styles.robotHovered
+      : styles.robotNormal;
+
+    drawRobot(context, viewSize.x, viewSize.y, style);
+  }
+
+  context.restore();
 }
 
 function drawAllPoses(context, poseList) {
@@ -999,16 +1019,14 @@ function drawAllPoses(context, poseList) {
   const inner = poseList.poses.slice(1, -1);
   const last = poseList.poses.slice(-1);
 
-  drawPose(context, first[0], images[toolStateToName[Tool.POSE]]);
+  drawPose(context, first[0]);
 
   for (let pose of inner) {
-    const image = images[toolStateToName[Tool.WAYPOINT]];
-
-    drawPose(context, pose, image);
+    drawPose(context, pose);
   }
 
   if (poseList.length > 1) {
-    drawPose(context, last[0], images[toolStateToName[Tool.FINISH]]);
+    drawPose(context, last[0]);
   }
 }
 
