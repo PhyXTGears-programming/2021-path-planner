@@ -1775,6 +1775,57 @@ function findNearestRotationIndex(mousePt) {
   return null;
 }
 
+function drawRotation(context, rotation) {
+  let rotationOrigin = calcRotationPos(rotation);
+
+  context.save();
+
+  context.translate(rotationOrigin.x, rotationOrigin.y);
+
+  // Draw hover elements.
+  if (null !== hoveredRotation && rotation == hoveredRotation.rotation) {
+    const mouseArrowVec = mousePt.sub(rotationOrigin);
+
+    context.save();
+
+    context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
+    context.scale(4.0, 4.0);
+
+    context.beginPath();
+    drawArrowPath(context, mouseArrowVec);
+
+    context.arc(0.0, 0.0, 14.0, 0, 2 * Math.PI, true);
+    context.arc(0.0, 0.0, 25.0, 0, 2 * Math.PI, false);
+
+    context.clip()
+
+    context.beginPath();
+    context.arc(0.0, 0.0, 30.0, 0, 2 * Math.PI, false);
+
+    context.fillStyle = "#ccc5";
+    context.fill();
+
+    context.restore();
+  }
+
+  context.fillStyle = '#a0a';
+
+  drawCircle(context, 0.0, 0.0, 4.0);
+
+  context.stroke();
+  context.fill();
+
+  const arrowVec = Vector(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
+
+  context.beginPath();
+  drawArrowPath(context, arrowVec);
+
+  context.stroke();
+  context.fill();
+
+  context.restore();
+}
+
 function drawRotations(context, poseList) {
   if(poseList.length < 2) {
     return;
@@ -1783,54 +1834,7 @@ function drawRotations(context, poseList) {
   for (let a = 0; a < rotationList.rotations.length; a += 1) {
     const rotation = rotationList.rotations[a];
 
-    let rotationOrigin = calcRotationPos(rotation);
-
-    context.save();
-
-    context.translate(rotationOrigin.x, rotationOrigin.y);
-
-    // Draw hover elements.
-    if (null !== modifyRotation && a == modifyRotation.index) {
-      const mouseArrowVec = mousePt.sub(rotationOrigin);
-
-      context.save();
-
-      context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
-      context.scale(4.0, 4.0);
-
-      context.beginPath();
-      drawArrowPath(context, mouseArrowVec);
-
-      context.arc(0.0, 0.0, 14.0, 0, 2 * Math.PI, true);
-      context.arc(0.0, 0.0, 25.0, 0, 2 * Math.PI, false);
-
-      context.clip()
-
-      context.beginPath();
-      context.arc(0.0, 0.0, 30.0, 0, 2 * Math.PI, false);
-
-      context.fillStyle = "#ccc5";
-      context.fill();
-
-      context.restore();
-    }
-
-    context.fillStyle = '#a0a';
-
-    drawCircle(context, 0.0, 0.0, 4.0);
-
-    context.stroke();
-    context.fill();
-
-    const arrowVec = Vector(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
-
-    context.beginPath();
-    drawArrowPath(context, arrowVec);
-
-    context.stroke();
-    context.fill();
-
-    context.restore();
+    drawRotation(context, rotation);
   }
 }
 
