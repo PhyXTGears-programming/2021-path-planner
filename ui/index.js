@@ -892,8 +892,12 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   drawField(context);
   drawAllPoses(context, poseList);
   drawBezier(context, poseList);
-  drawAllHandleLines(context, poseList);
-  drawAllHandleDots(context, poseList);
+
+  if (toolState == Tool.SELECT) {
+    drawAllHandleLines(context, poseList);
+    drawAllHandleDots(context, poseList);
+  }
+
   drawRotations(context, poseList);
   drawRotationHighlight(context);
 
