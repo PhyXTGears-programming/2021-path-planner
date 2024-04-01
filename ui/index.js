@@ -914,15 +914,56 @@ function drawRobot(context, w, h) {
     return;
   }
 
+  // Outside chassis components.
+  const odx = w / 2;
+  const ody = h / 2;
+
+  // Inside chassis components.
+  const idx = odx - 8;
+  const idy = ody - 8;
+
+  // Arrow components.
+  const adx = idx * 0.25;
+  const ady = idx * 0.50;
+
   context.save();
 
-  context.fillStyle = '#5558';
   context.beginPath();
-  context.rect(-w / 2, -h / 2, w, h);
+  context.moveTo(-odx, -ody);
+  context.lineTo( odx, -ody);
+  context.lineTo( odx,  ody);
+  context.lineTo(-odx,  ody);
+  context.closePath();
+
+  context.moveTo(-idx, -idy);
+  context.lineTo(-idx,  idy);
+  context.lineTo( idx,  idy);
+  context.lineTo( idx, -idy);
+  context.closePath();
+
+  // Draw forward arrow.
+  context.moveTo( adx, -ady);
+  context.lineTo( idx,    0);
+  context.lineTo( adx,  ady);
+  context.closePath();
+
+  context.fillStyle = '#ccca';
   context.fill();
 
-  context.fillStyle = '#ccc8';
-  context.arc(0.0, 0.0, Math.max(w, h) / 2, 0, 2 * Math.PI, true);
+  context.beginPath();
+  context.moveTo(-idx, -idy);
+  context.lineTo(-idx,  idy);
+  context.lineTo( idx,  idy);
+  context.lineTo( idx, -idy);
+  context.closePath();
+
+  // Cut forward arrow.
+  context.moveTo( adx, -ady);
+  context.lineTo( idx,    0);
+  context.lineTo( adx,  ady);
+  context.closePath();
+
+  context.fillStyle = '#888a';
   context.fill();
 
   context.restore();
