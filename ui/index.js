@@ -1407,6 +1407,10 @@ function findHandleNear(x, y) {
 }
 
 function findRotationNear(x, y) {
+  if (!poseList.hasBezier) {
+    return null;
+  }
+
   for (let a = 0; a < rotationList.rotations.length; a += 1) {
     const { t } = rotationList.rotations[a];
 

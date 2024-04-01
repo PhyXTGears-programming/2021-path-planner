@@ -111,6 +111,10 @@ const PoseListPrototype = {
     return { t: minT, pt: minPt, dist2: minD2 };
   },
 
+  get hasBezier() {
+    return this.length > 1;
+  },
+
   get length() {
     return this.poses.length;
   },
