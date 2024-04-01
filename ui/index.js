@@ -137,7 +137,7 @@ let movePose = null;
 let hoveredHandle = null;
 let moveHandle = null;
 
-let modifyRotation = null;
+let hoveredRotation = null;
 let rotationState = null;
 
 let actionedPose = null;
@@ -423,7 +423,7 @@ function onFieldLoaded(canvas) {
     // Reset ui state variables.  Make sure to reaquire hovered widget before event ends.
     hoveredHandle = null;
     hoveredPose = null;
-    modifyRotation = null;
+    hoveredRotation = null;
     drawingNearestPoint = true;
 
     // Compute the canvas position of the cursor relative to the canvas.
@@ -493,7 +493,7 @@ function onFieldLoaded(canvas) {
         switch (rotationState) {
           case RotationState.NEW:
             rotationState = RotationState.NONE;
-
+            hoveredRotation = findRotationNear(x, y);
             break;
 
           case RotationState.MOVE:
@@ -501,7 +501,7 @@ function onFieldLoaded(canvas) {
 
             // don't move when mouse moves off of valid t vals
             if(poseList.findTNearPoint(Point(x, y), 50).t != -1) {
-              rotationList.rotations[modifyRotation.index].t = poseList.findTNearPoint(Point(x, y), 50).t;
+              hoveredRotation.rotation.t = poseList.findTNearPoint(Point(x, y), 50).t;
             }
 
             break;
@@ -509,8 +509,8 @@ function onFieldLoaded(canvas) {
           case RotationState.ROTATE:
             drawingNearestPoint = false;
 
-            const rotPt = calcRotationPos(rotationList.rotations[modifyRotation.index]);
-            rotationList.rotations[modifyRotation.index].setRotVal(getAngleToCursor(rotPt, Point(x, y)));
+            const { pt, rotation } = hoveredRotation;
+            rotation.setRotVal(getAngleToCursor(pt, Point(x, y)));
 
             break;
         }
@@ -565,15 +565,14 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        modifyRotation = findRotationNear(x, y);
-
-        if (modifyRotation != null && innerOrOuterRadius(Point(x, y), modifyRotation.pt) == 'inner') {
+        if (hoveredRotation != null && innerOrOuterRadius(Point(x, y), hoveredRotation.pt) == 'inner') {
           rotationState = RotationState.MOVE;
-        } else if (modifyRotation != null && innerOrOuterRadius(Point(x, y), modifyRotation.pt) == 'outer') {
+        } else if (hoveredRotation != null && innerOrOuterRadius(Point(x, y), hoveredRotation.pt) == 'outer') {
           rotationState = RotationState.ROTATE;
         } else {
           rotationState = RotationState.NEW;
         }
+
         break;
 
       default:
@@ -624,21 +623,16 @@ function onFieldLoaded(canvas) {
       default:
         break;
     }
-    if (toolState == Tool.ROTATE && rotationState == RotationState.ROTATE) {
+    if (toolState == Tool.ROTATE && rotationState == RotationState.ROTATE && hoveredRotation) {
       if (findNearestRotationIndex(mousePt) >= 0) {
-        let nearRotationIndex = findNearestRotationIndex(mousePt);
-        rotationList.rotations[nearRotationIndex].setRotVal(
-          getAngleToCursor(
-            calcRotationPos(rotationList.rotations[nearRotationIndex]),
-            mousePt
-          )
-        );
-        console.log(getAngleToCursor(calcRotationPos(rotationList.rotations[nearRotationIndex]), mousePt));
+        const { pt, rotation } = hoveredRotation;
+
+        rotation.setRotVal(getAngleToCursor(pt, mousePt));
+        console.log(getAngleToCursor(pt, mousePt));
       }
 
       selectState = SelectState.NONE;
       rotationState = RotationState.NONE;
-      modifyRotation = null;
 
       redrawCanvas(canvas, poseList);
     }
@@ -1156,7 +1150,7 @@ function shallDrawNearestPoint() {
   const isNothingHovered = (
     null === hoveredHandle
     && null === hoveredPose
-    && null === modifyRotation
+    && null === hoveredRotation
   );
 
   const isProperTool = (
@@ -1374,8 +1368,6 @@ function updateElementNear(x, y) {
   if (null !== hoveredPose) {
     return;
   }
-
-  modifyRotation = findRotationNear(x, y);
 }
 
 function findPoseNear(x, y) {
@@ -1438,6 +1430,7 @@ function findRotationNear(x, y) {
       return {
         index: a,
         pt,
+        rotation: rotationList.rotations[a],
       };
     }
   }
