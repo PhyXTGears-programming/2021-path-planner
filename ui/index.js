@@ -142,8 +142,9 @@ let nearestPt = { t: -1, pt: Point(0, 0) }
 
 let drawToolPt = Point(0, 0);
 
-let keyState = {
+let inputState = {
   isShiftDown: false,
+  isMouseMiddleDown: false,
 };
 
 // Example:
@@ -622,6 +623,8 @@ function onFieldLoaded(canvas) {
       return;
     }
 
+    inputState.isMouseMiddleDown = true;
+
     // Compute the canvas position of the cursor relative to the canvas.
     const startVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
 
@@ -629,9 +632,16 @@ function onFieldLoaded(canvas) {
     redrawCanvas(canvas, poseList);
   });
 
+  // Mouse up handler to pan the canvas view.
+  canvas.addEventListener('mouseup', ev => {
+    if (MIDDLE_BUTTON == ev.button) {
+      inputState.isMouseMiddleDown = false;
+    }
+  });
+
   // Mouse move handler to pan the canvase.
   canvas.addEventListener('mousemove', ev => {
-    if (MIDDLE_BUTTON !== ev.button) {
+    if (MIDDLE_BUTTON !== ev.button && !inputState.isMouseMiddleDown) {
       return;
     }
 
@@ -659,20 +669,20 @@ function onFieldLoaded(canvas) {
   // Shift key handlers
   window.addEventListener('keyup', ev => {
     if ('Shift' === ev.key) {
-      keyState.isShiftDown = false;
+      inputState.isShiftDown = false;
       redrawCanvas(canvas, poseList);
     }
   });
 
   window.addEventListener('keydown', ev => {
     if ('Shift' == ev.key) {
-      keyState.isShiftDown = true;
+      inputState.isShiftDown = true;
       redrawCanvas(canvas, poseList);
     }
   });
 
   canvas.addEventListener('mousemove', ev => {
-    keyState.isShiftDown = ev.shiftKey;
+    inputState.isShiftDown = ev.shiftKey;
   });
 
   // Adding event handlers for toolbar icons
@@ -974,7 +984,7 @@ function shallDrawNearestPoint() {
   );
 
   const isProperTool = (
-    (toolState === Tool.POSE && keyState.isShiftDown)
+    (toolState === Tool.POSE && inputState.isShiftDown)
     || toolState === Tool.ROTATION
   );
 
