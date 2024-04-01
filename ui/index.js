@@ -878,13 +878,15 @@ function _redrawCanvas(canvas, poseList, options = {}) {
     const { size } = seasonConfig.config.robot.parameters;
     const w = size.xmeters * seasonConfig.fieldDims.xPixels / seasonConfig.fieldDims.xmeters;
     const h = size.ymeters * seasonConfig.fieldDims.yPixels / seasonConfig.fieldDims.ymeters;
-    const viewSize = Vector(w, h).scale(canvasViewport.scale);
 
     context.save();
 
     context.translate(drawToolPt.x, drawToolPt.y);
 
+    context.save();
+    context.scale(canvasViewport.scale, canvasViewport.scale);
     drawRobot(context, w, h);
+    context.restore();
 
     drawTool(context, toolStateToName[toolState]);
 
