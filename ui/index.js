@@ -1841,7 +1841,6 @@ function drawRotation(context, rotation) {
 
   drawCircle(context, 0.0, 0.0, 0.2);
 
-  context.stroke();
   context.fill();
 
   const arrowVec = Vector(Math.cos(rotation.rot), Math.sin(rotation.rot));
@@ -1849,7 +1848,6 @@ function drawRotation(context, rotation) {
   context.beginPath();
   drawArrowPath(context, arrowVec);
 
-  context.stroke();
   context.fill();
 
   context.restore();
