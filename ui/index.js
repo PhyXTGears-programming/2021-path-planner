@@ -1029,17 +1029,28 @@ function drawTool(context, tool) {
   context.restore();
 }
 
-function drawArrowPath(context, dirVec) {
-  const rotatedArrowPoints = arrowPoints().map(
-    pt => calcPointOnVector(pt, dirVec)
-  );
+function alignPath(path, dirVec) {
+  return path.map(pt => calcPointOnVector(pt, dirVec));
+}
 
-  context.moveTo(0.0, 0.0);
+function drawPath(context, path) {
+  const first = path[0];
+  const rest = path.slice(1);
 
-  for (let point of rotatedArrowPoints) {
+  context.moveTo(first.x, first.y);
+
+  for (let point of rest) {
     context.lineTo(point.x, point.y);
   }
+}
+
+function drawArrowPath(context, dirVec) {
+  drawPath(context, alignPath(arrowPoints(), dirVec));
 };
+
+function drawArrowHeadPath(context, dirVec) {
+  drawPath(context, alignPath(arrowHeadPoints(), dirVec));
+}
 
 function drawMoveWidget(context) {
   drawArrowPath(context, Vector.i);
@@ -1805,7 +1816,7 @@ function drawRotation(context, rotation) {
     context.scale(80.0, 80.0);
 
     context.beginPath();
-    drawArrowPath(context, mouseArrowVec);
+    drawArrowHeadPath(context, mouseArrowVec);
 
     context.arc(0.0, 0.0, 0.55, 0, 2 * Math.PI, true);
     context.arc(0.0, 0.0, 1.00, 0, 2 * Math.PI, false);
@@ -1887,6 +1898,16 @@ function arrowPoints() { // Takes canvas point and calcs
     Point(0.55, -0.06),
     Point(0.00, -0.06),
     Point(0.00,  0.00),
+  ];
+}
+
+function arrowHeadPoints() { // Takes canvas point and calcs
+  return [                             // relative points to draw arrow
+    Point(0.55,  0.06),
+    Point(0.55,  0.24),
+    Point(1.00,  0.00),
+    Point(0.55, -0.24),
+    Point(0.55, -0.06),
   ];
 }
 
