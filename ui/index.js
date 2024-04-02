@@ -113,8 +113,8 @@ const toolStateToName = {
 const styles = {
   default:      { primary: '#ccc',  secondary: '#282828' },
   robotActive:  { primary: '#fffa', secondary: '#777a' },
-  robotNormal:  { primary: '#aaaa', secondary: '#555a' },
-  robotHovered: { primary: '#cccc', secondary: '#555c' },
+  robotNormal:  { primary: '#666a', secondary: '#333a' },
+  robotHovered: { primary: '#aaac', secondary: '#555c' },
 };
 
 // Global variables
