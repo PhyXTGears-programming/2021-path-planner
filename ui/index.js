@@ -1092,6 +1092,7 @@ function drawMoveWidget(context) {
  */
 function drawPose(context, pose, options = {}) {
   const isHovered = pose === hoveredPose;
+  const canEdit = isHovered && toolState == Tool.ACTIONS;
   const canMove = isHovered && toolState == Tool.SELECT;
   const isMoving = isHovered && selectState == SelectState.MOVE_POSE;
   const canDelete = isHovered && toolState == Tool.DELETE;
@@ -1115,7 +1116,7 @@ function drawPose(context, pose, options = {}) {
     const style = (() => {
       const base = (isToolActions && isActivePose)
         ? styles.robotActive
-        : (canMove || isMoving || canDelete)
+        : (canDelete || canEdit || canMove || isMoving)
         ? styles.robotHovered
         : styles.robotNormal;
 
