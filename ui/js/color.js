@@ -21,12 +21,14 @@ const ColorPrototype = {
    */
   tint(tint) {
     const { red, green, blue, alpha } = Color.fromHex(tint);
+    const p = 0.7;
+    const q = 1.0 - p;
 
     return Color(
-      (red   + this.red  ) / 2,
-      (green + this.green) / 2,
-      (blue  + this.blue ) / 2,
-      (alpha + this.alpha) / 2
+      (q * red   + p * this.red  ),
+      (q * green + p * this.green),
+      (q * blue  + p * this.blue ),
+      (q * alpha + p * this.alpha)
     );
   },
 
