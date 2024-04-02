@@ -613,7 +613,7 @@ function onFieldLoaded(canvas) {
 
     switch (toolState) {
       case Tool.ACTIONS:
-        activePose = hoveredPose;
+        activePose = { pose: hoveredPose };
 
         break;
 
@@ -1092,13 +1092,14 @@ function drawMoveWidget(context) {
  */
 function drawPose(context, pose, options = {}) {
   const isHovered = pose === hoveredPose;
+  const isActive = !!activePose && pose === activePose.pose;
+
   const canEdit = isHovered && toolState == Tool.ACTIONS;
   const canMove = isHovered && toolState == Tool.SELECT;
-  const isMoving = isHovered && selectState == SelectState.MOVE_POSE;
   const canDelete = isHovered && toolState == Tool.DELETE;
 
-  const isToolActions = toolState == Tool.ACTIONS;
-  const isActivePose = activePose == pose;
+  const isEditActive = !!isActive && toolState == Tool.ACTIONS;
+  const isMoveActive = !!isActive && selectState == SelectState.MOVE_POSE;
 
   context.save();
 
@@ -1114,9 +1115,9 @@ function drawPose(context, pose, options = {}) {
     const prevRotation = findRotationBefore(pose.point.x, pose.point.y);
 
     const style = (() => {
-      const base = (isToolActions && isActivePose)
+      const base = (isEditActive || isMoveActive)
         ? styles.robotActive
-        : (canDelete || canEdit || canMove || isMoving)
+        : (canDelete || canEdit || canMove)
         ? styles.robotHovered
         : styles.robotNormal;
 
@@ -1136,7 +1137,7 @@ function drawPose(context, pose, options = {}) {
     context.restore();
   }
 
-  if (canMove || isMoving) {
+  if (canMove || isMoveActive) {
 
     context.globalCompositeOperation = 'xor';
 
