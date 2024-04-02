@@ -1815,7 +1815,21 @@ function drawRotation(context, rotation) {
     context.beginPath();
     context.arc(0.0, 0.0, 1.05, 0, 2 * Math.PI, false);
 
-    context.fillStyle = "#ccc5";
+    context.fillStyle = "#cccc";
+    context.fill();
+
+    context.restore();
+
+    context.save();
+
+    context.globalCompositeOperation = 'xor';
+
+    context.scale(45.0, 45.0);
+
+    context.beginPath();
+    drawMoveWidget(context);
+
+    context.fillStyle = "#cccc";
     context.fill();
 
     context.restore();
