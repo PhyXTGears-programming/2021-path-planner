@@ -1084,6 +1084,8 @@ function drawPose(context, pose, options = {}) {
 
   if (canMove || isMoving) {
 
+    context.globalCompositeOperation = 'xor';
+
     context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
     context.scale(45.0, 45.0);
 
@@ -1798,8 +1800,8 @@ function drawRotation(context, rotation) {
 
     context.save();
 
-    context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
-    context.scale(4.0, 4.0);
+    context.globalCompositeOperation = 'xor';
+
     context.scale(80.0, 80.0);
 
     context.beginPath();
