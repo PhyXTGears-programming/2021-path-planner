@@ -142,7 +142,6 @@ let rotationState = null;
 let activeRotation = null;
 
 let actionedPose = null;
-let drawingNearestPoint = true;
 
 let selectState = SelectState.NONE;
 
@@ -428,7 +427,6 @@ function onFieldLoaded(canvas) {
     hoveredHandle = null;
     hoveredPose = null;
     hoveredRotation = null;
-    drawingNearestPoint = true;
 
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
@@ -505,8 +503,6 @@ function onFieldLoaded(canvas) {
             break;
 
           case RotationState.MOVE:
-            drawingNearestPoint = false;
-
             // don't move when mouse moves off of valid t vals
             if(poseList.findTNearPoint(Point(x, y), 50).t != -1) {
               activeRotation.rotation.t = poseList.findTNearPoint(Point(x, y), 50).t;
@@ -515,8 +511,6 @@ function onFieldLoaded(canvas) {
             break;
 
           case RotationState.ROTATE:
-            drawingNearestPoint = false;
-
             const { pt, rotation } = activeRotation;
             rotation.setRotVal(getAngleToCursor(pt, Point(x, y)));
 
@@ -1337,7 +1331,7 @@ function drawAllHandleDots(context, poseList) {
 
 function drawNearestPoint(context) {
   // Draw point on poseList path that is nearest mouse.
-  if (0.0 <= nearestPt.t && drawingNearestPoint) {
+  if (0.0 <= nearestPt.t) {
     context.save();
 
     drawCircle(context, nearestPt.pt.x, nearestPt.pt.y, 5.0);
@@ -2088,7 +2082,6 @@ function innerOrOuterRadius(mousePt, rotPt) {
 
 function drawRotationHighlight(context) {
   if (poseList.length >= 2 && hoveredRotation) {
-    drawingNearestPoint = false;
     const rotPos = calcRotationPos(hoveredRotation.rotation);
 
     context.fillStyle = '#2F2';
