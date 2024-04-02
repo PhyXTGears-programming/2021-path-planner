@@ -1094,6 +1094,7 @@ function drawPose(context, pose, options = {}) {
   const isHovered = pose === hoveredPose;
   const canMove = isHovered && toolState == Tool.SELECT;
   const isMoving = isHovered && selectState == SelectState.MOVE_POSE;
+  const canDelete = isHovered && toolState == Tool.DELETE;
 
   const isToolActions = toolState == Tool.ACTIONS;
   const isActivePose = activePose == pose;
@@ -1114,7 +1115,7 @@ function drawPose(context, pose, options = {}) {
     const style = (() => {
       const base = (isToolActions && isActivePose)
         ? styles.robotActive
-        : (canMove || isMoving)
+        : (canMove || isMoving || canDelete)
         ? styles.robotHovered
         : styles.robotNormal;
 
