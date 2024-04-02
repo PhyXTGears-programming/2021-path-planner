@@ -1439,10 +1439,15 @@ function updateElementNear(x, y) {
 }
 
 function findPoseNear(x, y) {
+  const { size } = seasonConfig.config.robot.parameters;
+  const w = size.xmeters * seasonConfig.fieldDims.xPixels / seasonConfig.fieldDims.xmeters;
+  const h = size.ymeters * seasonConfig.fieldDims.yPixels / seasonConfig.fieldDims.ymeters;
+  const threshold = Math.pow(Math.max(w, h) / 2, 2);
+
   for (let pose of poseList.poses) {
     const distance = Math.pow(x - pose.point.x, 2) + Math.pow(y - pose.point.y, 2);
 
-    if (distance < 300) {
+    if (distance < threshold) {
       return pose;
     }
   }
