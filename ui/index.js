@@ -256,7 +256,7 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(() => {
       onFieldLoaded(canvas);
 
-      if(actionedPose) {
+      if (actionedPose) {
         drawAllNodes(actionedPose.commands);
       }
     })
@@ -385,7 +385,7 @@ function onFieldLoaded(canvas) {
 
         let nearestRotation = findRotationNear(x, y);
 
-        if(nearestRotation && nearestRotation.index != 0) {
+        if (nearestRotation && nearestRotation.index != 0) {
           repositionRotsAndDo('deleteRotation', rotationList.rotations[nearestRotation.index]);
         } else if (hoveredPose) {
           repositionRotsAndDo('deleteWaypoint', Point(x, y));
@@ -396,13 +396,13 @@ function onFieldLoaded(canvas) {
       case Tool.ACTIONS:
         actionedPose = findPoseNear(x, y);
 
-        if(!actionedPose) {
+        if (!actionedPose) {
           break;
         }
 
         drawAllNodes(actionedPose.commands);
 
-        if(poseList.poses.indexOf(actionedPose) == 0) {
+        if (poseList.poses.indexOf(actionedPose) == 0) {
           setEditHeadingVisible(true);
         } else {
           setEditHeadingVisible(false);
@@ -504,7 +504,7 @@ function onFieldLoaded(canvas) {
 
           case RotationState.MOVE:
             // don't move when mouse moves off of valid t vals
-            if(poseList.findTNearPoint(Point(x, y), 50).t != -1) {
+            if (poseList.findTNearPoint(Point(x, y), 50).t != -1) {
               activeRotation.rotation.t = poseList.findTNearPoint(Point(x, y), 50).t;
             }
 
@@ -1551,11 +1551,11 @@ document.addEventListener('dragenter', ev => {
   ev.preventDefault();
 
   if (ev.target.classList.contains('action-drop-zone')) {
-    if(spacerTarget) {
+    if (spacerTarget) {
       spacerTarget.classList.remove("is-active-dropzone");
     }
 
-    if(ev.target.classList.contains("o-command-group__spacer")) {
+    if (ev.target.classList.contains("o-command-group__spacer")) {
       spacerTarget = ev.target;
       spacerTarget.classList.add('is-active-dropzone');
     }
@@ -1574,8 +1574,8 @@ function drawAllNodes(rootSomething) {
   const { moveCondition, rootNode } = rootSomething;
 
   const moveConditionContinueClarification = document.createElement("p");
-  if(actionedPose.canSwitch()) {
-    if(moveCondition == "halt") {
+  if (actionedPose.canSwitch()) {
+    if (moveCondition == "halt") {
       moveConditionContinueClarification.textContent = "Go";
       moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
     }
@@ -1743,7 +1743,7 @@ document.addEventListener('drop', ev => {
   const targetPoseCommands = actionedPose.commands;
   let target = ev.target;
 
-  if(spacerTarget) {
+  if (spacerTarget) {
     spacerTarget.classList.remove("is-active-dropzone");
   }
 
@@ -1833,7 +1833,7 @@ function findNearestRotationIndex(mousePt) {
     let rotationPt = calcRotationPos(rotation);
     let distance = Math.sqrt(Math.pow(rotationPt.x - mousePt.x, 2) + Math.pow(rotationPt.y - mousePt.y, 2));
 
-    if(distance <= 30) {
+    if (distance <= 30) {
       return rotationList.rotations.indexOf(rotation);
     }
 
@@ -1867,7 +1867,7 @@ function drawRotation(context, rotation) {
     context.arc(0.0, 0.0, 0.55, 0, 2 * Math.PI, true);
     context.arc(0.0, 0.0, 1.00, 0, 2 * Math.PI, false);
 
-    context.clip()
+    context.clip();
 
     context.beginPath();
     context.arc(0.0, 0.0, 1.05, 0, 2 * Math.PI, false);
@@ -1911,7 +1911,7 @@ function drawRotation(context, rotation) {
 }
 
 function drawRotations(context, poseList) {
-  if(poseList.length < 2) {
+  if (poseList.length < 2) {
     return;
   }
 
@@ -1960,7 +1960,7 @@ function arrowHeadPoints() { // Takes canvas point and calcs
 function setEditHeadingVisible(visibool) {
   const headingElem = document.getElementById("rotation-heading-area");
 
-  if(visibool) {
+  if (visibool) {
     headingElem.style.visibility = "visible";
   } else {
     headingElem.style.visibility = "collapse";
@@ -2073,7 +2073,7 @@ function pruneInvalidRotPts() {
 function innerOrOuterRadius(mousePt, rotPt) {
   const threshold = 50.0 / canvasViewport.scale;
 
-  if(ezPtDistance(mousePt, rotPt) <= threshold) {
+  if (ezPtDistance(mousePt, rotPt) <= threshold) {
     return 'inner';
   } else {
     return 'outer';
@@ -2100,7 +2100,7 @@ function drawRotationHighlight(context) {
 //   for (let i = 1; i < iterations; i++) {
   //     const newDist = ezPtDistance(origin, poseList.pointAt(t - (integral * i)));
   //     console.log("Comparing t dist to new t: ", t - (integral * i));
-//     if(newDist < initialDist && newDist > initialDist * 0.8) {
+//     if (newDist < initialDist && newDist > initialDist * 0.8) {
   //       console.log("It wasn't");
   //       return false;
   //     }
