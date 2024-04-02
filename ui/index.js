@@ -415,6 +415,9 @@ function onFieldLoaded(canvas) {
           makeRotation(nearestPt.t);
         }
         rotationState = RotationState.NONE;
+
+        redrawCanvas(canvas, poseList);
+
         break;
     }
   });
