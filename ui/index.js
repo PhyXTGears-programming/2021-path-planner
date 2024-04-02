@@ -491,6 +491,10 @@ function onFieldLoaded(canvas) {
 
       case Tool.ROTATION:
         switch (rotationState) {
+          case RotationState.NONE:
+            hoveredRotation = findRotationNear(x, y);
+            break;
+
           case RotationState.NEW:
             rotationState = RotationState.NONE;
             hoveredRotation = findRotationNear(x, y);
