@@ -1085,7 +1085,7 @@ function drawPose(context, pose, options = {}) {
   if (canMove || isMoving) {
 
     context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
-    context.scale(2.0, 2.0);
+    context.scale(45.0, 45.0);
 
     context.beginPath();
     drawMoveWidget(context);
@@ -1790,6 +1790,8 @@ function drawRotation(context, rotation) {
 
   context.translate(rotationOrigin.x, rotationOrigin.y);
 
+  context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
+
   // Draw hover elements.
   if (null !== hoveredRotation && rotation == hoveredRotation.rotation) {
     const mouseArrowVec = mousePt.sub(rotationOrigin);
@@ -1798,17 +1800,18 @@ function drawRotation(context, rotation) {
 
     context.scale(1.0 / canvasViewport.scale, 1.0 / canvasViewport.scale);
     context.scale(4.0, 4.0);
+    context.scale(80.0, 80.0);
 
     context.beginPath();
     drawArrowPath(context, mouseArrowVec);
 
-    context.arc(0.0, 0.0, 14.0, 0, 2 * Math.PI, true);
-    context.arc(0.0, 0.0, 25.0, 0, 2 * Math.PI, false);
+    context.arc(0.0, 0.0, 0.55, 0, 2 * Math.PI, true);
+    context.arc(0.0, 0.0, 1.00, 0, 2 * Math.PI, false);
 
     context.clip()
 
     context.beginPath();
-    context.arc(0.0, 0.0, 30.0, 0, 2 * Math.PI, false);
+    context.arc(0.0, 0.0, 1.05, 0, 2 * Math.PI, false);
 
     context.fillStyle = "#ccc5";
     context.fill();
@@ -1816,14 +1819,16 @@ function drawRotation(context, rotation) {
     context.restore();
   }
 
+  context.scale(60.0, 60.0);
+
   context.fillStyle = '#a0a';
 
-  drawCircle(context, 0.0, 0.0, 4.0);
+  drawCircle(context, 0.0, 0.0, 0.2);
 
   context.stroke();
   context.fill();
 
-  const arrowVec = Vector(30*Math.cos(rotation.rot), 30*Math.sin(rotation.rot));
+  const arrowVec = Vector(Math.cos(rotation.rot), Math.sin(rotation.rot));
 
   context.beginPath();
   drawArrowPath(context, arrowVec);
@@ -1859,15 +1864,15 @@ function calcPointOnVector(pt, vector) {
 
 function arrowPoints() { // Takes canvas point and calcs
   return [                             // relative points to draw arrow
-    Point(0, 0),
-    Point(0, 1),
-    Point(16,1),
-    Point(16, 5),
-    Point(25, 0),
-    Point(16, -5),
-    Point(16, -1),
-    Point(0, -1),
-    Point(0, 0),
+    Point(0.00,  0.00),
+    Point(0.00,  0.06),
+    Point(0.55,  0.06),
+    Point(0.55,  0.24),
+    Point(1.00,  0.00),
+    Point(0.55, -0.24),
+    Point(0.55, -0.06),
+    Point(0.00, -0.06),
+    Point(0.00,  0.00),
   ];
 }
 
