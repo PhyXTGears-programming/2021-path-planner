@@ -628,23 +628,27 @@ function onFieldLoaded(canvas) {
         }
         break;
 
+      case Tool.ROTATION:
+        if (rotationState == RotationState.ROTATE && activeRotation) {
+          if (findNearestRotationIndex(mousePt) >= 0) {
+            const { pt, rotation } = activeRotation;
+
+            rotation.setRotVal(getAngleToCursor(pt, mousePt));
+            console.log(getAngleToCursor(pt, mousePt));
+          }
+
+          selectState = SelectState.NONE;
+          rotationState = RotationState.NONE;
+          activeRotation = null;
+
+          redrawCanvas(canvas, poseList);
+        }
+
+        break;
+
       default:
         break;
     }
-    if (toolState == Tool.ROTATE && rotationState == RotationState.ROTATE && hoveredRotation) {
-      if (findNearestRotationIndex(mousePt) >= 0) {
-        const { pt, rotation } = hoveredRotation;
-
-        rotation.setRotVal(getAngleToCursor(pt, mousePt));
-        console.log(getAngleToCursor(pt, mousePt));
-      }
-
-      selectState = SelectState.NONE;
-      rotationState = RotationState.NONE;
-
-      redrawCanvas(canvas, poseList);
-    }
-
   });
 
   // Mouse down handler to pan the canvas view.
