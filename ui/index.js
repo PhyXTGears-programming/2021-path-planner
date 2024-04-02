@@ -1046,10 +1046,14 @@ function drawPath(context, path) {
 
 function drawArrowPath(context, dirVec) {
   drawPath(context, alignPath(arrowPoints(), dirVec));
+  context.closePath();
+  context.moveTo(0, 0);
 };
 
 function drawArrowHeadPath(context, dirVec) {
   drawPath(context, alignPath(arrowHeadPoints(), dirVec));
+  context.closePath();
+  context.moveTo(0, 0);
 }
 
 function drawMoveWidget(context) {
