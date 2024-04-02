@@ -112,6 +112,7 @@ const toolStateToName = {
 
 const styles = {
   default:      { primary: '#ccc',  secondary: '#282828' },
+  robotActive:  { primary: '#fffa', secondary: '#777a' },
   robotNormal:  { primary: '#aaaa', secondary: '#555a' },
   robotHovered: { primary: '#cccc', secondary: '#555c' },
 };
@@ -132,7 +133,7 @@ let poseList = PoseList();
 let rotationList = new RotationList();
 
 let hoveredPose = null;
-let movePose = null;
+let activePose = null;
 
 let hoveredHandle = null;
 let moveHandle = null;
@@ -397,10 +398,12 @@ function onFieldLoaded(canvas) {
         actionedPose = findPoseNear(x, y);
 
         if (!actionedPose) {
+          clearAllNodes();
           break;
+        } else {
+          drawAllNodes(actionedPose.commands);
         }
 
-        drawAllNodes(actionedPose.commands);
 
         if (poseList.poses.indexOf(actionedPose) == 0) {
           setEditHeadingVisible(true);
@@ -439,12 +442,17 @@ function onFieldLoaded(canvas) {
     mousePt = Point(x, y);
 
     switch (toolState) {
+      case Tool.ACTIONS:
+        hoveredPose = findPoseNear(x, y);
+
+        break;
+
       case Tool.SELECT:
         switch (selectState) {
           case SelectState.MOVE_POSE:
-            const posePt = mousePt.addVec(movePose.offset);
+            const posePt = mousePt.addVec(activePose.offset);
 
-            movePose.pose.point = posePt;
+            activePose.pose.point = posePt;
 
             hoveredPose = findPoseNear(x, y);
 
@@ -543,7 +551,7 @@ function onFieldLoaded(canvas) {
         if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
 
-          movePose = {
+          activePose = {
             offset: hoveredPose.point.sub(mousePt),
             pose: hoveredPose,
           };
@@ -604,6 +612,11 @@ function onFieldLoaded(canvas) {
     mousePt = Point(x, y);
 
     switch (toolState) {
+      case Tool.ACTIONS:
+        activePose = hoveredPose;
+
+        break;
+
       case Tool.POSE:
         break;
 
@@ -611,7 +624,7 @@ function onFieldLoaded(canvas) {
         switch (selectState) {
           case SelectState.MOVE_POSE:
             selectState = SelectState.NONE;
-            movePose = null;
+            activePose = null;
             break;
 
           case SelectState.MOVE_ENTER_HANDLE:
@@ -1082,6 +1095,9 @@ function drawPose(context, pose, options = {}) {
   const canMove = isHovered && toolState == Tool.SELECT;
   const isMoving = isHovered && selectState == SelectState.MOVE_POSE;
 
+  const isToolActions = toolState == Tool.ACTIONS;
+  const isActivePose = activePose == pose;
+
   context.save();
 
   context.translate(pose.point.x, pose.point.y);
@@ -1095,13 +1111,17 @@ function drawPose(context, pose, options = {}) {
 
     const prevRotation = findRotationBefore(pose.point.x, pose.point.y);
 
-    const base = (canMove || isMoving)
-      ? styles.robotHovered
-      : styles.robotNormal;
+    const style = (() => {
+      const base = (isToolActions && isActivePose)
+        ? styles.robotActive
+        : (canMove || isMoving)
+        ? styles.robotHovered
+        : styles.robotNormal;
 
-    const style = (options.hasOwnProperty('robotTint'))
-      ? tintStyle(base, options.robotTint)
-      : base;
+      return (options.hasOwnProperty('robotTint'))
+        ? tintStyle(base, options.robotTint)
+        : base;
+    })();
 
     context.save();
 
@@ -1571,8 +1591,29 @@ document.addEventListener('dragover', ev => {
   } // frog  (._.)
 });
 
+function clearAllNodes() {
+  const rootElement = document.getElementById("c-action-work-area__sequence");
+
+  const childList = Array.prototype.slice.call(rootElement.children, 0);
+
+  for (let child of childList) {
+    rootElement.removeChild(child);
+  }
+}
+
 function drawAllNodes(rootSomething) {
   const rootElement = document.getElementById("c-action-work-area__sequence");
+
+  const childList = Array.prototype.slice.call(rootElement.children, 0);
+
+  for (let child of childList) {
+    rootElement.removeChild(child);
+  }
+
+  if (null === rootSomething) {
+    // No root node provided. Leave command ui empty.
+    return;
+  }
 
   const { moveCondition, rootNode } = rootSomething;
 
@@ -1597,12 +1638,6 @@ function drawAllNodes(rootSomething) {
     }
     drawAllNodes(actionedPose.commands);
   });
-
-  const childList = Array.prototype.slice.call(rootElement.children, 0);
-
-  for (let child of childList) {
-    rootElement.removeChild(child);
-  }
 
   if (moveCondition === "go") {
     moveConditionSwitch.textContent = "Go";
