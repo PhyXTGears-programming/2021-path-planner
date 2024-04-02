@@ -139,6 +139,7 @@ let moveHandle = null;
 
 let hoveredRotation = null;
 let rotationState = null;
+let activeRotation = null;
 
 let actionedPose = null;
 let drawingNearestPoint = true;
@@ -505,7 +506,7 @@ function onFieldLoaded(canvas) {
 
             // don't move when mouse moves off of valid t vals
             if(poseList.findTNearPoint(Point(x, y), 50).t != -1) {
-              hoveredRotation.rotation.t = poseList.findTNearPoint(Point(x, y), 50).t;
+              activeRotation.rotation.t = poseList.findTNearPoint(Point(x, y), 50).t;
             }
 
             break;
@@ -513,7 +514,7 @@ function onFieldLoaded(canvas) {
           case RotationState.ROTATE:
             drawingNearestPoint = false;
 
-            const { pt, rotation } = hoveredRotation;
+            const { pt, rotation } = activeRotation;
             rotation.setRotVal(getAngleToCursor(pt, Point(x, y)));
 
             break;
@@ -571,10 +572,13 @@ function onFieldLoaded(canvas) {
       case Tool.ROTATION:
         if (hoveredRotation != null && innerOrOuterRadius(mousePt, hoveredRotation.pt) == 'inner') {
           rotationState = RotationState.MOVE;
+          activeRotation = hoveredRotation;
         } else if (hoveredRotation != null && innerOrOuterRadius(mousePt, hoveredRotation.pt) == 'outer') {
           rotationState = RotationState.ROTATE;
+          activeRotation = hoveredRotation;
         } else {
           rotationState = RotationState.NEW;
+          activeRotation = null;
         }
 
         break;
