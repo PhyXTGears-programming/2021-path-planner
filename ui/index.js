@@ -2087,18 +2087,13 @@ function innerOrOuterRadius(mousePt, rotPt) {
 }
 
 function drawRotationHighlight(context) {
-  if (rotationList.rotations.length >= 2) {
-    const hoveredRot = findNearestRotationIndex(mousePt);
+  if (poseList.length >= 2 && hoveredRotation) {
+    drawingNearestPoint = false;
+    const rotPos = calcRotationPos(hoveredRotation.rotation);
 
-    if (hoveredRot != null) {
-      drawingNearestPoint = false;
-      const rotPos = calcRotationPos(rotationList.rotations[hoveredRot]);
-
-      context.fillStyle = '#2F2';
-      drawCircle(context, rotPos.x, rotPos.y, 4);
-      context.stroke();
-      context.fill();
-    }
+    context.fillStyle = '#2F2';
+    drawCircle(context, rotPos.x, rotPos.y, 4);
+    context.fill();
   }
 }
 
