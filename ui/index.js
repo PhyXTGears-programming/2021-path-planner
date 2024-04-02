@@ -595,7 +595,7 @@ function onFieldLoaded(canvas) {
         break;
     }
 
-
+    redrawCanvas(canvas, poseList);
   });
 
   canvas.addEventListener('mouseup', ev => {
