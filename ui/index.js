@@ -567,7 +567,10 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        if (hoveredRotation != null && innerOrOuterRadius(mousePt, hoveredRotation.pt) == 'inner') {
+        if (hoveredRotation != null
+          && 0 < hoveredRotation.index
+          && innerOrOuterRadius(mousePt, hoveredRotation.pt) == 'inner'
+        ) {
           rotationState = RotationState.MOVE;
           activeRotation = hoveredRotation;
         } else if (hoveredRotation != null && innerOrOuterRadius(mousePt, hoveredRotation.pt) == 'outer') {
@@ -1877,19 +1880,21 @@ function drawRotation(context, rotation) {
 
     context.restore();
 
-    context.save();
+    if (0 < hoveredRotation.index) {
+      context.save();
 
-    context.globalCompositeOperation = 'xor';
+      context.globalCompositeOperation = 'xor';
 
-    context.scale(45.0, 45.0);
+      context.scale(45.0, 45.0);
 
-    context.beginPath();
-    drawMoveWidget(context);
+      context.beginPath();
+      drawMoveWidget(context);
 
-    context.fillStyle = "#cccc";
-    context.fill();
+      context.fillStyle = "#cccc";
+      context.fill();
 
-    context.restore();
+      context.restore();
+    }
   }
 
   context.scale(60.0, 60.0);
