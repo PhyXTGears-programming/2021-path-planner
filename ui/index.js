@@ -1090,6 +1090,8 @@ function drawPose(context, pose, options = {}) {
     const h = size.ymeters * seasonConfig.fieldDims.yPixels / seasonConfig.fieldDims.ymeters;
     const viewSize = Vector(w, h);
 
+    const prevRotation = findRotationBefore(pose.point.x, pose.point.y);
+
     const base = (canMove || isMoving)
       ? styles.robotHovered
       : styles.robotNormal;
@@ -1098,7 +1100,15 @@ function drawPose(context, pose, options = {}) {
       ? tintStyle(base, options.robotTint)
       : base;
 
+    context.save();
+
+    if (prevRotation) {
+      context.rotate(prevRotation.rotation.rot);
+    }
+
     drawRobot(context, viewSize.x, viewSize.y, style);
+
+    context.restore();
   }
 
   if (canMove || isMoving) {
@@ -1432,6 +1442,29 @@ function findHandleNear(x, y) {
       };
     }
   }
+
+  return null;
+}
+
+function findRotationBefore(x, y) {
+  if (!poseList.hasBezier) {
+    return null;
+  }
+
+  const { t: nearestT } = poseList.findTNearPoint(Point(x, y), 70);
+
+  for (let a = rotationList.rotations.length - 1; a >= 0; a -= 1) {
+    const { t } = rotationList.rotations[a];
+
+    if (t <= nearestT) {
+      return {
+        index: a,
+        rotation: rotationList.rotations[a],
+      };
+    }
+  }
+
+  console.log('no rotation before t:', nearestT);
 
   return null;
 }
