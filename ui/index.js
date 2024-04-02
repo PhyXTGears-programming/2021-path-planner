@@ -653,8 +653,6 @@ function onFieldLoaded(canvas) {
           selectState = SelectState.NONE;
           rotationState = RotationState.NONE;
           activeRotation = null;
-
-          redrawCanvas(canvas, poseList);
         }
 
         break;
@@ -662,6 +660,8 @@ function onFieldLoaded(canvas) {
       default:
         break;
     }
+
+    redrawCanvas(canvas, poseList);
   });
 
   // Mouse down handler to pan the canvas view.
