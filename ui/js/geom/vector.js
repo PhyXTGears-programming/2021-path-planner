@@ -1,3 +1,11 @@
+/** @module vector */
+
+/**
+ * @typedef {object} Vector
+ * @property {number} x
+ * @property {number} y
+ */
+
 const VectorPrototype = {
   add: function (other) {
     return Vector(this.x + other.x, this.y + other.y);
@@ -31,11 +39,19 @@ const VectorPrototype = {
   },
 };
 
+/**
+ * @constructor
+ * @param {number} x
+ * @param {number} y
+ */
 const Vector = (x, y) => {
   const self = Object.create(VectorPrototype);
   self.x = x;
   self.y = y;
   return self;
 };
+
+Vector.i = Vector(1, 0);
+Vector.j = Vector(0, 1);
 
 export default Vector;
