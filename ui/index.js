@@ -917,7 +917,10 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   }
 
   drawRotations(context, poseList);
-  drawRotationHighlight(context);
+
+  if (shallDrawRotationHighlight()) {
+    drawRotationHighlight(context);
+  }
 
   if (shallDrawNearestPoint()) {
     drawNearestPoint(context);
@@ -1201,6 +1204,10 @@ function shallDrawNearestPoint() {
   );
 
   return isNothingHovered && isProperTool;
+}
+
+function shallDrawRotationHighlight() {
+  return toolState == Tool.ROTATION;
 }
 
 function shallDrawTool() {
