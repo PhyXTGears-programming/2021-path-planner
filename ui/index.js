@@ -1450,8 +1450,9 @@ function findRotationNear(x, y) {
     const pt = poseList.pointAt(t);
 
     const distance = Math.pow(x - pt.x, 2) + Math.pow(y - pt.y, 2);
+    const threshold = Math.pow(80 / canvasViewport.scale, 2);
 
-    if (distance < 800) {
+    if (distance < threshold) {
       return {
         index: a,
         pt,
@@ -2029,7 +2030,9 @@ function pruneInvalidRotPts() {
 }
 
 function innerOrOuterRadius(mousePt, rotPt) {
-  if(ezPtDistance(mousePt, rotPt) <= 14) {
+  const threshold = 50.0 / canvasViewport.scale;
+
+  if(ezPtDistance(mousePt, rotPt) <= threshold) {
     return 'inner';
   } else {
     return 'outer';
