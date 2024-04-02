@@ -565,9 +565,9 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ROTATION:
-        if (hoveredRotation != null && innerOrOuterRadius(Point(x, y), hoveredRotation.pt) == 'inner') {
+        if (hoveredRotation != null && innerOrOuterRadius(mousePt, hoveredRotation.pt) == 'inner') {
           rotationState = RotationState.MOVE;
-        } else if (hoveredRotation != null && innerOrOuterRadius(Point(x, y), hoveredRotation.pt) == 'outer') {
+        } else if (hoveredRotation != null && innerOrOuterRadius(mousePt, hoveredRotation.pt) == 'outer') {
           rotationState = RotationState.ROTATE;
         } else {
           rotationState = RotationState.NEW;
