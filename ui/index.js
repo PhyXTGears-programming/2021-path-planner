@@ -2273,33 +2273,35 @@ function bakeAdvancedExport(poseList, rotations) {
 
   //            Interpolating rotations:
 
-  for (let r of rotations) {
-    let attatchedPoseIndex = findNearestIndexToFromByT(r, payload);
-    payload[attatchedPoseIndex].rot = r.rot;
-    payload[attatchedPoseIndex].type = "unbakedRotationHead";
-  } // Assign rotation points certain poses
+  {
+    let lastRotationIndex = 0;
+    let lastRotation = rotations[0].rot;
 
-  let rotationHeads = filterPayloadToIndexListByType(payload, "unbakedRotationHead");
+    payload = payload.map(chunk => {
+      // Find relevant rotation.
+      const nearestT = poseList.findTNearPoint(Point(chunk.x, chunk.y), 50);
 
-  for (let i in rotationHeads) {
-
-    if (i < rotationHeads.length - 1) {
-      i = Number(i);
-      const iUp = i + 1;
-      const indexDist = rotationHeads[iUp] - rotationHeads[i];
-      const avgChange = (payload[rotationHeads[i]].rot + payload[rotationHeads[iUp]].rot) / indexDist;
-
-      for (let x = 1; x <= indexDist; x++) {
-        payload[x + rotationHeads[i]].rot = payload[rotationHeads[i]].rot + avgChange * x;
-        payload[x + rotationHeads[i]].type = "unbaked";
+      if (-1 === nearestT.t) {
+        console.log("Cannot find t near point", { x: chunk.x, y: chunk.y });
+      } else {
+        for (let a = lastRotationIndex; a < rotations.length; a += 1) {
+          debugger;
+          if (nearestT.t >= rotations[a].t) {
+            lastRotationIndex = a;
+            lastRotation = rotations[a].rot;
+          } else {
+            break;
+          }
+        }
       }
-    } else {
-      const howManyAtEnd = payload.length - rotationHeads[i];
-      for (let x = 1; x < howManyAtEnd; x++) {
-        payload[x +  rotationHeads[i]].rot =  payload[rotationHeads[i]].rot;
-        payload[x +  rotationHeads[i]].type = "unbaked";
-      }
-    }
+
+      // Apply relevant rotation to chunk.
+      return Object.assign(
+        {},
+        chunk,
+        { rot: lastRotation }
+      );
+    });
   }
 
   // Baking commands into the payload:
