@@ -30,7 +30,7 @@ import { throttleLast } from './js/timer.js';
 import { IdGen, clamp } from './js/util.js';
 
 import {
-  ActionNode, importPoses, exportPoses, Pose, PoseCommandGroup, PoseList, botExport, ExportChunk
+  importPoses, exportPoses, Pose, PoseList, botExport, ExportChunk
 } from './js/pose.js';
 
 import Viewport from './js/viewport.js';
@@ -142,7 +142,7 @@ let hoveredRotation = null;
 let rotationState = null;
 let activeRotation = null;
 
-let actionedPose = null;
+let actionedControl = null;
 
 let selectState = SelectState.NONE;
 
@@ -257,8 +257,8 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(() => {
       onFieldLoaded(canvas);
 
-      if (actionedPose) {
-        drawAllNodes(actionedPose.commands);
+      if (actionedControl) {
+        drawAllNodes(actionedControl.commands);
       }
     })
     .catch(err => console.error('dom content loaded', err));
@@ -376,7 +376,7 @@ function onFieldLoaded(canvas) {
         } else {
           // Append pose.
           placePointAt(x, y);
-          poseList.updateMoveSwitchPerms();
+          // poseList.updateMoveSwitchPerms();
         }
 
         redrawCanvas(canvas, poseList);
@@ -395,32 +395,32 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.ACTIONS:
-        actionedPose = findPoseNear(x, y);
+      //   actionedControl = findPoseNear(x, y);
 
-        if (!actionedPose) {
-          clearAllNodes();
-          break;
-        } else {
-          drawAllNodes(actionedPose.commands);
-        }
+      //   if (!actionedControl) {
+      //     clearAllNodes();
+      //     break;
+      //   } else {
+      //     drawAllNodes(actionedControl.commands);
+      //   }
 
 
-        if (poseList.poses.indexOf(actionedPose) == 0) {
-          setEditHeadingVisible(true);
-        } else {
-          setEditHeadingVisible(false);
-        }
-        break;
+      //   if (poseList.poses.indexOf(actionedControl) == 0) {
+      //     setEditHeadingVisible(true);
+      //   } else {
+      //     setEditHeadingVisible(false);
+      //   }
+      //   break;
 
-      case Tool.ROTATION:
-        if (rotationState == RotationState.NEW) {
-          makeRotation(nearestPt.t);
-        }
-        rotationState = RotationState.NONE;
+      // case Tool.ROTATION:
+      //   if (rotationState == RotationState.NEW) {
+      //     makeRotation(nearestPt.t);
+      //   }
+      //   rotationState = RotationState.NONE;
 
-        redrawCanvas(canvas, poseList);
+      //   redrawCanvas(canvas, poseList);
 
-        break;
+      //   break;
     }
   });
 
@@ -1396,7 +1396,9 @@ function insertPoseAt(t) {
   const exitVec = enterVec.scale(-1);
 
   const pose = (
-    Pose(pt, enterVec, exitVec, { commands: PoseCommandGroup(genId()) })
+    // Pose(pt, enterVec, exitVec, { commands: PoseCommandGroup(genId()) })
+    //   .setMoveCondition('go')
+    Pose(pt, enterVec, exitVec,)
       .setMoveCondition('go')
   );
 
@@ -1408,7 +1410,7 @@ function placePointAt(x, y) {
   let new_pose;
 
   if (0 == poseList.length) {
-    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), { commands: PoseCommandGroup(genId()) }, 0, 1);
+    new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), 0, 1);
     makeRotation(0);
     rotationState = RotationState.NONE;
 
@@ -1417,7 +1419,7 @@ function placePointAt(x, y) {
     const enterVec = last_point.sub(new_point).unit().scale(100);
     const exitVec = enterVec.scale(-1);
 
-    new_pose = Pose(new_point, enterVec, exitVec, {commands: PoseCommandGroup(genId())});
+    new_pose = Pose(new_point, enterVec, exitVec);
   }
 
   poseList.appendPose(new_pose)
@@ -1626,7 +1628,7 @@ function drawAllNodes(rootSomething) {
   const { moveCondition, rootNode } = rootSomething;
 
   const moveConditionContinueClarification = document.createElement("p");
-  if (actionedPose.canSwitch()) {
+  if (actionedControl.canSwitch()) {
     if (moveCondition == "halt") {
       moveConditionContinueClarification.textContent = "Go";
       moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
@@ -1639,12 +1641,12 @@ function drawAllNodes(rootSomething) {
   const moveConditionSwitch = document.createElement("div");
   moveConditionSwitch.classList.add('o-command-moveswitch');
   moveConditionSwitch.addEventListener('click', () => {
-    if (actionedPose.canSwitch()) {
-      actionedPose.toggleMoveCondition();
+    if (actionedControl.canSwitch()) {
+      actionedControl.toggleMoveCondition();
     } else {
       alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
     }
-    drawAllNodes(actionedPose.commands);
+    drawAllNodes(actionedControl.commands);
   });
 
   if (moveCondition === "go") {
@@ -1786,7 +1788,7 @@ function insertNode(child, parent, index) {
 
 document.addEventListener('drop', ev => {
 
-  const targetPoseCommands = actionedPose.commands;
+  const targetPoseCommands = actionedControl.commands;
   let target = ev.target;
 
   if (spacerTarget) {
@@ -1795,7 +1797,7 @@ document.addEventListener('drop', ev => {
 
   if (ev.target.classList.contains('action-drop-zone')) {
 
-    const targetPoseCommands = actionedPose.commands;
+    const targetPoseCommands = actionedControl.commands;
 
     let insertIndex = 0;
 
@@ -2213,7 +2215,7 @@ function makeAdvanceExport(poseList, rotations) {
     [X] Assign Commands to New Pose pts
     [-] Put all of these together [No longer necessary]
     [X] Actually export it
-    [ ] Velocity
+    [-] Velocity
 
 */
 
@@ -2304,30 +2306,69 @@ function bakeAdvancedExport(poseList, rotations) {
     });
   }
 
+  // for (let r of rotations) {
+  //   let attatchedPoseIndex = findNearestIndexToFromByT(r, payload);
+  //   payload[attatchedPoseIndex].rot = r.rot - rotations[0].rot;
+  //   payload[attatchedPoseIndex].type = "unbakedRotationHead";
+  // } // Label rotation heads, adjust volume to be per the head
+
+  // for (let p of poseList.poses) {
+  //   payload[p.t].type = "";
+  // }
+
+  // let rotationHeads = filterPayloadToIndexListByType(payload, "unbakedRotationHead");
+  // rotationHeads[0].rot = 0;
+
+  // for (let i in rotationHeads) {
+
+  //   // if (i < rotationHeads.length - 1) {
+  //   //   i = Number(i);
+  //   //   const iUp = i + 1;
+  //   //   const indexDist = rotationHeads[iUp] - rotationHeads[i];
+  //   //   const avgChange = (payload[rotationHeads[i]].rot + payload[rotationHeads[iUp]].rot) / indexDist;
+
+  //   // for (let x = 1; x <= indexDist; x++) {
+  //   //   payload[x + rotationHeads[i]].rot = payload[rotationHeads[i]].rot + avgChange * x;
+  //   //   payload[x + rotationHeads[i]].type = "unbaked";
+  //   // }
+  //   // } else {
+  //   //   const howManyAtEnd = payload.length - rotationHeads[i];
+  //   //   for (let x = 1; x < howManyAtEnd; x++) {
+  //   //     payload[x +  rotationHeads[i]].rot =  payload[rotationHeads[i]].rot;
+  //   //     payload[x +  rotationHeads[i]].type = "unbaked";
+  //   //   }
+  //   // }
+
+  // }
+
+
+
   // Baking commands into the payload:
+
+  // CURRENT COMMAND EXPORTING
 
   console.log("Pre-command-baking payload: ", popsicle(payload));
 
-  let commandHeads = [];
+  // let commandHeads = [];
 
-  for (let pose of poseList.poses) {
-    const tEncased = poseList.findTNearPoint(pose.point);
-    const commandHeadIndex = findNearestIndexToFromByT(tEncased, payload);
+  // for (let pose of poseList.poses) {
+  //   const tEncased = poseList.findTNearPoint(pose.point);
+  //   const commandHeadIndex = findNearestIndexToFromByT(tEncased, payload);
 
-    commandHeads.push({
-      index: commandHeadIndex,
-      commands: pose.commands,
-    });
-  }
+  //   commandHeads.push({
+  //     index: commandHeadIndex,
+  //     commands: pose.commands,
+  //   });
+  // }
 
-  for (let h of commandHeads) {
-    payload[h.index].commands = h.commands;
+  // for (let h of commandHeads) {
+  //   payload[h.index].commands = h.commands;
 
-    if (h.commands.moveCondition == 'halt') {
-      payload[h.index].type = 'stop';
-      payload[h.index].vel = 0.0;
-    }
-  }
+  //   if (h.commands.moveCondition == 'halt') {
+  //     payload[h.index].type = 'stop';
+  //     payload[h.index].vel = 0.0;
+  //   }
+  // }
 
   // Calculate and apply velocities:
   const distanceToVelocity = accelerate(seasonConfig.config.robot.parameters);

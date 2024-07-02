@@ -98,7 +98,7 @@ const PoseListPrototype = {
           && dist2 < minD2)
       ) {
         // Keep the point closest to prevT even when it's further away.
-        // This let's the user navigate overlaps by sliding along the bezier
+        // This lets the user navigate overlaps by sliding along the bezier
         // toward the intersection.
         //
         // Careful not to favor first point of next bezier segment when its further away.
@@ -144,20 +144,20 @@ const PoseListPrototype = {
     return bez.pointAt(t);
   },
 
-  updateMoveSwitchPerms() {
-    if (0 == this.length) {
-      return;
-    }
+  // updateMoveSwitchPerms() {
+  //   if (0 == this.length) {
+  //     return;
+  //   }
 
-    const lastPose = this.poses[this.length - 1];
-    lastPose.commands.moveConditionCanSwitch = false;
+  //   const lastPose = this.poses[this.length - 1];
+  //   lastPose.commands.moveConditionCanSwitch = false;
 
-    const rest = this.poses.slice(0, -1);
+  //   const rest = this.poses.slice(0, -1);
 
-    for (const pose of rest) {
-      pose.commands.moveConditionCanSwitch = true;
-    }
-  },
+  //   for (const pose of rest) {
+  //     pose.commands.moveConditionCanSwitch = true;
+  //   }
+  // },
 
 };
 
@@ -173,38 +173,38 @@ export const PoseList = (poses = []) => {
 
 
 const PosePrototype = {
-  canSwitch () {
-    return this.commands.moveConditionCanSwitch;
-  },
+  // canSwitch () {
+  //   // return this.commands.moveConditionCanSwitch;
+  // },
 
-  toggleMoveCondition () {
-    const sequence = this.commands;
-    if (sequence.moveConditionCanSwitch) {
-      if ('go' == sequence.moveCondition) {
-        sequence.moveCondition = 'halt';
-      } else if ('halt' == sequence.moveCondition) {
-        sequence.moveCondition = 'go';
-      }
-    }
+  // toggleMoveCondition () {
+  //   const sequence = this.commands;
+  //   if (sequence.moveConditionCanSwitch) {
+  //     if ('go' == sequence.moveCondition) {
+  //       sequence.moveCondition = 'halt';
+  //     } else if ('halt' == sequence.moveCondition) {
+  //       sequence.moveCondition = 'go';
+  //     }
+  //   }
 
-    // Enable method chaining.
-    return this;
-  },
+  //   // Enable method chaining.
+  //   return this;
+  // },
 
-  setMoveCondition (condition) {
-    const sequence = this.commands;
+  // setMoveCondition (condition) {
+  //   const sequence = this.commands;
 
-    if (sequence.moveConditionCanSwitch) {
-      if ('go' == condition.toLowerCase()) {
-        sequence.moveCondition = 'go';
-      } else if ('halt' === condition.toLowerCase()) {
-        sequence.moveCondition = 'halt';
-      }
-    }
+  //   if (sequence.moveConditionCanSwitch) {
+  //     if ('go' == condition.toLowerCase()) {
+  //       sequence.moveCondition = 'go';
+  //     } else if ('halt' === condition.toLowerCase()) {
+  //       sequence.moveCondition = 'halt';
+  //     }
+  //   }
 
-    // Enable method chaining.
-    return this;
-  },
+  //   // Enable method chaining.
+  //   return this;
+  // },
 };
 
 /**
@@ -212,38 +212,22 @@ const PosePrototype = {
  * @param {Point} point
  * @param {Handle} enterHandle
  * @param {Handle} exitHandle
- * @param {object} options
+//  * @param {object} options
  * @param {number} enterVel
  * @param {number} exitVel
  */
 export const Pose = (point, enterHandle, exitHandle, options, enterVel = 1, exitVel = 1) => {
   const self = Object.create(PosePrototype);
-  const { commands } = options;
+  // const { commands } = options;
   return Object.assign(self, {
     point,
     enterHandle,
     exitHandle,
-    commands,
+    // commands,
     enterVel,
     exitVel,
   });
 };
-
-
-export const PoseCommandGroup = nodeId => ({
-  moveConditionCanSwitch: false,
-  moveCondition: "halt",
-  rootNode: ActionNode("group", [], 'sequence', nodeId),
-});
-
-
-export const ActionNode = (kind, children, name, nodeId) => ({
-  kind,
-  children,
-  name,
-  nodeId,
-});
-
 
 const Payload = () => ({
   segments: [],
@@ -311,8 +295,8 @@ export const exportPoses = (poseList, fieldDims, rotationList) => {
 
     for (let pose of poseList.poses) {
       const waypoint = {
-        commands: pose.commands.rootNode,
-        shallHalt: pose.commands.moveCondition === 'halt',
+        // commands: pose.commands.rootNode,
+        // shallHalt: pose.commands.moveCondition === 'halt',
       };
 
       payload.waypoints.push(waypoint);
@@ -352,7 +336,7 @@ export const importPoses = (data, fieldDims, genId) => {
   let pt1 = segments[0][0];
   let cp1 = segments[0][1];
 
-  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1), { commands: PoseCommandGroup(genId()) });
+  let pose = Pose(pt1, cp1.sub(pt1).scale(-1), cp1.sub(pt1));
   poseList.appendPose(pose);
 
   pt1 = segments[0][3];
@@ -361,7 +345,7 @@ export const importPoses = (data, fieldDims, genId) => {
   for (let segment of segments.slice(1)) {
     const cp2 = segment[1];
 
-    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1), { commands: PoseCommandGroup(genId()) });
+    pose = Pose(pt1, cp1.sub(pt1), cp2.sub(pt1));
 
     poseList.appendPose(pose);
     pt1 = segment[3];
@@ -371,26 +355,26 @@ export const importPoses = (data, fieldDims, genId) => {
   let segment = segments.slice(-1)[0];
   pt1 = segment[3];
   cp1 = segment[2];
-  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1), { commands: PoseCommandGroup(genId()) });
+  pose = Pose(pt1, cp1.sub(pt1), cp1.sub(pt1).scale(-1));
 
   poseList.appendPose(pose);
 
-  poseList.updateMoveSwitchPerms();
+  // poseList.updateMoveSwitchPerms();
 
   // Load move conditions.
-  for (let i = 0; i < poseList.length; i += 1) {
-    const moveCondition = (data.waypoints[i].shallHalt
-      ? 'halt'
-      : 'go'
-    );
+  // for (let i = 0; i < poseList.length; i += 1) {
+    // const moveCondition = (data.waypoints[i].shallHalt
+    //   ? 'halt'
+    //   : 'go'
+    // );
 
-    poseList.poses[i].setMoveCondition(moveCondition);
-  }
+    // poseList.poses[i].setMoveCondition(moveCondition);
+  // }
 
   // Load commands
-  for (let i = 0; i < poseList.length; i += 1) {
-    poseList.poses[i].commands.rootNode = data.waypoints[i].commands;
-  }
+  // for (let i = 0; i < poseList.length; i += 1) {
+  //   poseList.poses[i].commands.rootNode = data.waypoints[i].commands;
+  // }
 
   let rotationOffset = data.rotationOffset;
 
@@ -429,14 +413,14 @@ export const botExport = (poseList, rotations, func = () => {console.warn("Passe
   return func(poseList, rotations);
 }
 
-export function ExportChunk(type = "unassigned", rot = null, x, y, commands = [], t, vel = 1.0) {
+export function ExportChunk(type = "unassigned", rot = null, x, y, t, vel = 1.0) {
   return {
     type: type,
     vel: vel,
     rot: rot,
     x: x,
     y: y,
-    commands: commands,
+    // commands: commands,
     t: t,
   };
 }

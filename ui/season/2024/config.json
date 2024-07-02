@@ -57,6 +57,16 @@
         "name": "Wait 5s",
         "image": "null.png",
         "tags": ["a", "b"]
+      },
+      {
+        "name": "Preheat Indefinite",
+        "image": "null.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "Cancel Preheat",
+        "image": "null.png",
+        "tags": ["a", "b"]
       }
     ]
   }
