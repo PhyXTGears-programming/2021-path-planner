@@ -311,8 +311,6 @@ export const exportPoses = (poseList, fieldDims, rotationList) => {
   }
 }
 
-
-
 export const importPoses = (data, fieldDims, genId) => {
   const poseList = PoseList();
   const rotationsImported = new RotationList();

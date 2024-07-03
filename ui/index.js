@@ -37,6 +37,8 @@ import Viewport from './js/viewport.js';
 
 import { accelerate } from './js/robot/distanceToVelocity.js';
 
+import { ActionNode, CommandPointList, CommandPoint } from './js/control.js';
+
 // JSDoc types
 
 /** @external {object} Canvas */
@@ -131,6 +133,7 @@ let toolState = Tool.NONE;
 const images = {};
 let poseList = PoseList();
 let rotationList = new RotationList();
+let controlList = CommandPointList();
 
 let hoveredPose = null;
 let activePose = null;
@@ -143,6 +146,7 @@ let rotationState = null;
 let activeRotation = null;
 
 let actionedControl = null;
+let hoveredActionSpot = null;
 
 let selectState = SelectState.NONE;
 
@@ -421,6 +425,9 @@ function onFieldLoaded(canvas) {
       //   redrawCanvas(canvas, poseList);
 
       //   break;
+
+      controlList.newCtrl(poseList.findTNearPoint(Point(x, y)));
+      note(controlList);
     }
   });
 
@@ -430,6 +437,7 @@ function onFieldLoaded(canvas) {
     hoveredHandle = null;
     hoveredPose = null;
     hoveredRotation = null;
+    hoveredActionSpot = null;
 
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
@@ -443,8 +451,8 @@ function onFieldLoaded(canvas) {
 
     switch (toolState) {
       case Tool.ACTIONS:
-        hoveredPose = findPoseNear(x, y);
-
+        // hoveredPose = findPoseNear(x, y);
+        hoveredActionSpot = poseList.findTNearPoint(mousePt, 50).pt;
         break;
 
       case Tool.SELECT:
@@ -515,7 +523,6 @@ function onFieldLoaded(canvas) {
             if (poseList.findTNearPoint(Point(x, y), 50).t != -1) {
               activeRotation.rotation.t = poseList.findTNearPoint(Point(x, y), 50).t;
             }
-
             break;
 
           case RotationState.ROTATE:
@@ -928,8 +935,10 @@ function _redrawCanvas(canvas, poseList, options = {}) {
 
   drawRotations(context, poseList);
 
-  if (shallDrawRotationHighlight()) {
-    drawRotationHighlight(context);
+  if (shallDrawHighlight() && hoveredRotation != null) {
+    drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
+  } else if (shallDrawHighlight() && hoveredActionSpot != null) {
+    drawHighlight(context, hoveredActionSpot);
   }
 
   if (shallDrawNearestPoint()) {
@@ -1226,8 +1235,8 @@ function shallDrawNearestPoint() {
   return isNothingHovered && isProperTool;
 }
 
-function shallDrawRotationHighlight() {
-  return toolState == Tool.ROTATION;
+function shallDrawHighlight() {
+  return toolState == Tool.ROTATION || toolState == Tool.ACTIONS;
 }
 
 function shallDrawTool() {
@@ -2130,12 +2139,12 @@ function innerOrOuterRadius(mousePt, rotPt) {
   }
 }
 
-function drawRotationHighlight(context) {
-  if (poseList.length >= 2 && hoveredRotation) {
-    const rotPos = calcRotationPos(hoveredRotation.rotation);
+function drawHighlight(context, pos) {
+  if (poseList.length >= 2 && hoveredRotation || hoveredActionSpot != null) {
+    // const rotPos = calcRotationPos(hoveredRotation.rotation);
 
     context.fillStyle = '#2F2';
-    drawCircle(context, rotPos.x, rotPos.y, 4);
+    drawCircle(context, pos.x, pos.y, 4);
     context.fill();
   }
 }
@@ -2342,7 +2351,6 @@ function bakeAdvancedExport(poseList, rotations) {
   // }
 
 
-
   // Baking commands into the payload:
 
   // CURRENT COMMAND EXPORTING
@@ -2496,6 +2504,10 @@ function filterPayloadToIndexListByType(payload, type) {
   return filteredList;
 }
 
+// Control Point Stuff: (_COM)
+
+// Other useful functions:
+
 function ezPtDistance(a, b) {
   return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 }
@@ -2507,6 +2519,11 @@ function pxToMeters(px) {
 function popsicle(data) { // temporary function for debugging. Just deep clones.
   return JSON.parse(JSON.stringify(data));
 }
+
+function note(x, y = null, z = null, a = null) {
+  console.log(x, y, z, a);
+}
+
 // The Following Is A Secret Frog:
   /*
                       █████████████████
