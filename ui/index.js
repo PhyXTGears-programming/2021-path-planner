@@ -133,7 +133,7 @@ let toolState = Tool.NONE;
 const images = {};
 let poseList = PoseList();
 let rotationList = new RotationList();
-let controlList = CommandPointList();
+let commandPointList = CommandPointList();
 
 let hoveredPose = null;
 let activePose = null;
@@ -426,8 +426,8 @@ function onFieldLoaded(canvas) {
 
       //   break;
 
-      controlList.newCtrl(poseList.findTNearPoint(Point(x, y)));
-      note(controlList);
+      commandPointList.newCommandPoint(poseList.findTNearPoint(Point(x, y)));
+      note(commandPointList);
     }
   });
 
@@ -880,7 +880,7 @@ const redrawCanvas = throttleLast(100, _redrawCanvas);
  *
  * options :: { onOverlay :: (canvas) -> Void }
  */
-function _redrawCanvas(canvas, poseList, options = {}) {
+function _redrawCanvas(canvas, poseList, options = {}) { // _CA
   // Calculate the t value nearest to the mouse.
   // Do this before any drawing, so that anything drawn that needs the nearestPt will have a correct value.
   // Would prefer to calculate outside of the draw function, but we must compute just before every redraw, so here we be.
@@ -926,6 +926,7 @@ function _redrawCanvas(canvas, poseList, options = {}) {
   // Draw canvas objects in viewport coordinate system.
   drawField(context);
   drawAllPoses(context, poseList);
+  drawAllCommandPoints(context);
   drawBezier(context, poseList);
 
   if (toolState == Tool.SELECT) {
@@ -2506,6 +2507,22 @@ function filterPayloadToIndexListByType(payload, type) {
 
 // Control Point Stuff: (_COM)
 
+function drawAllCommandPoints(context) {
+  updateCommandPointPts();
+  for(let cmdPt of commandPointList.cmdPts) {
+    context.fillStyle = "FFF";
+    drawCircle(context, cmdPt.t.pt.x, cmdPt.t.pt.y, 8);
+    context.fill();
+  }
+}
+
+function updateCommandPointPts() {
+  for (let cmdPt of commandPointList.cmdPts) {
+    let index = commandPointList.cmdPts.indexOf(cmdPt);
+    commandPointList.cmdPts[index].t.pt = poseList.pointAt(cmdPt.t.t);
+  }
+}
+
 // Other useful functions:
 
 function ezPtDistance(a, b) {
@@ -2520,8 +2537,8 @@ function popsicle(data) { // temporary function for debugging. Just deep clones.
   return JSON.parse(JSON.stringify(data));
 }
 
-function note(x, y = null, z = null, a = null) {
-  console.log(x, y, z, a);
+function note(x) {
+  console.log(x);
 }
 
 // The Following Is A Secret Frog:
