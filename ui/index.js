@@ -426,8 +426,14 @@ function onFieldLoaded(canvas) {
 
       //   break;
 
-      commandPointList.newCommandPoint(poseList.findTNearPoint(Point(x, y)));
-      note(commandPointList);
+
+      let chosenCmdT = poseList.findTNearPoint(Point(x, y));
+
+      chosenCmdT = tSnappedToPoses(chosenCmdT);
+
+      commandPointList.newCommandPoint(chosenCmdT);
+      note(commandPointList); // TODO
+
     }
   });
 
@@ -939,7 +945,7 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
   if (shallDrawHighlight() && hoveredRotation != null) {
     drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
   } else if (shallDrawHighlight() && hoveredActionSpot != null) {
-    drawHighlight(context, hoveredActionSpot);
+    drawHighlight(context, poseList.pointAt(tSnappedToPoses(poseList.findTNearPoint(hoveredActionSpot)).t));
   }
 
   if (shallDrawNearestPoint()) {
@@ -1549,7 +1555,6 @@ function findRotationNear(x, y) {
 }
 
 function findNode(passedNode, idTarget) {
-  // console.log("Node obj: ", passedNode);
 
   if (passedNode.nodeId == idTarget) {
     return passedNode;
@@ -2133,7 +2138,7 @@ function pruneInvalidRotPts() {
 function innerOrOuterRadius(mousePt, rotPt) {
   const threshold = 50.0 / canvasViewport.scale;
 
-  if (ezPtDistance(mousePt, rotPt) <= threshold) {
+  if (ezPtDistance2D(mousePt, rotPt) <= threshold) {
     return 'inner';
   } else {
     return 'outer';
@@ -2179,7 +2184,7 @@ function findIdealTIntegral(lowT, hiT, i = 0, maxTries = 20) {
 
   const lowPt = poseList.pointAt(lowT);
   const midPt = poseList.pointAt(midT);
-  const sampleDistance = pxToMeters(ezPtDistance(lowPt, midPt));
+  const sampleDistance = pxToMeters(ezPtDistance2D(lowPt, midPt));
 
   if (i >= maxTries) {
     console.warn("While finding ideal t integral, had to iterate more than ", maxTries, " times. Returning the following t value despite it not being as accurate as wanted: ", midT);
@@ -2508,7 +2513,9 @@ function filterPayloadToIndexListByType(payload, type) {
 // Control Point Stuff: (_COM)
 
 function drawAllCommandPoints(context) {
+
   updateCommandPointPts();
+
   for(let cmdPt of commandPointList.cmdPts) {
     context.fillStyle = "FFF";
     drawCircle(context, cmdPt.t.pt.x, cmdPt.t.pt.y, 8);
@@ -2517,16 +2524,53 @@ function drawAllCommandPoints(context) {
 }
 
 function updateCommandPointPts() {
+  pruneStrayCmdPts();
+
   for (let cmdPt of commandPointList.cmdPts) {
     let index = commandPointList.cmdPts.indexOf(cmdPt);
     commandPointList.cmdPts[index].t.pt = poseList.pointAt(cmdPt.t.t);
   }
 }
 
+function tSnappedToPoses(t) {
+
+  for (let pose of poseList.poses) {
+    let poseT = poseList.findTNearPoint(pose.point, 30, 20);
+
+    if (ezNumDist(t.t, poseT.t) < 0.05 && ezNumDist(t.t, poseT.t) > -0.05) {
+      return poseT;
+    }
+
+  }
+
+  return t;
+}
+
+function isTReasonable(t) {
+  if (poseList.pointAt(t) == null) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+function pruneStrayCmdPts() {
+  for (let cmdPt of commandPointList.cmdPts) {
+    let index = commandPointList.cmdPts.indexOf(cmdPt);
+    if (!isTReasonable(cmdPt.t.t)) {
+      commandPointList.cmdPts.splice(index, 1);
+    }
+  }
+}
+
 // Other useful functions:
 
-function ezPtDistance(a, b) {
+function ezPtDistance2D(a, b) {
   return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+}
+
+function ezNumDist(a, b) {
+  return a - b;
 }
 
 function pxToMeters(px) {

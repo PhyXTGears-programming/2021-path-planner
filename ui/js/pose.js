@@ -128,11 +128,13 @@ const PoseListPrototype = {
     // 2nd bezier              is t = [1.0, 2.0) between pose 1 and 2.
     // etc...
 
-    if (t < 0.0 || t > this.length) {
-      return null;
-    }
+    const lastPt = this.poses[this.poses.length - 1];
 
     const index = ~~t;   // Javascript trick to convert float to int.
+
+    if (t < 0.0 || t > this.findTNearPoint(lastPt.point).t) {
+      return null;
+    }
 
     t -= index;
 
