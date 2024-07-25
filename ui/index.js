@@ -145,8 +145,8 @@ let hoveredRotation = null;
 let rotationState = null;
 let activeRotation = null;
 
-let actionedControl = null;
-let hoveredActionSpot = null;
+let actionedCommandPoint = null;
+let hoveredCommandPoint = null;
 
 let selectState = SelectState.NONE;
 
@@ -261,8 +261,8 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(() => {
       onFieldLoaded(canvas);
 
-      if (actionedControl) {
-        drawAllNodes(actionedControl.commands);
+      if (actionedCommandPoint) {
+        drawAllNodes(actionedCommandPoint.commands);
       }
     })
     .catch(err => console.error('dom content loaded', err));
@@ -431,7 +431,9 @@ function onFieldLoaded(canvas) {
 
       let chosenCmdT = poseList.findTNearPoint(Point(x, y));
 
-      chosenCmdT = tSnappedToPoses(chosenCmdT);
+      if (!inputState.isShiftDown) {
+        chosenCmdT = tSnappedToPoses(chosenCmdT);
+      }
 
       commandPointList.newCommandPoint(chosenCmdT);
 
@@ -444,7 +446,7 @@ function onFieldLoaded(canvas) {
     hoveredHandle = null;
     hoveredPose = null;
     hoveredRotation = null;
-    hoveredActionSpot = null;
+    hoveredCommandPoint = null;
 
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
@@ -459,7 +461,7 @@ function onFieldLoaded(canvas) {
     switch (toolState) {
       case Tool.ACTIONS:
         // hoveredPose = findPoseNear(x, y);
-        hoveredActionSpot = poseList.findTNearPoint(mousePt, 50).pt;
+        hoveredCommandPoint = poseList.findTNearPoint(mousePt, 50).pt;
         break;
 
       case Tool.SELECT:
@@ -945,8 +947,12 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
 
   if (shallDrawHighlight() && hoveredRotation != null) {
     drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
-  } else if (shallDrawHighlight() && hoveredActionSpot != null) {
-    drawHighlight(context, poseList.pointAt(tSnappedToPoses(poseList.findTNearPoint(hoveredActionSpot)).t));
+  } else if (shallDrawHighlight() && hoveredCommandPoint != null) {
+    if (!inputState.isShiftDown) {
+      drawHighlight(context, poseList.pointAt(tSnappedToPoses(poseList.findTNearPoint(hoveredCommandPoint)).t));
+    } else {
+      drawHighlight(context, hoveredCommandPoint);
+    }
   }
 
   if (shallDrawNearestPoint()) {
@@ -1644,7 +1650,7 @@ function drawAllNodes(rootSomething) {
   const { moveCondition, rootNode } = rootSomething;
 
   const moveConditionContinueClarification = document.createElement("p");
-  if (actionedControl.canSwitch()) {
+  if (actionedCommandPoint.canSwitch()) {
     if (moveCondition == "halt") {
       moveConditionContinueClarification.textContent = "Go";
       moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
@@ -1657,12 +1663,12 @@ function drawAllNodes(rootSomething) {
   const moveConditionSwitch = document.createElement("div");
   moveConditionSwitch.classList.add('o-command-moveswitch');
   moveConditionSwitch.addEventListener('click', () => {
-    if (actionedControl.canSwitch()) {
-      actionedControl.toggleMoveCondition();
+    if (actionedCommandPoint.canSwitch()) {
+      actionedCommandPoint.toggleMoveCondition();
     } else {
       alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
     }
-    drawAllNodes(actionedControl.commands);
+    drawAllNodes(actionedCommandPoint.commands);
   });
 
   if (moveCondition === "go") {
@@ -1804,7 +1810,7 @@ function insertNode(child, parent, index) {
 
 document.addEventListener('drop', ev => {
 
-  const targetPoseCommands = actionedControl.commands;
+  const targetPoseCommands = actionedCommandPoint.commands;
   let target = ev.target;
 
   if (spacerTarget) {
@@ -1813,7 +1819,7 @@ document.addEventListener('drop', ev => {
 
   if (ev.target.classList.contains('action-drop-zone')) {
 
-    const targetPoseCommands = actionedControl.commands;
+    const targetPoseCommands = actionedCommandPoint.commands;
 
     let insertIndex = 0;
 
@@ -2147,7 +2153,7 @@ function innerOrOuterRadius(mousePt, rotPt) {
 }
 
 function drawHighlight(context, pos) {
-  if (poseList.length >= 2 && hoveredRotation || hoveredActionSpot != null) {
+  if (poseList.length >= 2 && hoveredRotation || hoveredCommandPoint != null) {
     // const rotPos = calcRotationPos(hoveredRotation.rotation);
 
     context.fillStyle = '#2F2';
