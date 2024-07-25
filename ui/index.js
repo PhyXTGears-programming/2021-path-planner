@@ -37,7 +37,7 @@ import Viewport from './js/viewport.js';
 
 import { accelerate } from './js/robot/distanceToVelocity.js';
 
-import { ActionNode, CommandPointList, CommandPoint } from './js/control.js';
+import { ActionNode, CommandPointList, CommandPoint } from './js/commandpoint.js';
 
 // JSDoc types
 
@@ -396,6 +396,8 @@ function onFieldLoaded(canvas) {
           repositionRotsAndDo('deleteWaypoint', Point(x, y));
         }
 
+        deleteTouchedCmdPtIfAny(Point(x, y));
+
         break;
 
       case Tool.ACTIONS:
@@ -432,7 +434,6 @@ function onFieldLoaded(canvas) {
       chosenCmdT = tSnappedToPoses(chosenCmdT);
 
       commandPointList.newCommandPoint(chosenCmdT);
-      note(commandPointList); // TODO
 
     }
   });
@@ -2224,7 +2225,7 @@ function makeAdvanceExport(poseList, rotations) {
 */
 /*
 
-- - - - - - - - TODO LIST - - - - - - - -
+- - - - - - - - T.O.D.O. LIST - - - - - - - -
     [X] Interpolate Pose pts
     [X] Interpolate Rot pts
     [X] Assign Commands to New Pose pts
@@ -2559,6 +2560,16 @@ function pruneStrayCmdPts() {
     let index = commandPointList.cmdPts.indexOf(cmdPt);
     if (!isTReasonable(cmdPt.t.t)) {
       commandPointList.cmdPts.splice(index, 1);
+      pruneStrayCmdPts();
+    }
+  }
+}
+
+function deleteTouchedCmdPtIfAny(pt) {
+  for (let cmdPt of commandPointList.cmdPts) {
+    if (ezPtDistance2D(pt, cmdPt.t.pt) <= 10) {
+      commandPointList.deleteCommandPoint(cmdPt);
+      break;
     }
   }
 }
