@@ -418,15 +418,6 @@ function onFieldLoaded(canvas) {
       //   }
       //   break;
 
-      // case Tool.ROTATION:
-      //   if (rotationState == RotationState.NEW) {
-      //     makeRotation(nearestPt.t);
-      //   }
-      //   rotationState = RotationState.NONE;
-
-      //   redrawCanvas(canvas, poseList);
-
-      //   break;
 
 
       let chosenCmdT = poseList.findTNearPoint(Point(x, y));
@@ -436,7 +427,17 @@ function onFieldLoaded(canvas) {
       }
 
       commandPointList.newCommandPoint(chosenCmdT);
+      break;
 
+      case Tool.ROTATION:
+        if (rotationState == RotationState.NEW) {
+          makeRotation(nearestPt.t);
+        }
+        rotationState = RotationState.NONE;
+
+        redrawCanvas(canvas, poseList);
+
+        break;
     }
   });
 
@@ -663,7 +664,6 @@ function onFieldLoaded(canvas) {
             const { pt, rotation } = activeRotation;
 
             rotation.setRotVal(getAngleToCursor(pt, mousePt));
-            console.log(getAngleToCursor(pt, mousePt));
           }
 
           selectState = SelectState.NONE;
@@ -1880,12 +1880,14 @@ document.addEventListener('drop', ev => {
 
 function makeRotation(tval) {
   rotationList.insertRotation(tval);
+  note(popsicle(rotationList));
   pruneInvalidRotPts();
 
 }
 
 function deleteRotation(r) {
-  rotationList.rotations.splice(rotationList.rotations[rotationList.rotations.indexOf(r)], 1);
+  console.log("Index of rotpt to dete: ", rotationList.rotations.indexOf(r), "  Actual rotPt: ", r);
+  rotationList.rotations.splice(rotationList.rotations.indexOf(r), 1);
 }
 
 function calcRotationPos(rotation) {
@@ -2110,8 +2112,10 @@ function repositionRotsAndDo(task, data = undefined) {
     console.warn("You did not pass the needed data (the Rotation) into repositionRotsAndDo() while attempting to delete a rotation.");
     
   } else if (task == 'deleteRotation' && data !== undefined) {
+    console.log("Pre rot-dete: ", popsicle(rotationList.rotations));
     rotPosList.splice(rotationList.rotations.indexOf(data), 1);
     deleteRotation(data);
+    console.log("all rot-dete: ", popsicle(rotationList.rotations));
 
   } else {//                                                         Invalid/No Task
     console.warn("You passed ", task, " to repositionRotsAndDo; this is not a valid task. Valid tasks are 'insert' and 'delete.' Did not perform task in any capacity.");
