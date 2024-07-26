@@ -66,7 +66,7 @@ const Tool = {
   NONE: 3,
   SELECT: 4,
   DELETE: 5,
-  ACTIONS: 6,
+  COMMANDS: 6,
   ROTATION: 7,
 };
 
@@ -108,7 +108,7 @@ const toolStateToName = {
   [Tool.NONE]: '',
   [Tool.SELECT]: 'select',
   [Tool.DELETE]: 'delete',
-  [Tool.ACTIONS]: 'actions',
+  [Tool.COMMANDS]: 'commands',
   [Tool.ROTATION] : 'rotation',
 };
 
@@ -201,7 +201,7 @@ const config = {
       file: './images/delete.png',
     },
     {
-      name: 'actions',
+      name: 'commands',
       file: './images/temp-lower.png',
     },
   ],
@@ -400,7 +400,7 @@ function onFieldLoaded(canvas) {
 
         break;
 
-      case Tool.ACTIONS:
+      case Tool.COMMANDS:
       //   actionedControl = findPoseNear(x, y);
 
       //   if (!actionedControl) {
@@ -460,7 +460,7 @@ function onFieldLoaded(canvas) {
     mousePt = Point(x, y);
 
     switch (toolState) {
-      case Tool.ACTIONS:
+      case Tool.COMMANDS:
         // hoveredPose = findPoseNear(x, y);
         hoveredCommandPoint = poseList.findTNearPoint(mousePt, 50).pt;
         break;
@@ -629,7 +629,7 @@ function onFieldLoaded(canvas) {
     mousePt = Point(x, y);
 
     switch (toolState) {
-      case Tool.ACTIONS:
+      case Tool.COMMANDS:
         activePose = { pose: hoveredPose };
 
         break;
@@ -764,8 +764,8 @@ function onFieldLoaded(canvas) {
       state: Tool.DELETE,
     },
     {
-      id: 'action-tool',
-      state: Tool.ACTIONS,
+      id: 'commands-tool',
+      state: Tool.COMMANDS,
     },
     {
       id: 'rotation-tool',
@@ -1117,11 +1117,11 @@ function drawPose(context, pose, options = {}) {
   const isHovered = pose === hoveredPose;
   const isActive = !!activePose && pose === activePose.pose;
 
-  const canEdit = isHovered && toolState == Tool.ACTIONS;
+  const canEdit = isHovered && toolState == Tool.COMMANDS;
   const canMove = isHovered && toolState == Tool.SELECT;
   const canDelete = isHovered && toolState == Tool.DELETE;
 
-  const isEditActive = !!isActive && toolState == Tool.ACTIONS;
+  const isEditActive = !!isActive && toolState == Tool.COMMANDS;
   const isMoveActive = !!isActive && selectState == SelectState.MOVE_POSE;
 
   context.save();
@@ -1250,7 +1250,7 @@ function shallDrawNearestPoint() {
 }
 
 function shallDrawHighlight() {
-  return toolState == Tool.ROTATION || toolState == Tool.ACTIONS;
+  return toolState == Tool.ROTATION || toolState == Tool.COMMANDS;
 }
 
 function shallDrawTool() {
@@ -1422,7 +1422,7 @@ function insertPoseAt(t) {
     // Pose(pt, enterVec, exitVec, { commands: PoseCommandGroup(genId()) })
     //   .setMoveCondition('go')
     Pose(pt, enterVec, exitVec,)
-      .setMoveCondition('go')
+      // .setMoveCondition('go')
   );
 
   poseList.insertPose(next, pose);
@@ -1886,7 +1886,6 @@ function makeRotation(tval) {
 }
 
 function deleteRotation(r) {
-  console.log("Index of rotpt to dete: ", rotationList.rotations.indexOf(r), "  Actual rotPt: ", r);
   rotationList.rotations.splice(rotationList.rotations.indexOf(r), 1);
 }
 
@@ -2112,10 +2111,8 @@ function repositionRotsAndDo(task, data = undefined) {
     console.warn("You did not pass the needed data (the Rotation) into repositionRotsAndDo() while attempting to delete a rotation.");
     
   } else if (task == 'deleteRotation' && data !== undefined) {
-    console.log("Pre rot-dete: ", popsicle(rotationList.rotations));
     rotPosList.splice(rotationList.rotations.indexOf(data), 1);
     deleteRotation(data);
-    console.log("all rot-dete: ", popsicle(rotationList.rotations));
 
   } else {//                                                         Invalid/No Task
     console.warn("You passed ", task, " to repositionRotsAndDo; this is not a valid task. Valid tasks are 'insert' and 'delete.' Did not perform task in any capacity.");
