@@ -570,6 +570,10 @@ function onFieldLoaded(canvas) {
 
       actionedCommandPoint = cmdPtObjNear(mousePt);
 
+      if(actionedCommandPoint !== null) {
+        break;
+      }
+
         if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
 
