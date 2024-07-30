@@ -28,6 +28,10 @@ const CommandPointListPrototype = {
 
     deleteCommandPoint (cmdPt) {
         this.cmdPts.splice(this.cmdPts.indexOf(cmdPt), 1);
+    },
+
+    moveCommandPointToT (cmdPt, t) {
+        this.cmdPts[this.cmdPts.indexOf(cmdPt)].t = t;
     }
 }
 

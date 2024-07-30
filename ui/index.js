@@ -447,7 +447,6 @@ function onFieldLoaded(canvas) {
     hoveredHandle = null;
     hoveredPose = null;
     hoveredRotation = null;
-    hoveredCommandPoint = null;
 
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
@@ -465,7 +464,10 @@ function onFieldLoaded(canvas) {
         hoveredCommandPoint = poseList.findTNearPoint(mousePt, 50).pt;
         break;
 
-      case Tool.SELECT:
+        case Tool.SELECT:
+
+        moveDraggingCmdPtIfApplicable(poseList.findTNearPoint(mousePt));
+
         switch (selectState) {
           case SelectState.MOVE_POSE:
             const posePt = mousePt.addVec(activePose.offset);
@@ -565,6 +567,9 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.SELECT:
+
+      actionedCommandPoint = cmdPtObjNear(mousePt);
+
         if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
 
@@ -627,6 +632,8 @@ function onFieldLoaded(canvas) {
     const { x, y } = canvasViewport.toViewCoord(clickVec);
 
     mousePt = Point(x, y);
+
+    actionedCommandPoint = null;
 
     switch (toolState) {
       case Tool.COMMANDS:
@@ -2578,6 +2585,22 @@ function deleteTouchedCmdPtIfAny(pt) {
       commandPointList.deleteCommandPoint(cmdPt);
       break;
     }
+  }
+}
+
+function cmdPtObjNear(pt) {
+  for (let cmdPt of commandPointList.cmdPts) {
+    if (ezPtDistance2D(pt, cmdPt.t.pt) <= 10) {
+      return cmdPt;
+    }
+  }
+  return null;
+}
+
+function moveDraggingCmdPtIfApplicable(t) {
+  if (actionedCommandPoint !== null && t.t > 0) {
+    commandPointList.moveCommandPointToT(actionedCommandPoint, t);
+
   }
 }
 
