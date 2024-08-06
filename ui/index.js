@@ -1404,12 +1404,19 @@ function drawNearestPoint(context) {
 
 // _P0
 function insertPoseAt(t) {
+
   if (2 > poseList.length) {
     return;
   }
 
   if (-1 == t) {
     return;
+  }
+
+  let originalCmdPtPtList = [];
+
+  for (let cmdPt of commandPointList.cmdPts) {
+    originalCmdPtPtList.push(cmdPt.t.pt);
   }
 
   const pt = poseList.pointAt(t);
@@ -1430,20 +1437,28 @@ function insertPoseAt(t) {
   const exitVec = enterVec.scale(-1);
 
   const pose = (
-    // Pose(pt, enterVec, exitVec, { commands: PoseCommandGroup(genId()) })
-    //   .setMoveCondition('go')
-    Pose(pt, enterVec, exitVec,)
-      // .setMoveCondition('go')
+  // Pose(pt, enterVec, exitVec, { commands: PoseCommandGroup(genId()) })
+  //   .setMoveCondition('go')
+  Pose(pt, enterVec, exitVec,)
+  // .setMoveCondition('go')
   );
 
   poseList.insertPose(next, pose);
+
+  attachNewPtsToCmdPts(originalCmdPtPtList);
+
+  for (let cmdPt of commandPointList.cmdPts) {
+    let index = commandPointList.cmdPts.indexOf(cmdPt);
+
+    commandPointList.cmdPts[index].t = poseList.findTNearPoint(cmdPt.t.pt);
+  }
 }
 
-function placePointAt(x, y) {
-  const new_point = Point(x, y, []);
-  let new_pose;
+  function placePointAt(x, y) {
+    const new_point = Point(x, y, []);
+    let new_pose;
 
-  if (0 == poseList.length) {
+    if (0 == poseList.length) {
     new_pose = Pose(new_point, Vector(-100, 0), Vector(100, 0), 0, 1);
     makeRotation(0);
     rotationState = RotationState.NONE;
@@ -2548,6 +2563,13 @@ function updateCommandPointPts() {
   for (let cmdPt of commandPointList.cmdPts) {
     let index = commandPointList.cmdPts.indexOf(cmdPt);
     commandPointList.cmdPts[index].t.pt = poseList.pointAt(cmdPt.t.t);
+  }
+}
+
+function attachNewPtsToCmdPts(ptList) {
+  for (let cmdPt of commandPointList.cmdPts) {
+    let index = commandPointList.cmdPts.indexOf(cmdPt);
+    commandPointList.cmdPts[index].t.pt = ptList[index];
   }
 }
 
