@@ -388,6 +388,10 @@ function onFieldLoaded(canvas) {
 
       case Tool.DELETE:
 
+        if (deleteTouchedCmdPtIfAny(Point(x, y))) {
+          break
+        }
+
         let nearestRotation = findRotationNear(x, y);
 
         if (nearestRotation && nearestRotation.index != 0) {
@@ -395,8 +399,6 @@ function onFieldLoaded(canvas) {
         } else if (hoveredPose) {
           repositionRotsAndDo('deleteWaypoint', Point(x, y));
         }
-
-        deleteTouchedCmdPtIfAny(Point(x, y));
 
         break;
 
@@ -2180,6 +2182,10 @@ function innerOrOuterRadius(mousePt, rotPt) {
 }
 
 function drawHighlight(context, pos) {
+  if (pos == null) {
+    return;
+  }
+
   if (poseList.length >= 2 && hoveredRotation || hoveredCommandPoint != null) {
     // const rotPos = calcRotationPos(hoveredRotation.rotation);
 
@@ -2609,9 +2615,10 @@ function deleteTouchedCmdPtIfAny(pt) {
   for (let cmdPt of commandPointList.cmdPts) {
     if (ezPtDistance2D(pt, cmdPt.t.pt) <= 10) {
       commandPointList.deleteCommandPoint(cmdPt);
-      break;
+      return true;
     }
   }
+  return false;
 }
 
 function cmdPtObjNear(pt) {
