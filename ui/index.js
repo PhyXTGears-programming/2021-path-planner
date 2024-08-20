@@ -5,7 +5,7 @@
 // selectively enable features needed in the rendering
 // process.
 
-// I'm adding _* spots around the code to make easy bookmarks. Listed w/ - to prevent trigger:
+// I'm adding _* spots around the code to make easy b_o_o_k_marks. Listed w/ - to prevent trigger:
 /*
   -C - Constants
   -SU - "Setup;" background and setup functions for the app
@@ -420,15 +420,23 @@ function onFieldLoaded(canvas) {
       //   }
       //   break;
 
+        let potentialNearCmdPt = cmdPtObjNear(Point(x, y));
 
+      if (potentialNearCmdPt !== null) {
 
-      let chosenCmdT = poseList.findTNearPoint(Point(x, y));
+        actionedCommandPoint = potentialNearCmdPt;
+        drawAllNodes(actionedCommandPoint);
+
+      } else {
+        let chosenCmdT = poseList.findTNearPoint(Point(x, y));
 
       if (!inputState.isShiftDown) {
         chosenCmdT = tSnappedToPoses(chosenCmdT);
       }
 
       commandPointList.newCommandPoint(chosenCmdT);
+      }
+
       break;
 
       case Tool.ROTATION:
@@ -639,8 +647,6 @@ function onFieldLoaded(canvas) {
 
     mousePt = Point(x, y);
 
-    actionedCommandPoint = null;
-
     switch (toolState) {
       case Tool.COMMANDS:
         activePose = { pose: hoveredPose };
@@ -651,6 +657,9 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.SELECT:
+
+        actionedCommandPoint = null;
+
         switch (selectState) {
           case SelectState.MOVE_POSE:
             selectState = SelectState.NONE;
@@ -1590,7 +1599,6 @@ function findRotationNear(x, y) {
 }
 
 function findNode(passedNode, idTarget) {
-
   if (passedNode.nodeId == idTarget) {
     return passedNode;
   }
@@ -1675,43 +1683,46 @@ function drawAllNodes(rootSomething) {
     return;
   }
 
-  const { moveCondition, rootNode } = rootSomething;
+  // const { moveCondition, rootNode } = rootSomething;
 
-  const moveConditionContinueClarification = document.createElement("p");
-  if (actionedCommandPoint.canSwitch()) {
-    if (moveCondition == "halt") {
-      moveConditionContinueClarification.textContent = "Go";
-      moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
-    }
-  } else {
-    moveConditionContinueClarification.textContent = "End Auto";
-    moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot__end');
-  }
+  // const moveConditionContinueClarification = document.createElement("p");
+  // if (actionedCommandPoint.canSwitch()) {
+  //   if (moveCondition == "halt") {
+  //     moveConditionContinueClarification.textContent = "Go";
+  //     moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
+  //   }
+  // } else {
+  //   moveConditionContinueClarification.textContent = "End Auto";
+  //   moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot__end');
+  // }
 
-  const moveConditionSwitch = document.createElement("div");
-  moveConditionSwitch.classList.add('o-command-moveswitch');
-  moveConditionSwitch.addEventListener('click', () => {
-    if (actionedCommandPoint.canSwitch()) {
-      actionedCommandPoint.toggleMoveCondition();
-    } else {
-      alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
-    }
-    drawAllNodes(actionedCommandPoint.commands);
-  });
+  // const moveConditionSwitch = document.createElement("div");
+  // moveConditionSwitch.classList.add('o-command-moveswitch');
+  // moveConditionSwitch.addEventListener('click', () => {
+  //   if (actionedCommandPoint.canSwitch()) {
+  //     actionedCommandPoint.toggleMoveCondition();
+  //   } else {
+  //     alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
+  //   }
+  //   drawAllNodes(actionedCommandPoint.commands);
+  // });
 
-  if (moveCondition === "go") {
-    moveConditionSwitch.textContent = "Go";
-    moveConditionSwitch.classList.add("o-command-moveswitch--go");
-  } else {
-    moveConditionSwitch.textContent = "Halt";
-    moveConditionSwitch.classList.add("o-command-moveswitch--stop");
-  }
+  // if (moveCondition === "go") {
+  //   moveConditionSwitch.textContent = "Go";
+  //   moveConditionSwitch.classList.add("o-command-moveswitch--go");
+  // } else {
+  //   moveConditionSwitch.textContent = "Halt";
+  //   moveConditionSwitch.classList.add("o-command-moveswitch--stop");
+  // }
 
-  const elem = drawNodes(rootNode);
+  note(rootSomething);
 
-  rootElement.appendChild(moveConditionSwitch);
+  const elem = drawNodes(rootSomething);
+
+  // rootElement.appendChild(moveConditionSwitch);
   rootElement.appendChild(elem);
-  rootElement.appendChild(moveConditionContinueClarification);
+  // rootElement.appendChild(moveConditionContinueClarification);
+
 }
 
 function drawNodes(node) {
@@ -1739,7 +1750,8 @@ function drawNodes(node) {
    */
 
 
-  let capitalizedCommandName = node.name[0].toUpperCase() + node.name.substring(1);
+  // let capitalizedCommandName = node.name[0].toUpperCase() + node.name.substring(1);
+  let capitalizedCommandName = node.name; // temporary fix
 
   if (node.kind == 'group') {
     const nodeElem = document.createElement("div");
@@ -1796,7 +1808,7 @@ function drawNodes(node) {
 }
 
 function createNode(type, commandName) {
-  return ActionNode(type, [], commandName, genId());
+  return ActionNode(type, [], commandName, 0, genId());
 }
 
 function insertNode(child, parent, index) {
@@ -1847,8 +1859,6 @@ document.addEventListener('drop', ev => {
 
   if (ev.target.classList.contains('action-drop-zone')) {
 
-    const targetPoseCommands = actionedCommandPoint.commands;
-
     let insertIndex = 0;
 
     if (target.classList.contains('o-command-group__spacer')) {
@@ -1859,7 +1869,7 @@ document.addEventListener('drop', ev => {
     const commandName = ev.dataTransfer.getData('text/plain');
     // console.log("Target nodeId: ", target.dataset.nodeId, target);
 
-    targetNode = findNode(targetPoseCommands.rootNode, target.dataset.nodeId, true);
+    targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
 
     switch (commandName) {
       case 'sequence':

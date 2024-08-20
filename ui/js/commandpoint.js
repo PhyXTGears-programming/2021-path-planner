@@ -6,23 +6,34 @@
 
 import { IdGen } from './util.js';
 
-export const ActionNode = (kind, children, name, t) => ({
+export const ActionNode = (kind, children, name, t, nodeId) => ({
     kind,
     children,
     name,
     t,
+    nodeId,
 });
 
 export const CommandPoint = (t, commands) => ({
     t,
     commands,
+
+    canSwitch () {
+        //TODO
+        return false;
+    },
+
+    toggleMoveCondition () {
+        //TODO
+        return false;
+    }
 });
 
 const CommandPointListPrototype = {
     cmdPts: [],
 
     newCommandPoint (t, commands = []) {
-        let commandPackage = ActionNode("group", commands, 'sequence', IdGen(), 0); // Ensure there is always a base sequence group
+        let commandPackage = ActionNode("group", commands, 'sequence', 0, IdGen()); // Ensure there is always a base sequence group
         this.cmdPts.push(CommandPoint(t, commandPackage));
     },
 
@@ -32,7 +43,8 @@ const CommandPointListPrototype = {
 
     moveCommandPointToT (cmdPt, t) {
         this.cmdPts[this.cmdPts.indexOf(cmdPt)].t = t;
-    }
+    },
+
 }
 
 export const CommandPointList = () => {
