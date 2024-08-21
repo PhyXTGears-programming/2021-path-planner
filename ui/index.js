@@ -425,7 +425,7 @@ function onFieldLoaded(canvas) {
       if (potentialNearCmdPt !== null) {
 
         actionedCommandPoint = potentialNearCmdPt;
-        drawAllNodes(actionedCommandPoint);
+        drawAllNodes(actionedCommandPoint.commands);
 
       } else {
         let chosenCmdT = poseList.findTNearPoint(Point(x, y));
@@ -1685,43 +1685,38 @@ function drawAllNodes(rootSomething) {
 
   // const { moveCondition, rootNode } = rootSomething;
 
-  // const moveConditionContinueClarification = document.createElement("p");
-  // if (actionedCommandPoint.canSwitch()) {
-  //   if (moveCondition == "halt") {
-  //     moveConditionContinueClarification.textContent = "Go";
-  //     moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
-  //   }
-  // } else {
-  //   moveConditionContinueClarification.textContent = "End Auto";
-  //   moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot__end');
-  // }
+  const moveConditionContinueClarification = document.createElement("p");
 
-  // const moveConditionSwitch = document.createElement("div");
-  // moveConditionSwitch.classList.add('o-command-moveswitch');
-  // moveConditionSwitch.addEventListener('click', () => {
-  //   if (actionedCommandPoint.canSwitch()) {
-  //     actionedCommandPoint.toggleMoveCondition();
-  //   } else {
-  //     alert("Cannot continue moving after final Waypoint. To switch to 'Go', please add another waypoint at the desired end location.");
-  //   }
-  //   drawAllNodes(actionedCommandPoint.commands);
-  // });
+  let moveCondition = actionedCommandPoint.moveCondition;
 
-  // if (moveCondition === "go") {
-  //   moveConditionSwitch.textContent = "Go";
-  //   moveConditionSwitch.classList.add("o-command-moveswitch--go");
-  // } else {
-  //   moveConditionSwitch.textContent = "Halt";
-  //   moveConditionSwitch.classList.add("o-command-moveswitch--stop");
-  // }
+  if (moveCondition == "halt") {
+    moveConditionContinueClarification.textContent = "Go";
+    moveConditionContinueClarification.classList.add('c-command-moveswitch-continue-foot');
+  }
 
-  note(rootSomething);
+  const moveConditionSwitch = document.createElement("div");
+  moveConditionSwitch.classList.add('o-command-moveswitch');
+
+  moveConditionSwitch.addEventListener('click', () => {
+    actionedCommandPoint.toggleMoveCondition();
+    drawAllNodes(actionedCommandPoint.commands);
+  });
+
+  if (moveCondition === "go") {
+    moveConditionSwitch.textContent = "Go";
+    moveConditionSwitch.classList.add("o-command-moveswitch--go");
+  } else {
+    moveConditionSwitch.textContent = "Halt";
+    moveConditionSwitch.classList.add("o-command-moveswitch--stop");
+  }
+
+  // note(rootSomething);
 
   const elem = drawNodes(rootSomething);
 
-  // rootElement.appendChild(moveConditionSwitch);
+  rootElement.appendChild(moveConditionSwitch);
   rootElement.appendChild(elem);
-  // rootElement.appendChild(moveConditionContinueClarification);
+  rootElement.appendChild(moveConditionContinueClarification);
 
 }
 
@@ -1918,7 +1913,7 @@ document.addEventListener('drop', ev => {
 
 function makeRotation(tval) {
   rotationList.insertRotation(tval);
-  note(popsicle(rotationList));
+  // note(popsicle(rotationList));
   pruneInvalidRotPts();
 
 }
