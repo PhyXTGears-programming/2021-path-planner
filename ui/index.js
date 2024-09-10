@@ -2280,7 +2280,7 @@ function makeAdvanceExport(poseList, rotations) {
 */
 
 function bakeAdvancedExport(poseList, rotations) {
-  let payload = [];
+  let payload = {content: [], commands: []};
 
   // Building initial interpolated list
   let currentIntegral = 0;
@@ -2295,7 +2295,7 @@ function bakeAdvancedExport(poseList, rotations) {
     // console.log("Iterating with lowT and integral: ", lowT, currentIntegral);
     currentIntegral = findIdealTIntegral(lowT, lowT + 1);
 
-    payload.push(ExportChunk(
+    payload.content.push(ExportChunk(
       "unbakedUnrotated",
       null,
       poseList.pointAt(lowT).x,
@@ -2311,7 +2311,7 @@ function bakeAdvancedExport(poseList, rotations) {
     // console.log("Late-stage iterating with lowT and integral: ", lowT, currentIntegral);
     currentIntegral = findIdealTIntegral(lowT, endT, 0, 15);
 
-    payload.push(ExportChunk(
+    payload.content.push(ExportChunk(
       "unbakedUnrotated",
       null,
       poseList.pointAt(lowT).x,
@@ -2322,7 +2322,7 @@ function bakeAdvancedExport(poseList, rotations) {
 
     lowT = lowT + currentIntegral;
   }
-  payload.push(ExportChunk(
+  payload.content.push(ExportChunk(
     "unbakedUnrotated",
     null,
     poseList.pointAt(endT).x,
@@ -2331,6 +2331,7 @@ function bakeAdvancedExport(poseList, rotations) {
     endT,
   ));
 
+
   // console.log("End space coagulated into final pt (m): ", pxToMeters(ezPtDistance(poseList.pointAt(lowT - currentIntegral), poseList.pointAt(endT))));
 
   //            Interpolating rotations:
@@ -2338,10 +2339,13 @@ function bakeAdvancedExport(poseList, rotations) {
   {
     let lastRotationIndex = 0;
     let lastRotation = rotations[0].rot;
+    let focusCmdPts = commandPointList.cmdPts;
 
-    payload = payload.map(chunk => {
+    payload.content = payload.content.map(chunk => {// BOOKMARK
       // Find relevant rotation.
       const nearestT = poseList.findTNearPoint(Point(chunk.x, chunk.y), 50);
+
+      const nearCmdPtIndex = nearCommandPointToT(nearestT.t, focusCmdPts);
 
       if (-1 === nearestT.t) {
         console.log("Cannot find t near point", { x: chunk.x, y: chunk.y });
@@ -2361,7 +2365,8 @@ function bakeAdvancedExport(poseList, rotations) {
       return Object.assign(
         {},
         chunk,
-        { rot: lastRotation }
+        { rot: lastRotation },
+        { commands: commandPointList.cmdPts[nearCmdPtIndex.i] }
       );
     });
   }
@@ -2406,19 +2411,20 @@ function bakeAdvancedExport(poseList, rotations) {
 
   // CURRENT COMMAND EXPORTING
 
-  console.log("Pre-command-baking payload: ", popsicle(payload));
+  console.log("Pre-baking payload: ", popsicle(payload));
 
   // let commandHeads = [];
 
-  // for (let pose of poseList.poses) {
-  //   const tEncased = poseList.findTNearPoint(pose.point);
+  // for (let cmdPt of commandPointList.cmdPts) {
+  //   const tEncased = poseList.findTNearPoint(cmdPt.t.pt);
   //   const commandHeadIndex = findNearestIndexToFromByT(tEncased, payload);
 
   //   commandHeads.push({
   //     index: commandHeadIndex,
-  //     commands: pose.commands,
+  //     commands: cmdPt.commands,
   //   });
   // }
+
 
   // for (let h of commandHeads) {
   //   payload[h.index].commands = h.commands;
@@ -2429,6 +2435,8 @@ function bakeAdvancedExport(poseList, rotations) {
   //   }
   // }
 
+  // payload.commands = commandPointList;
+
   // Calculate and apply velocities:
   const distanceToVelocity = accelerate(seasonConfig.config.robot.parameters);
   const maxVelocity = seasonConfig.config.robot.parameters.maxVelocityMetersPerSecond;
@@ -2436,7 +2444,7 @@ function bakeAdvancedExport(poseList, rotations) {
   {
     // Assign zero velocities to stop positions.
     // Assign max velocity to all other positions.
-    payload = payload.map(chunk => {
+    payload.content = payload.content.map(chunk => {
       if ('stop' === chunk.type) {
         const newChunk = Object.assign({}, chunk, { vel: 0.0 });
 
@@ -2455,7 +2463,7 @@ function bakeAdvancedExport(poseList, rotations) {
     let prevPt = Point(0.0, 0.0);
     let prevVel = 0.0;
 
-    payload = payload.map(chunk => {
+    payload.content = payload.content.map(chunk => {
       if ('stop' === chunk.type) {
         distance = 0.0;
         prevPt = Point(chunk.x, chunk.y);
@@ -2480,13 +2488,13 @@ function bakeAdvancedExport(poseList, rotations) {
   {
     // Reverse payload, and compute velocities for deceleration to rest.
     // Because the list is reversed, the code looks identical to acceleration above.
-    payload = payload.toReversed();
+    payload.content = payload.content.toReversed();
 
     let distance = 0.0;
     let prevPt = Point(0.0, 0.0);
     let prevVel = 0.0;
 
-    payload = payload.map(chunk => {
+    payload.content = payload.content.map(chunk => {
       if ('stop' === chunk.type) {
         distance = 0.0;
         prevPt = Point(chunk.x, chunk.y);
@@ -2508,11 +2516,11 @@ function bakeAdvancedExport(poseList, rotations) {
     });
 
     // Restore payload to original order.
-    payload = payload.toReversed();
+    payload.content = payload.content.toReversed();
   }
 
   // Convert pixel units to meters and set origin to bottom left corner - Linus D
-  for (let pose of payload) {
+  for (let pose of payload.content) {
     pose.x =                                  pose.x / seasonConfig.fieldDims.xPixels * seasonConfig.fieldDims.xmeters;
     pose.y = seasonConfig.fieldDims.ymeters - pose.y / seasonConfig.fieldDims.yPixels * seasonConfig.fieldDims.ymeters;
   }
@@ -2547,7 +2555,7 @@ function filterPayloadToIndexListByType(payload, type) {
   for (let pose of payload) {
     if (pose.type == type) {
       filteredList.push(
-        Number(payload.indexOf(pose)),
+        Number(payload.content.indexOf(pose)),
       );
     }
   }
@@ -2555,7 +2563,16 @@ function filterPayloadToIndexListByType(payload, type) {
   return filteredList;
 }
 
-// Control Point Stuff: (_COM)
+function nearCommandPointToT(tClean, cmdPtList) {
+  for (let i = 0; i < cmdPtList.length; i++) {
+    if (-0.2 < ezNumDist(tClean, cmdPtList[i].t.t) < 0.2) {
+      return {i};
+    }
+  }
+  return false;
+}
+
+// Command Point Stuff: (_COM)
 
 function drawAllCommandPoints(context) {
 
