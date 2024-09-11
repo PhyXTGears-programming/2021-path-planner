@@ -832,7 +832,7 @@ function onFieldLoaded(canvas) {
   });
 
   document.getElementById('export').addEventListener('click', _ev => {
-    const payload = exportPoses(poseList, seasonConfig.fieldDims, rotationList);
+    const payload = exportPoses(poseList, seasonConfig.fieldDims, rotationList, commandPointList);
     const data = JSON.stringify(payload, null, 4);
 
     console.log('export data', payload);
@@ -2341,7 +2341,7 @@ function bakeAdvancedExport(poseList, rotations) {
     let lastRotation = rotations[0].rot;
     let focusCmdPts = commandPointList.cmdPts;
 
-    payload.content = payload.content.map(chunk => {// BOOKMARK
+    payload.content = payload.content.map(chunk => {
       // Find relevant rotation.
       const nearestT = poseList.findTNearPoint(Point(chunk.x, chunk.y), 50);
 

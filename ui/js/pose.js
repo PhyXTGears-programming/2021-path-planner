@@ -235,6 +235,7 @@ const Payload = () => ({
   segments: [],
   waypoints: [],
   rotations: [],
+  commands: [],
 });
 
 export function alignAnglesWithHeading(rotationsList) {
@@ -252,7 +253,7 @@ export function alignAnglesWithHeading(rotationsList) {
   return alignedRotationPayload;
 }
 
-export const exportPoses = (poseList, fieldDims, rotationList) => {
+export const exportPoses = (poseList, fieldDims, rotationList, commandPointList) => {
   /** Export file format
    *
    *  Point :: List Float Float
@@ -266,7 +267,7 @@ export const exportPoses = (poseList, fieldDims, rotationList) => {
    *             }
    */
 
-  const payload = Payload();
+  const payload = Payload();// BOOKMARK
 
   if (2 > poseList.length) {
     return payload;
@@ -295,19 +296,23 @@ export const exportPoses = (poseList, fieldDims, rotationList) => {
       pose1 = pose2;
     }
 
-    for (let pose of poseList.poses) {
-      const waypoint = {
-        // commands: pose.commands.rootNode,
-        // shallHalt: pose.commands.moveCondition === 'halt',
-      };
+    // for (let pose of poseList.poses) {
+    //   const waypoint = {
+    //     // commands: pose.commands.rootNode,
+    //     // shallHalt: pose.commands.moveCondition === 'halt',
+    //   };
 
-      payload.waypoints.push(waypoint);
-    }
+    //   payload.waypoints.push(waypoint);
+    // }
+
+    payload.waypoints = poseList;
 
     let rotationPayload = alignAnglesWithHeading(rotationList.rotations);
 
     payload.rotations = rotationPayload.rotations;
     payload.rotationOffset = rotationPayload.rotationOffset;
+
+    payload.commands = commandPointList;
 
     return payload;
   }
