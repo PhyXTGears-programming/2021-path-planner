@@ -835,7 +835,7 @@ function onFieldLoaded(canvas) {
     const payload = exportPoses(poseList, seasonConfig.fieldDims, rotationList, commandPointList);
     const data = JSON.stringify(payload, null, 4);
 
-    console.log('export data', payload);
+    // console.log('export data:', data);
 
     writeTextFile(saveFileName, data);
   });
@@ -844,7 +844,7 @@ function onFieldLoaded(canvas) {
     const payload = botExport(poseList, rotationList.rotations, bakeAdvancedExport);
     const data = JSON.stringify(payload, null, 4);
 
-    console.log('Bot export payload: ', payload);
+    // console.log('Bot export payload: ', payload);
 
     writeTextFile(saveFileName, data);
   });
@@ -886,9 +886,12 @@ function onFieldLoaded(canvas) {
           readTextFile(importFileName)
             .then(text => JSON.parse(text))
             .then(data => importPoses(data, seasonConfig.fieldDims, genId) )
-            .then(p => { poseList = p.poseList; return p; })
-            .then(r1 => { return revertRotOffset(r1.rotationList.rotations, r1.rotationOffset); })
-            .then(r2 => { rotationList.rotations = convertAllRotDegToRad(r2.rotations) })
+            .then(p => { poseList = p.poseList;
+              console.log("Imported data:", popsicle(p));
+              return p; })
+            .then(r1 => { return {rotOffsetReverted: revertRotOffset(r1.rotationList.rotations, r1.rotationOffset), commands: r1.commands} })
+            .then(r2 => { rotationList.rotations = convertAllRotDegToRad(r2.rotOffsetReverted.rotations);
+              commandPointList.absorb(r2.commands); })
             .then(() => redrawCanvas(canvas, poseList));
         }
       })
@@ -2411,8 +2414,6 @@ function bakeAdvancedExport(poseList, rotations) {
 
   // CURRENT COMMAND EXPORTING
 
-  console.log("Pre-baking payload: ", popsicle(payload));
-
   // let commandHeads = [];
 
   // for (let cmdPt of commandPointList.cmdPts) {
@@ -2525,7 +2526,6 @@ function bakeAdvancedExport(poseList, rotations) {
     pose.y = seasonConfig.fieldDims.ymeters - pose.y / seasonConfig.fieldDims.yPixels * seasonConfig.fieldDims.ymeters;
   }
 
-  console.log("Done. payload: ", popsicle(payload));
   return payload;
 }
 

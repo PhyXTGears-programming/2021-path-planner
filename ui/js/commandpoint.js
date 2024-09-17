@@ -29,7 +29,6 @@ export const CommandPoint = (t, commands, moveCondition) => ({
 });
 
 const CommandPointListPrototype = {
-    cmdPts: [],
 
     newCommandPoint (t, commands = []) {
         let commandPackage = ActionNode("group", commands, 'sequence', 0, IdGen()); // Ensure there is always a base sequence group
@@ -44,9 +43,15 @@ const CommandPointListPrototype = {
         this.cmdPts[this.cmdPts.indexOf(cmdPt)].t = t;
     },
 
+    absorb (data) {
+        // copy cmdPtList data into self to preserve variable
+        this.cmdPts = data.cmdPts;
+    },
+
 }
 
 export const CommandPointList = () => {
     const self = Object.create(CommandPointListPrototype);
+    self.cmdPts = [];
     return self;
 }

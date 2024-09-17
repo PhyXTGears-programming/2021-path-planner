@@ -267,7 +267,7 @@ export const exportPoses = (poseList, fieldDims, rotationList, commandPointList)
    *             }
    */
 
-  const payload = Payload();// BOOKMARK
+  const payload = Payload();
 
   if (2 > poseList.length) {
     return payload;
@@ -321,6 +321,9 @@ export const exportPoses = (poseList, fieldDims, rotationList, commandPointList)
 export const importPoses = (data, fieldDims, genId) => {
   const poseList = PoseList();
   const rotationsImported = new RotationList();
+
+  console.log("Data to import: ", JSON.parse(JSON.stringify(data)));
+  let commandStuff = data.commands;
 
   if (data.length < 1) {
     return poseList;
@@ -393,11 +396,11 @@ export const importPoses = (data, fieldDims, genId) => {
 
   rotationsImported.rotations = data.rotations;
 
-
   return {
     poseList: poseList,
     rotationList: rotationsImported,
-    rotationOffset: rotationOffset
+    rotationOffset: rotationOffset,
+    commands: commandStuff,
   };
 }
 
