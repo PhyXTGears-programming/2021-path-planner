@@ -55,7 +55,7 @@ const { documentDir } = window.__TAURI__.path;
 
 // Custom types
 
-const FRC_SEASON = '2024';
+const FRC_SEASON = '2025';
 
 // Constants _C
 
@@ -973,14 +973,20 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
   if (shallDrawHighlight() && hoveredRotation != null) {
     drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
   } else if (shallDrawHighlight() && hoveredCommandPoint != null) {
+    let focusColor = '2f2';// BOOKMARK
+
+    if (cmdPtObjNear(hoveredCommandPoint) != null) {
+      focusColor = '000';
+    }
+
     if (!inputState.isShiftDown) {
-      drawHighlight(context, poseList.pointAt(tSnappedToPoses(poseList.findTNearPoint(hoveredCommandPoint)).t));
+      drawHighlight(context, poseList.pointAt(tSnappedToPoses(poseList.findTNearPoint(hoveredCommandPoint)).t, focusColor));
     } else {
-      drawHighlight(context, hoveredCommandPoint);
+      drawHighlight(context, hoveredCommandPoint, focusColor);
     }
   }
 
-  if (shallDrawNearestPoint()) {
+  if (shallDrawNearestPoint() && hoveredCommandPoint == null) {
     drawNearestPoint(context);
   }
 
@@ -2189,7 +2195,7 @@ function innerOrOuterRadius(mousePt, rotPt) {
   }
 }
 
-function drawHighlight(context, pos) {
+function drawHighlight(context, pos, fillColor = '2F2') {
   if (pos == null) {
     return;
   }
@@ -2197,7 +2203,7 @@ function drawHighlight(context, pos) {
   if (poseList.length >= 2 && hoveredRotation || hoveredCommandPoint != null) {
     // const rotPos = calcRotationPos(hoveredRotation.rotation);
 
-    context.fillStyle = '#2F2';
+    context.fillStyle = fillColor;
     drawCircle(context, pos.x, pos.y, 4);
     context.fill();
   }

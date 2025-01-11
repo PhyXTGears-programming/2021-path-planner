@@ -1,0 +1,43 @@
+{
+  "fieldDims": {
+    "xmeters": 17.55,
+    "ymeters": 8.05
+  },
+  "robot": {
+    "parameters": {
+      "size": {
+        "xmeters": 0.762,
+        "ymeters": 0.762
+      },
+      "maxVelocityMetersPerSecond": 1.5,
+      "maxAccelerationMetersPerSecondSecond": 0.3
+    },
+    "commands": [
+      {
+        "name": "alignToTag",
+        "image": "align-to-tag.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "scoreTrough",
+        "image": "score-1.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "score2",
+        "image": "score-2.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "score3",
+        "image": "score-3.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "score4",
+        "image": "score-4.png",
+        "tags": ["a", "b"]
+      }
+    ]
+  }
+}
