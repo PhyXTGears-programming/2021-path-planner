@@ -403,46 +403,47 @@ function onFieldLoaded(canvas) {
         break;
 
       case Tool.COMMANDS:
-      //   actionedControl = findPoseNear(x, y);
-
-      //   if (!actionedControl) {
-      //     clearAllNodes();
-      //     break;
-      //   } else {
-      //     drawAllNodes(actionedControl.commands);
-      //   }
-
-
-      //   if (poseList.poses.indexOf(actionedControl) == 0) {
-      //     setEditHeadingVisible(true);
-      //   } else {
-      //     setEditHeadingVisible(false);
-      //   }
-      //   break;
+        //actionedControl = findPoseNear(x, y);
+        //
+        //if (!actionedControl) {
+        //  clearAllNodes();
+        //  break;
+        //} else {
+        //  drawAllNodes(actionedControl.commands);
+        //}
+        //
+        //
+        //if (poseList.poses.indexOf(actionedControl) == 0) {
+        //  setEditHeadingVisible(true);
+        //} else {
+        //  setEditHeadingVisible(false);
+        //}
+        //break;
 
         let potentialNearCmdPt = cmdPtObjNear(Point(x, y));
 
-      if (potentialNearCmdPt !== null) {
+        if (potentialNearCmdPt !== null) {
 
-        actionedCommandPoint = potentialNearCmdPt;
-        drawAllNodes(actionedCommandPoint.commands);
+          actionedCommandPoint = potentialNearCmdPt;
+          drawAllNodes(actionedCommandPoint.commands);
 
-      } else {
-        let chosenCmdT = poseList.findTNearPoint(Point(x, y));
+        } else {
+          let chosenCmdT = poseList.findTNearPoint(Point(x, y));
 
-      if (!inputState.isShiftDown) {
-        chosenCmdT = tSnappedToPoses(chosenCmdT);
-      }
+          if (!inputState.isShiftDown) {
+            chosenCmdT = tSnappedToPoses(chosenCmdT);
+          }
 
-      commandPointList.newCommandPoint(chosenCmdT);
-      }
+          commandPointList.newCommandPoint(chosenCmdT);
+        }
 
-      break;
+        break;
 
       case Tool.ROTATION:
         if (rotationState == RotationState.NEW) {
           makeRotation(nearestPt.t);
         }
+
         rotationState = RotationState.NONE;
 
         redrawCanvas(canvas, poseList);
@@ -2331,6 +2332,7 @@ function bakeAdvancedExport(poseList, rotations) {
 
     lowT = lowT + currentIntegral;
   }
+
   payload.content.push(ExportChunk(
     "unbakedUnrotated",
     null,
