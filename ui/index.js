@@ -843,7 +843,7 @@ function onFieldLoaded(canvas) {
 
   document.getElementById('export-for-bot').addEventListener('click', () => {
     console.log("exporting bot");
-    const payload = bakeAdvancedExport(poseList, rotationList.rotations);
+    const payload = bakeAdvancedExport(poseList, rotationList.rotations, commandPointList.cmdPts);
     const data = JSON.stringify(payload, null, 4);
 
     // console.log('Bot export payload: ', payload);
@@ -2290,7 +2290,7 @@ function makeAdvanceExport(poseList, rotations) {
 
 */
 
-function bakeAdvancedExport(poseList, rotations) {
+function bakeAdvancedExport(poseList, rotations, commands) {
   let payload = {content: [], commands: []};
 
   // Building initial interpolated list
@@ -2351,13 +2351,12 @@ function bakeAdvancedExport(poseList, rotations) {
   {
     let lastRotationIndex = 0;
     let lastRotation = rotations[0].rot;
-    let focusCmdPts = commandPointList.cmdPts;
 
     payload.content = payload.content.map(chunk => {
       // Find relevant rotation.
       const nearestT = poseList.findTNearPoint(Point(chunk.x, chunk.y), 50);
 
-      const nearCmdPtIndex = nearCommandPointToT(nearestT.t, focusCmdPts);
+      const nearCmdPtIndex = nearCommandPointToT(nearestT.t, commands);
 
       if (-1 === nearestT.t) {
         console.log("Cannot find t near point", { x: chunk.x, y: chunk.y });
@@ -2378,7 +2377,7 @@ function bakeAdvancedExport(poseList, rotations) {
         {},
         chunk,
         { rot: lastRotation },
-        { commands: commandPointList.cmdPts[nearCmdPtIndex.i] }
+        { commands: commands[nearCmdPtIndex.i] }
       );
     });
   }
