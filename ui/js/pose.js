@@ -413,14 +413,6 @@ const bezierFromPoses = (pose1, pose2) => {
     );
 };
 
-export const botExport = (poseList, rotations, func = () => {console.warn("Passed no function to botExport?"); return null;}) => {
-
-  // Space for any other processes we want added to the export
-
-  console.log("exporting bot");
-  return func(poseList, rotations);
-}
-
 export function ExportChunk(type = "unassigned", rot = null, x, y, t, vel = 1.0, commands = []) {
   return {
     type: type,

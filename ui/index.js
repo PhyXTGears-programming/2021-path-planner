@@ -842,7 +842,8 @@ function onFieldLoaded(canvas) {
   });
 
   document.getElementById('export-for-bot').addEventListener('click', () => {
-    const payload = botExport(poseList, rotationList.rotations, bakeAdvancedExport);
+    console.log("exporting bot");
+    const payload = bakeAdvancedExport(poseList, rotationList.rotations);
     const data = JSON.stringify(payload, null, 4);
 
     // console.log('Bot export payload: ', payload);
