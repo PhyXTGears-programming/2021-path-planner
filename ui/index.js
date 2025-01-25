@@ -2311,7 +2311,6 @@ function bakeAdvancedExport(poseList, rotations, commands) {
       null,
       poseList.pointAt(lowT).x,
       poseList.pointAt(lowT).y,
-      [],
       lowT,
     ));
 
@@ -2327,7 +2326,6 @@ function bakeAdvancedExport(poseList, rotations, commands) {
       null,
       poseList.pointAt(lowT).x,
       poseList.pointAt(lowT).y,
-      [],
       lowT,
     ));
 
@@ -2339,7 +2337,6 @@ function bakeAdvancedExport(poseList, rotations, commands) {
     null,
     poseList.pointAt(endT).x,
     poseList.pointAt(endT).y,
-    [],
     endT,
   ));
 
