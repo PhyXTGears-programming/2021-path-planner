@@ -30,7 +30,7 @@ import { throttleLast } from './js/timer.js';
 import { IdGen, clamp } from './js/util.js';
 
 import {
-  importPoses, exportPoses, Pose, PoseList, botExport, ExportChunk
+  importPoses, exportPoses, Pose, PoseList, ExportChunk
 } from './js/pose.js';
 
 import Viewport from './js/viewport.js';
@@ -841,7 +841,8 @@ function onFieldLoaded(canvas) {
   });
 
   document.getElementById('export-for-bot').addEventListener('click', () => {
-    const payload = botExport(poseList, rotationList.rotations, bakeAdvancedExport);
+    console.log("exporting bot");
+    const payload = bakeAdvancedExport(poseList, rotationList.rotations);
     const data = JSON.stringify(payload, null, 4);
 
     // console.log('Bot export payload: ', payload);
