@@ -2290,7 +2290,7 @@ function makeAdvanceExport(poseList, rotations) {
 */
 
 function bakeAdvancedExport(poseList, rotations, commands) {
-  let payload = {content: [], commands: []};
+  let payload = {content: [], commands: commands};
 
   // Building initial interpolated list
   let currentIntegral = 0;
@@ -2351,7 +2351,7 @@ function bakeAdvancedExport(poseList, rotations, commands) {
       // Find relevant rotation.
       const nearestT = poseList.findTNearPoint(Point(chunk.x, chunk.y), 50);
 
-      const nearCmdPtIndex = nearCommandPointToT(nearestT.t, commands);
+      // const nearCmdPtIndex = nearCommandPointToT(nearestT.t, commands);
 
       if (-1 === nearestT.t) {
         console.log("Cannot find t near point", { x: chunk.x, y: chunk.y });
@@ -2372,7 +2372,7 @@ function bakeAdvancedExport(poseList, rotations, commands) {
         {},
         chunk,
         { rot: lastRotation },
-        { commands: commands[nearCmdPtIndex.i] }
+        // { commands: commands[nearCmdPtIndex.i] }
       );
     });
   }
@@ -2415,20 +2415,16 @@ function bakeAdvancedExport(poseList, rotations, commands) {
 
   // Baking commands into the payload:
 
-  // CURRENT COMMAND EXPORTING
+  // FIND STOPS FOR CMDS:
 
-  // let commandHeads = [];
+  for (let cmdPt of commandPointList.cmdPts) {
+    if (cmdPt.moveCondition == 'halt') {
+      const tEncased = poseList.findTNearPoint(cmdPt.t.pt);
+      const commandIndex = findNearestIndexToFromByT(tEncased, payload);
 
-  // for (let cmdPt of commandPointList.cmdPts) {
-  //   const tEncased = poseList.findTNearPoint(cmdPt.t.pt);
-  //   const commandHeadIndex = findNearestIndexToFromByT(tEncased, payload);
-
-  //   commandHeads.push({
-  //     index: commandHeadIndex,
-  //     commands: cmdPt.commands,
-  //   });
-  // }
-
+      payload.content[commandIndex].type = 'stop';
+    }
+  }
 
   // for (let h of commandHeads) {
   //   payload[h.index].commands = h.commands;
@@ -2443,6 +2439,7 @@ function bakeAdvancedExport(poseList, rotations, commands) {
 
   // Calculate and apply velocities:
   const distanceToVelocity = accelerate(seasonConfig.config.robot.parameters);
+  note(distanceToVelocity(10, 1));
   const maxVelocity = seasonConfig.config.robot.parameters.maxVelocityMetersPerSecond;
 
   {
@@ -2479,11 +2476,11 @@ function bakeAdvancedExport(poseList, rotations, commands) {
         distance += herePt.sub(prevPt).length();
         prevPt = herePt;
 
-        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(distance, prevVel));
+        debugger;
+        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(pxToMeters(distance), prevVel));
         prevVel = vel;
 
         const newChunk = Object.assign({}, chunk, { vel });
-
         return newChunk;
       }
     });
@@ -2504,13 +2501,15 @@ function bakeAdvancedExport(poseList, rotations, commands) {
         prevPt = Point(chunk.x, chunk.y);
         prevVel = 0.0;
 
+        console.warn("Stop chunk encountered");
+
         return chunk;
       } else {
         const herePt = Point(chunk.x, chunk.y);
         distance += herePt.sub(prevPt).length();
         prevPt = herePt;
 
-        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(distance, prevVel));
+        const vel = clamp(chunk.vel, 0.0, distanceToVelocity(pxToMeters(distance), prevVel));
         prevVel = vel;
 
         const newChunk = Object.assign({}, chunk, { vel });
@@ -2532,15 +2531,18 @@ function bakeAdvancedExport(poseList, rotations, commands) {
   return payload;
 }
 
-// Sub-processes for exporting
+// ------------------ Sub-processes for exporting ---------------------
+
 function findNearestIndexToFromByT(origin, ptList) {
   let near = {dist: 9999, pt: null};
+
+  ptList = ptList.content;
 
   if (ptList == [] || ptList == null) {
     console.error("You passed an empty or null list into findNearestIndexToFromByT");
   }
 
-  for(let pt of ptList) {
+  for (let pt of ptList) {
     const dist = Math.abs(origin.t - pt.t);
     if (dist < near.dist) {
       near = {

@@ -421,15 +421,13 @@ export const botExport = (poseList, rotations, func = () => {console.warn("Passe
   return func(poseList, rotations);
 }
 
-export function ExportChunk(type = "unassigned", rot = null, x, y, t, vel = 1.0, commands = []) {
+export function ExportChunk(type = "unassigned", rot = null, x, y, t, vel = 1.0) {
   return {
     type: type,
     vel: vel,
     rot: rot,
     x: x,
     y: y,
-    // commands: commands,
     t: t,
-    commands: commands,
   };
 }
