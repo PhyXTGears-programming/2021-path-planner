@@ -123,11 +123,7 @@ const styles = {
 
 // const frog = {attributes : ["kindness", "beauty", "just incredible"], dangerLevel: "Cognitohazard"};
 
-// A noop is a function that performs "no operation".
-// When we have a variable that must hold a function (never null), but we don't have any
-// particular action we want to perform, we can lend that variable noop, so it at least
-// has a function (so it's happy) that does nothing (so dev is happy).
-const noop = () => {}; // ?????? what is noop? I'm the confused one for once??? (- The Frog Man)
+const noop = () => {};
 
 let toolState = Tool.NONE;
 const images = {};
@@ -298,6 +294,7 @@ function updateRobotCommands() {
     imgElem.classList.add('o-action-command-icon');
 
     const itemElem = document.createElement('li');
+    itemElem.flexWrap = "wrap";
     itemElem.appendChild(imgElem);
 
     listElem.appendChild(itemElem);

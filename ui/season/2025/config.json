@@ -14,11 +14,6 @@
     },
     "commands": [
       {
-        "name": "alignToTag",
-        "image": "align-to-tag.png",
-        "tags": ["a", "b"]
-      },
-      {
         "name": "scoreTrough",
         "image": "score-1.png",
         "tags": ["a", "b"]
@@ -36,6 +31,116 @@
       {
         "name": "score4",
         "image": "score-4.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag1",
+        "image": "aprilTag01.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag2",
+        "image": "aprilTag02.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag3",
+        "image": "aprilTag03.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag4",
+        "image": "aprilTag04.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag5",
+        "image": "aprilTag05.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag6",
+        "image": "aprilTag06.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag7",
+        "image": "aprilTag07.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag8",
+        "image": "aprilTag08.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag9",
+        "image": "aprilTag09.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag10",
+        "image": "aprilTag10.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag11",
+        "image": "aprilTag11.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag12",
+        "image": "aprilTag12.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag13",
+        "image": "aprilTag13.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag14",
+        "image": "aprilTag14.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag15",
+        "image": "aprilTag15.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag16",
+        "image": "aprilTag16.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag17",
+        "image": "aprilTag17.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag18",
+        "image": "aprilTag18.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag19",
+        "image": "aprilTag19.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag20",
+        "image": "aprilTag20.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag21",
+        "image": "aprilTag21.png",
+        "tags": ["a", "b"]
+      },
+      {
+        "name": "alignToTag22",
+        "image": "aprilTag22.png",
         "tags": ["a", "b"]
       }
     ]

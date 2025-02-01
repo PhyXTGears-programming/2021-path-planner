@@ -107,8 +107,8 @@
 
   .o-action-command-icon,
   .o-command {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border: thin solid var(--color-border-command);
   }
 
@@ -130,9 +130,9 @@
 
     position: relative;
   }
-
+/*
   .c-action-work-area__sequence > .o-command-group {
-  }
+  } */
 
   .o-command-group__spacer {
     box-sizing: border-box;
@@ -205,8 +205,11 @@
     margin-right: 0;
     padding: 0;
 
+    max-width: 100px;
+
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
   }
