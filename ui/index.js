@@ -37,7 +37,7 @@ import Viewport from './js/viewport.js';
 
 import { accelerate } from './js/robot/distanceToVelocity.js';
 
-import { ActionNode, CommandPointList, CommandPoint } from './js/commandpoint.js';
+import { ActionNode, CommandPointList, CommandPoint, FlatCommandPoint } from './js/commandpoint.js';
 
 // JSDoc types
 
@@ -842,7 +842,7 @@ function onFieldLoaded(canvas) {
 
   document.getElementById('export-for-bot').addEventListener('click', () => {
     console.log("exporting bot");
-    const payload = bakeAdvancedExport(poseList, rotationList.rotations, commandPointList.cmdPts);
+    const payload = bakeAdvancedExport(poseList, rotationList.rotations, popsicle(commandPointList.cmdPts));
     const data = JSON.stringify(payload, null, 4);
 
     // console.log('Bot export payload: ', payload);
@@ -974,7 +974,7 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
   if (shallDrawHighlight() && hoveredRotation != null) {
     drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
   } else if (shallDrawHighlight() && hoveredCommandPoint != null) {
-    let focusColor = '2f2';// BOOKMARK
+    let focusColor = '2f2';
 
     if (cmdPtObjNear(hoveredCommandPoint) != null) {
       focusColor = '000';
@@ -2285,11 +2285,11 @@ function makeAdvanceExport(poseList, rotations) {
     [X] Assign Commands to New Pose pts
     [-] Put all of these together [No longer necessary]
     [X] Actually export it
-    [-] Velocity
+    [X] Velocity
 
 */
 
-function bakeAdvancedExport(poseList, rotations, commands) {
+function bakeAdvancedExport(poseList, rotations, commands) {//TODO
   let payload = {content: [], commands: commands};
 
   // Building initial interpolated list
@@ -2424,6 +2424,8 @@ function bakeAdvancedExport(poseList, rotations, commands) {
 
       payload.content[commandIndex].type = 'stop';
     }
+
+    // payload.content[commandIndex];
   }
 
   // for (let h of commandHeads) {
@@ -2439,7 +2441,6 @@ function bakeAdvancedExport(poseList, rotations, commands) {
 
   // Calculate and apply velocities:
   const distanceToVelocity = accelerate(seasonConfig.config.robot.parameters);
-  note(distanceToVelocity(10, 1));
   const maxVelocity = seasonConfig.config.robot.parameters.maxVelocityMetersPerSecond;
 
   {
@@ -2501,8 +2502,6 @@ function bakeAdvancedExport(poseList, rotations, commands) {
         prevPt = Point(chunk.x, chunk.y);
         prevVel = 0.0;
 
-        console.warn("Stop chunk encountered");
-
         return chunk;
       } else {
         const herePt = Point(chunk.x, chunk.y);
@@ -2528,6 +2527,13 @@ function bakeAdvancedExport(poseList, rotations, commands) {
     pose.y = seasonConfig.fieldDims.ymeters - pose.y / seasonConfig.fieldDims.yPixels * seasonConfig.fieldDims.ymeters;
   }
 
+  // Flatten command points to not encase pt and t in tEncased obj:
+  for (let i = 0; i < payload.commands.length; i++) {
+    let cmd = payload.commands[i];
+    payload.commands[i] = FlatCommandPoint(cmd.t.t, cmd.t.pt.x, cmd.t.pt.y, cmd.commands, cmd.moveCondition);
+  }
+
+  console.log(popsicle(payload));
   return payload;
 }
 
@@ -2555,27 +2561,27 @@ function findNearestIndexToFromByT(origin, ptList) {
   return ptList.indexOf(near.pt);
 }
 
-function filterPayloadToIndexListByType(payload, type) {
-  let filteredList = [];
-  for (let pose of payload) {
-    if (pose.type == type) {
-      filteredList.push(
-        Number(payload.content.indexOf(pose)),
-      );
-    }
-  }
+// function filterPayloadToIndexListByType(payload, type) {
+//   let filteredList = [];
+//   for (let pose of payload) {
+//     if (pose.type == type) {
+//       filteredList.push(
+//         Number(payload.content.indexOf(pose)),
+//       );
+//     }
+//   }
 
-  return filteredList;
-}
+//   return filteredList;
+// }
 
-function nearCommandPointToT(tClean, cmdPtList) {
-  for (let i = 0; i < cmdPtList.length; i++) {
-    if (-0.2 < ezNumDist(tClean, cmdPtList[i].t.t) < 0.2) {
-      return {i};
-    }
-  }
-  return false;
-}
+// function nearCommandPointToT(tClean, cmdPtList) {
+//   for (let i = 0; i < cmdPtList.length; i++) {
+//     if (-0.2 < ezNumDist(tClean, cmdPtList[i].t.t) < 0.2) {
+//       return {i};
+//     }
+//   }
+//   return false;
+// }
 
 // Command Point Stuff: (_COM)
 

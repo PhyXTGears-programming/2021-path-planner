@@ -28,6 +28,14 @@ export const CommandPoint = (t, commands, moveCondition) => ({
     }
 });
 
+export const FlatCommandPoint = (t, xMeters, yMeters, cmds, moveCondition) => ({
+    t,
+    xMeters,
+    yMeters,
+    cmds,
+    moveCondition
+});
+
 const CommandPointListPrototype = {
 
     newCommandPoint (t, commands = []) {
