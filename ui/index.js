@@ -39,6 +39,8 @@ import { accelerate } from './js/robot/distanceToVelocity.js';
 
 import { ActionNode, CommandPointList, CommandPoint, FlatCommandPoint } from './js/commandpoint.js';
 
+import { CommandClump } from './js/commandclump.js';
+
 // JSDoc types
 
 /** @external {object} Canvas */
@@ -166,6 +168,8 @@ let inputState = {
   isMouseMiddleDown: false,
 };
 
+let commandClumpList = [];
+
 // Example:
 // commandImages.set('lowerIntake', './images/temp-lower.png')
 const commandImages = new Map();
@@ -279,30 +283,72 @@ function updateRobotCommands() {
 
   commandImages.clear();
 
-  // Add robot commands from season config.
-  for (const cmd of seasonConfig.config.robot.commands) {
-    const imgSrc = (cmd.image)
-      ? `./season/${seasonConfig.config.year}/${cmd.image}`
-      : './images/default-command-icon.png';
+  // [][][][][]    Add robot commands from season config:  [][][][][]
 
-    // Update command list GUI.
-    const imgElem = document.createElement('img');
-    imgElem.src = imgSrc;
-    imgElem.draggable = true;
-    imgElem.id = cmd.name;
-    imgElem.title = cmd.name;
-    imgElem.classList.add('o-action-command-icon');
+  // make clump list:
+  for (let cmdClump of seasonConfig.config.robot.commandClumps) {
+    const clumpElem = document.createElement('div');
+    const titleElem = document.createElement('p');
+    const title = cmdClump.name;
 
-    const itemElem = document.createElement('li');
-    itemElem.flexWrap = "wrap";
-    itemElem.appendChild(imgElem);
+    titleElem.textContent = title;
+    titleElem.style.border = "thick solid #000000";
+    titleElem.style.backgroundColor = "#408040";
+    titleElem.style.cursor = "n-resize";
 
-    listElem.appendChild(itemElem);
+    clumpElem.style.display = 'flex';
+    clumpElem.style.flexDirection = 'row';
+    clumpElem.style.width = 100;
+    clumpElem.style.flexWrap = 'wrap';
 
-    // Add command images to image index.
-    commandImages.set(cmd.name, imgSrc);
+    clumpElem.id = `clump${title}`;
+
+    let cmds = cmdClump.commands;
+
+    commandClumpList.push(CommandClump(title, titleElem, clumpElem, cmds));
+  }
+
+  // bring forth cmds from clump
+  for (let clump of commandClumpList) {
+    for (const cmd of clump.cmds) {
+      const imgSrc = (cmd.image)
+        ? `./season/${seasonConfig.config.year}/${cmd.image}`
+        : './images/default-command-icon.png';
+
+      // Update command list GUI.
+      const imgElem = document.createElement('img');
+      imgElem.src = imgSrc;
+      imgElem.draggable = true;
+      imgElem.id = cmd.name;
+      imgElem.title = cmd.name;
+      imgElem.classList.add('o-action-command-icon');
+
+      const itemElem = document.createElement('li');
+      itemElem.flexWrap = "wrap";
+      itemElem.appendChild(imgElem);
+
+      clump.elem.appendChild(itemElem);
+
+      // Add command images to image index.
+      commandImages.set(cmd.name, imgSrc);
+    }
+    listElem.appendChild(clump.titleElem);
+    listElem.appendChild(clump.elem);
+
+    clump.titleElem.addEventListener('click', () => {
+      if (clump.visible) {
+        clump.visible = false;
+        clump.elem.style.display = 'none';
+        clump.titleElem.style.cursor = "s-resize";
+      } else {
+        clump.visible = true;
+        clump.elem.style.display = 'flex';
+        clump.titleElem.style.cursor = "n-resize";
+      }
+    });
   }
 }
+
 
 // Load all images in parallel, wait for all images to finish loading,
 // then activate onDone function.
@@ -1632,7 +1678,14 @@ document.addEventListener('dragstart', ev => {
 
     // Add robot commands to drag targets.
 
-    dragTargets = dragTargets.concat(seasonConfig.config.robot.commands.map(c => c.name));
+    let commandOptionsList = [];
+
+    for (let i = 0; i < commandClumpList.length; i++) {
+      for (let cmd of commandClumpList[i].cmds) {
+        commandOptionsList.push(cmd);
+      }
+    }
+    dragTargets = dragTargets.concat(commandOptionsList.map(c => c.name));
   }
 
   if (dragTargets.includes(ev.target.id)) {
@@ -1681,9 +1734,7 @@ function drawAllNodes(rootSomething) {
 
   const childList = Array.prototype.slice.call(rootElement.children, 0);
 
-  for (let child of childList) {
-    rootElement.removeChild(child);
-  }
+  clearAllNodes();
 
   if (null === rootSomething) {
     // No root node provided. Leave command ui empty.
@@ -1851,6 +1902,7 @@ function insertNode(child, parent, index) {
 // }
 
 document.addEventListener('drop', ev => {
+  note("Trigger drop");
 
   const targetPoseCommands = actionedCommandPoint.commands;
   let target = ev.target;
@@ -1887,8 +1939,8 @@ document.addEventListener('drop', ev => {
         insertNode(createNode('command', commandName), targetNode, insertIndex);
     }
   }
-  // console.log("Updated Data structure: ", targetPoseCommands, targetNode);
   drawAllNodes(targetPoseCommands);
+  console.log("Updated Data structure: ", popsicle(targetPoseCommands), popsicle(targetNode));
 });
 
 // Hi welcome to pain
@@ -2710,4 +2762,4 @@ function note(x) {
                  █            ██           ██
                                 ██          ██
                                  █           █
-  */
+*/
