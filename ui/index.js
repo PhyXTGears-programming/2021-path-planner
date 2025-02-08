@@ -465,22 +465,22 @@ function onFieldLoaded(canvas) {
 
         let potentialNearCmdPt = cmdPtObjNear(Point(x, y));
 
-      if (potentialNearCmdPt !== null) {
+        if (potentialNearCmdPt !== null) {
 
-        actionedCommandPoint = potentialNearCmdPt;
-        drawAllNodes(actionedCommandPoint.commands);
+          actionedCommandPoint = potentialNearCmdPt;
+          drawAllNodes(actionedCommandPoint.commands);
 
-      } else {
-        let chosenCmdT = poseList.findTNearPoint(Point(x, y));
+        } else {
+          let chosenCmdT = poseList.findTNearPoint(Point(x, y));
 
-      if (!inputState.isShiftDown) {
-        chosenCmdT = tSnappedToPoses(chosenCmdT);
-      }
+          if (!inputState.isShiftDown) {
+            chosenCmdT = tSnappedToPoses(chosenCmdT);
+          }
 
-      commandPointList.newCommandPoint(chosenCmdT);
-      }
+          commandPointList.newCommandPoint(chosenCmdT);
+        }
 
-      break;
+        break;
 
       case Tool.ROTATION:
         if (rotationState == RotationState.NEW) {
@@ -621,11 +621,11 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
 
-      actionedCommandPoint = cmdPtObjNear(mousePt);
+        actionedCommandPoint = cmdPtObjNear(mousePt);
 
-      if(actionedCommandPoint !== null) {
-        break;
-      }
+        if(actionedCommandPoint !== null) {
+          break;
+        }
 
         if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
