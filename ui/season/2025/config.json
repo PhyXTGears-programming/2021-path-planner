@@ -155,5 +155,15 @@
         ]
       }
     ]
-  }
+  },
+  "commandSections": [
+    {
+      "id": "scoring",
+      "title": "Scoring"
+    },
+    {
+      "id": "april-tags",
+      "title": "April Tags"
+    }
+  ]
 }

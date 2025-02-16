@@ -292,6 +292,7 @@ function updateRobotCommands() {
     const title = cmdClump.name;
 
     titleElem.textContent = title;
+
     titleElem.style.border = "thick solid #000000";
     titleElem.style.backgroundColor = "#408040";
     titleElem.style.cursor = "n-resize";
@@ -1689,9 +1690,17 @@ document.addEventListener('dragstart', ev => {
   }
 
   if (dragTargets.includes(ev.target.id)) {
+    console.log("drag start: include by target id", ev.target.id);
     ev.dataTransfer.setData('text/plain', ev.target.id);
+  } else if (dragTargets.includes(ev.target.dataset.nodeName)) {
+    console.log("drag start: include by data node name", ev.target.dataset.nodeName);
+    ev.dataTransfer.setData('text/plain', ev.target.dataset.nodeName);
   }
 
+  // NodeId located differently on commands in work area; attach ID to datatransfer
+  if (ev.target.classList.contains("o-command")) {
+    ev.dataTransfer.setData('text/plain', ev.toElement.dataset.nodeId);
+  }
 });
 
 document.addEventListener('dragend', ev => {
@@ -1713,11 +1722,28 @@ document.addEventListener('dragenter', ev => {
   }
 });
 
+// document.getElementById("command-trashbin").addEventListener('dragover', ev => {
+//   ev.preventDefault();
+// });
+ // frog  (._.)
+
 document.addEventListener('dragover', ev => {
   if (ev.target.classList.contains('action-drop-zone')) {
     ev.preventDefault();
-  } // frog  (._.)
+  }
 });
+
+// document.addEventListener('drop', ev => {
+//   if (ev.target.id == "command-trashbin") {
+//     console.log("Dropped into bin: ", ev);
+//     ev.preventDefault();
+//   }
+// });
+
+// document.getElementById("command-trashbin").addEventListener('drop', ev => {
+//   ev.preventDefault();
+//   console.log("Dragged into bin: ", ev);
+// });
 
 function clearAllNodes() {
   const rootElement = document.getElementById("c-action-work-area__sequence");
@@ -1855,6 +1881,7 @@ function drawNodes(node) {
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
     nodeElem.dataset.nodeKind = node.kind;
+    nodeElem.draggable = true;
 
     return nodeElem;
   }
@@ -1921,9 +1948,21 @@ document.addEventListener('drop', ev => {
     }
 
     const commandName = ev.dataTransfer.getData('text/plain');
-    // console.log("Target nodeId: ", target.dataset.nodeId, target);
 
     targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
+
+    if (ev.target.id == "command-trashbin") {
+      const comId = commandName; // ID and Name stored in same field; using ID here.
+
+      runCmdRemoval(actionedCommandPoint.commands, comId);
+
+      drawAllNodes(targetPoseCommands);
+      return;
+    }
+
+    // BOOKMARK
+
+    drawAllNodes(targetPoseCommands);
 
     switch (commandName) {
       case 'sequence':
@@ -1939,8 +1978,9 @@ document.addEventListener('drop', ev => {
         insertNode(createNode('command', commandName), targetNode, insertIndex);
     }
   }
+
   drawAllNodes(targetPoseCommands);
-  console.log("Updated Data structure: ", popsicle(targetPoseCommands), popsicle(targetNode));
+  return;
 });
 
 // Hi welcome to pain
@@ -2712,6 +2752,19 @@ function cmdPtObjNear(pt) {
   return null;
 }
 
+function runCmdRemoval(list, id) {
+  for (let cmd of list.children) {
+    if (cmd.nodeId == id) {
+      list.children.splice(list.children.indexOf(cmd), 1);
+      return;
+    }
+    if (cmd.kind == 'group') {
+      note("Checking into group for removal site");
+      runCmdRemoval(cmd, id);
+    }
+  }
+}
+
 function moveDraggingCmdPtIfApplicable(t) {
   if (actionedCommandPoint !== null && t.t > 0) {
     commandPointList.moveCommandPointToT(actionedCommandPoint, t);
@@ -2737,8 +2790,12 @@ function popsicle(data) { // temporary function for debugging. Just deep clones.
   return JSON.parse(JSON.stringify(data));
 }
 
-function note(x) {
-  console.log(x);
+function note(x, y = ",") {
+  console.log(x, y);
+}
+
+function note2(x, y = ",", z = ",", a = ",") {
+  console.log(x, y, z, a);
 }
 
 // The Following Is A Secret Frog:
