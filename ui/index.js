@@ -1689,7 +1689,7 @@ document.addEventListener('dragstart', ev => {
     dragTargets = dragTargets.concat(commandOptionsList.map(c => c.name));
   }
 
-  if (dragTargets.includes(ev.target.id)) {
+  if (dragTargets.includes(ev.target.id)) { // BOOKMARK
     console.log("drag start: include by target id", ev.target.id);
     ev.dataTransfer.setData('text/plain', ev.target.id);
   } else if (dragTargets.includes(ev.target.dataset.nodeName)) {
@@ -1699,6 +1699,7 @@ document.addEventListener('dragstart', ev => {
 
   // NodeId located differently on commands in work area; attach ID to datatransfer
   if (ev.target.classList.contains("o-command")) {
+    ev.dataTransfer.setData('nameText', ev.toElement.dataset.nodeName);
     ev.dataTransfer.setData('text/plain', ev.toElement.dataset.nodeId);
   }
 });
@@ -1929,7 +1930,6 @@ function insertNode(child, parent, index) {
 // }
 
 document.addEventListener('drop', ev => {
-  note("Trigger drop");
 
   const targetPoseCommands = actionedCommandPoint.commands;
   let target = ev.target;
@@ -1947,7 +1947,7 @@ document.addEventListener('drop', ev => {
       target = target.parentElement;
     }
 
-    const commandName = ev.dataTransfer.getData('text/plain');
+    let commandName = ev.dataTransfer.getData('text/plain');
 
     targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
 
@@ -1959,8 +1959,6 @@ document.addEventListener('drop', ev => {
       drawAllNodes(targetPoseCommands);
       return;
     }
-
-    // BOOKMARK
 
     drawAllNodes(targetPoseCommands);
 
@@ -1975,7 +1973,14 @@ document.addEventListener('drop', ev => {
         }
         break;
       default:
-        insertNode(createNode('command', commandName), targetNode, insertIndex);
+        let movingCommandName = ev.dataTransfer.getData('nameText');
+
+        if (movingCommandName != "") {
+          insertNode(createNode('command', movingCommandName), targetNode, insertIndex);
+          runCmdRemoval(actionedCommandPoint.commands, commandName);
+        } else {
+          insertNode(createNode('command', commandName), targetNode, insertIndex);
+        }
     }
   }
 
@@ -2759,7 +2764,6 @@ function runCmdRemoval(list, id) {
       return;
     }
     if (cmd.kind == 'group') {
-      note("Checking into group for removal site");
       runCmdRemoval(cmd, id);
     }
   }
