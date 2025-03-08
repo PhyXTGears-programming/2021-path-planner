@@ -43,115 +43,181 @@
         "commands": [
 
           {
-            "name": "alignToTag1",
-            "image": "aprilTag01.png",
+            "name": "alignToTag1or13Left",
+            "image": "./april-tags/align-left-1.13.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag2",
-            "image": "aprilTag02.png",
+            "name": "alignToTag1or13Center",
+            "image": "./april-tags/align-center-1.13.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag3",
-            "image": "aprilTag03.png",
+            "name": "alignToTag1or13Right",
+            "image": "./april-tags/align-right-1.13.png",
+            "tags": ["a", "b"]
+          },
+
+          {
+            "name": "alignToTag2or12Left",
+            "image": "./april-tags/align-left-2.12.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag4",
-            "image": "aprilTag04.png",
+            "name": "alignToTag2or12Center",
+            "image": "./april-tags/align-center-2.12.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag5",
-            "image": "aprilTag05.png",
+            "name": "alignToTag2or12Right",
+            "image": "./april-tags/align-right-2.12.png",
+            "tags": ["a", "b"]
+          },
+          
+          {
+            "name": "alignToTag3or16Left",
+            "image": "./april-tags/align-left-3.16.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag6",
-            "image": "aprilTag06.png",
+            "name": "alignToTag3or16Center",
+            "image": "./april-tags/align-center-3.16.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag7",
-            "image": "aprilTag07.png",
+            "name": "alignToTag3or16Right",
+            "image": "./april-tags/align-right-3.16.png",
+            "tags": ["a", "b"]
+          },
+
+          {
+            "name": "alignToTag4or15Left",
+            "image": "./april-tags/align-left-4.15.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag8",
-            "image": "aprilTag08.png",
+            "name": "alignToTag4or15Center",
+            "image": "./april-tags/align-center-4.15.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag9",
-            "image": "aprilTag09.png",
+            "name": "alignToTag4or15Right",
+            "image": "./april-tags/align-right-4.15.png",
             "tags": ["a", "b"]
-            },
+          },
+
           {
-            "name": "alignToTag10",
-            "image": "aprilTag10.png",
+            "name": "alignToTag5or14Left",
+            "image": "./april-tags/align-left-5.14.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag11",
-            "image": "aprilTag11.png",
+            "name": "alignToTag5or14Center",
+            "image": "./april-tags/align-center-5.14.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag12",
-            "image": "aprilTag12.png",
+            "name": "alignToTag5or14Right",
+            "image": "./april-tags/align-right-5.14.png",
+            "tags": ["a", "b"]
+          },
+
+          {
+            "name": "alignToTag6or19Left",
+            "image": "./april-tags/align-left-6.19.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag13",
-            "image": "aprilTag13.png",
+            "name": "alignToTag6or19Center",
+            "image": "./april-tags/align-center-6.19.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag14",
-            "image": "aprilTag14.png",
+            "name": "alignToTag6or19Right",
+            "image": "./april-tags/align-right-6.19.png",
+            "tags": ["a", "b"]
+          },
+
+          {
+            "name": "alignToTag7or18Left",
+            "image": "./april-tags/align-left-7.18.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag15",
-            "image": "aprilTag15.png",
+            "name": "alignToTag7or18Center",
+            "image": "./april-tags/align-center-7.18.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag16",
-            "image": "aprilTag16.png",
+            "name": "alignToTag7or18Right",
+            "image": "./april-tags/align-right-7.18.png",
+            "tags": ["a", "b"]
+          },
+
+          {
+            "name": "alignToTag8or17Left",
+            "image": "./april-tags/align-left-8.17.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag17",
-            "image": "aprilTag17.png",
+            "name": "alignToTag8or17Center",
+            "image": "./april-tags/align-center-8.17.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag18",
-            "image": "aprilTag18.png",
+            "name": "alignToTag8or17Right",
+            "image": "./april-tags/align-right-8.17.png",
+            "tags": ["a", "b"]
+          },
+
+          {
+            "name": "alignToTag9or22Left",
+            "image": "./april-tags/align-left-9.22.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag19",
-            "image": "aprilTag19.png",
+            "name": "alignToTag9or22Center",
+            "image": "./april-tags/align-center-9.22.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag20",
-            "image": "aprilTag20.png",
+            "name": "alignToTag9or22Right",
+            "image": "./april-tags/align-right-9.22.png",
+            "tags": ["a", "b"]
+          },
+
+          {
+            "name": "alignToTag10or21Left",
+            "image": "./april-tags/align-left-10.21.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag21",
-            "image": "aprilTag21.png",
+            "name": "alignToTag10or21Center",
+            "image": "./april-tags/align-center-10.21.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "alignToTag22",
-            "image": "aprilTag22.png",
+            "name": "alignToTag10or21Right",
+            "image": "./april-tags/align-right-10.21.png",
+            "tags": ["a", "b"]
+          },
+
+          {
+            "name": "alignToTag11or20Left",
+            "image": "./april-tags/align-left-11.20.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "alignToTag11or20Center",
+            "image": "./april-tags/align-center-11.20.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "alignToTag11or20Right",
+            "image": "./april-tags/align-right-11.20.png",
             "tags": ["a", "b"]
           }
+
         ]
       }
     ]
