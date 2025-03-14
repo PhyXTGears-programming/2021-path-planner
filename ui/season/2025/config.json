@@ -17,23 +17,68 @@
         "name": "Scoring",
         "commands": [
           {
-            "name": "scoreTrough",
-            "image": "score-1.png",
-            "tags": ["a", "b"]
-          },
-          {
-            "name": "score2",
+            "name": "elevatorToL2",
             "image": "score-2.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "score3",
+            "name": "elevatorToL3",
             "image": "score-3.png",
             "tags": ["a", "b"]
           },
           {
-            "name": "score4",
+            "name": "elevatorToL4",
             "image": "score-4.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "holdElevator",
+            "image": "hold-elevator.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "scoreCoral",
+            "image": "score-coral.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "resetPosForFeeder",
+            "image": "reset-for-feeder.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "tiltCoral",
+            "image": "default-command-icon.png",
+            "tags": ["a", "b"]
+          }
+        ]
+      },
+      {
+        "name": "Wait",
+        "commands": [
+          {
+            "name": "wait1sec",
+            "image": "wait-1.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "wait2sec",
+            "image": "wait-2.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "wait3sec",
+            "image": "wait-3.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "wait4sec",
+            "image": "wait-4.png",
+            "tags": ["a", "b"]
+          },
+          {
+            "name": "wait5sec",
+            "image": "wait-5.png",
             "tags": ["a", "b"]
           }
         ]
@@ -226,6 +271,10 @@
     {
       "id": "scoring",
       "title": "Scoring"
+    },
+    {
+      "id": "wait",
+      "title": "Wait"
     },
     {
       "id": "april-tags",
