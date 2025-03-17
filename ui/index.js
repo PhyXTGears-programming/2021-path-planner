@@ -1671,29 +1671,14 @@ function findNode(passedNode, idTarget) {
 }
 // _COM
 document.addEventListener('dragstart', ev => {
-  let dragSources = [
-    "sequence",
-    "parallel",
-    "race",
-  ];
+  const dragSource = ev.target.dataset.dragSource;
 
-  if (seasonConfig.isLoaded()) {
+  switch (dragSource) {
+    case 'command-palette':
+      console.log("drag start: include by data node name", ev.target.dataset.nodeName);
+      ev.dataTransfer.setData('text/plain', ev.target.dataset.nodeName);
 
-    // Add robot commands to drag sources.
-
-    let commandOptionsList = [];
-
-    for (let i = 0; i < commandClumpList.length; i++) {
-      for (let cmd of commandClumpList[i].cmds) {
-        commandOptionsList.push(cmd);
-      }
-    }
-    dragSources = dragSources.concat(commandOptionsList.map(c => c.name));
-  }
-
-  if (dragSources.includes(ev.target.dataset.nodeName)) {
-    console.log("drag start: include by data node name", ev.target.dataset.nodeName);
-    ev.dataTransfer.setData('text/plain', ev.target.dataset.nodeName);
+      break;
   }
 });
 
