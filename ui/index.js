@@ -143,7 +143,7 @@ let hoveredRotation = null;
 let rotationState = null;
 let activeRotation = null;
 
-let actionedCommandPoint = null;
+let selectedCommandPoint = null;
 let hoveredCommandPoint = null;
 
 let selectState = SelectState.NONE;
@@ -261,8 +261,8 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(() => {
       onFieldLoaded(canvas);
 
-      if (actionedCommandPoint) {
-        drawAllNodes(actionedCommandPoint.commands);
+      if (selectedCommandPoint) {
+        drawAllNodes(selectedCommandPoint.commands);
       }
     })
     .catch(err => console.error('dom content loaded', err));
@@ -468,8 +468,8 @@ function onFieldLoaded(canvas) {
 
         if (potentialNearCmdPt !== null) {
 
-          actionedCommandPoint = potentialNearCmdPt;
-          drawAllNodes(actionedCommandPoint.commands);
+          selectedCommandPoint = potentialNearCmdPt;
+          drawAllNodes(selectedCommandPoint.commands);
 
         } else {
           let chosenCmdT = poseList.findTNearPoint(Point(x, y));
@@ -622,9 +622,9 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
 
-        actionedCommandPoint = cmdPtObjNear(mousePt);
+        selectedCommandPoint = cmdPtObjNear(mousePt);
 
-        if(actionedCommandPoint !== null) {
+        if(selectedCommandPoint !== null) {
           break;
         }
 
@@ -702,7 +702,7 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
 
-        actionedCommandPoint = null;
+        selectedCommandPoint = null;
 
         switch (selectState) {
           case SelectState.MOVE_POSE:
@@ -1774,7 +1774,7 @@ function drawAllNodes(rootSomething) {
 
   const moveConditionContinueClarification = document.createElement("p");
 
-  let moveCondition = actionedCommandPoint.moveCondition;
+  let moveCondition = selectedCommandPoint.moveCondition;
 
   if (moveCondition == "halt") {
     moveConditionContinueClarification.textContent = "Go";
@@ -1785,8 +1785,8 @@ function drawAllNodes(rootSomething) {
   moveConditionSwitch.classList.add('o-command-moveswitch');
 
   moveConditionSwitch.addEventListener('click', () => {
-    actionedCommandPoint.toggleMoveCondition();
-    drawAllNodes(actionedCommandPoint.commands);
+    selectedCommandPoint.toggleMoveCondition();
+    drawAllNodes(selectedCommandPoint.commands);
   });
 
   if (moveCondition === "go") {
@@ -1933,7 +1933,7 @@ function insertNode(child, parent, index) {
 
 document.addEventListener('drop', ev => {
 
-  const targetPoseCommands = actionedCommandPoint.commands;
+  const targetPoseCommands = selectedCommandPoint.commands;
   let target = ev.target;
 
   if (spacerTarget) {
@@ -1956,7 +1956,7 @@ document.addEventListener('drop', ev => {
     if (ev.target.id == "command-trashbin") {
       const comId = commandName; // ID and Name stored in same field; using ID here.
 
-      runCmdRemoval(actionedCommandPoint.commands, comId);
+      runCmdRemoval(selectedCommandPoint.commands, comId);
 
       drawAllNodes(targetPoseCommands);
       return;
@@ -1979,7 +1979,7 @@ document.addEventListener('drop', ev => {
 
         if (movingCommandName != "") {
           insertNode(createNode('command', movingCommandName), targetNode, insertIndex);
-          runCmdRemoval(actionedCommandPoint.commands, commandName);
+          runCmdRemoval(selectedCommandPoint.commands, commandName);
         } else {
           insertNode(createNode('command', commandName), targetNode, insertIndex);
         }
@@ -2772,8 +2772,8 @@ function runCmdRemoval(list, id) {
 }
 
 function moveDraggingCmdPtIfApplicable(t) {
-  if (actionedCommandPoint !== null && t.t > 0) {
-    commandPointList.moveCommandPointToT(actionedCommandPoint, t);
+  if (selectedCommandPoint !== null && t.t > 0) {
+    commandPointList.moveCommandPointToT(selectedCommandPoint, t);
 
   }
 }
