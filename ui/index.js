@@ -41,6 +41,8 @@ import { ActionNode, CommandPointList, CommandPoint, FlatCommandPoint } from './
 
 import { CommandClump } from './js/commandclump.js';
 
+import * as dnd from './js/drag-n-drop.js';
+
 // JSDoc types
 
 /** @external {object} Canvas */
@@ -1675,8 +1677,17 @@ document.addEventListener('dragstart', ev => {
 
   switch (dragSource) {
     case 'command-palette':
-      console.log("drag start: include by data node name", ev.target.dataset.nodeName);
-      ev.dataTransfer.setData('text/plain', ev.target.dataset.nodeName);
+      if ('commandName' in ev.target.dataset) {
+        const commandName = ev.target.dataset.commandName;
+
+        console.log("drag start: from command palette with command name", commandName);
+
+        const source = dnd.CommandPaletteSource(commandName);
+
+        // Data source info requires a data structure, but drag-n-drop only
+        // supports strings or files, so we'll use json.
+        ev.dataTransfer.setData('application/json', JSON.stringify(source));
+      }
 
       break;
   }
@@ -1911,6 +1922,16 @@ function insertNode(child, parent, index) {
 
 document.addEventListener('drop', ev => {
 
+  let dragSource = JSON.parse(ev.dataTransfer.getData('application/json'));
+
+  switch (dragSource.type) {
+    case dnd.SourceType.CommandPalette:
+      dropFromCommandPalette(dragSource, ev);
+      break;
+  }
+});
+
+function dropFromCommandPalette(dragSource, ev) {
   const targetPoseCommands = selectedCommandPoint.commands;
   let target = ev.target;
 
@@ -1927,20 +1948,9 @@ document.addEventListener('drop', ev => {
       target = target.parentElement;
     }
 
-    let commandName = ev.dataTransfer.getData('text/plain');
+    const { commandName } = dragSource.data;
 
     targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
-
-    if (ev.target.id == "command-trashbin") {
-      const comId = commandName; // ID and Name stored in same field; using ID here.
-
-      runCmdRemoval(selectedCommandPoint.commands, comId);
-
-      drawAllNodes(targetPoseCommands);
-      return;
-    }
-
-    drawAllNodes(targetPoseCommands);
 
     switch (commandName) {
       case 'sequence':
@@ -1953,20 +1963,12 @@ document.addEventListener('drop', ev => {
         }
         break;
       default:
-        let movingCommandName = ev.dataTransfer.getData('nameText');
-
-        if (movingCommandName != "") {
-          insertNode(createNode('command', movingCommandName), targetNode, insertIndex);
-          runCmdRemoval(selectedCommandPoint.commands, commandName);
-        } else {
-          insertNode(createNode('command', commandName), targetNode, insertIndex);
-        }
+        insertNode(createNode('command', commandName), targetNode, insertIndex);
     }
-  }
 
-  drawAllNodes(targetPoseCommands);
-  return;
-});
+    drawAllNodes(targetPoseCommands);
+  }
+}
 
 // Hi welcome to pain
 
