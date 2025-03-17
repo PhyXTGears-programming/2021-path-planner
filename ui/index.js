@@ -1669,7 +1669,7 @@ function findNode(passedNode, idTarget) {
 }
 // _COM
 document.addEventListener('dragstart', ev => {
-  let dragTargets = [
+  let dragSources = [
     "sequence",
     "parallel",
     "race",
@@ -1677,7 +1677,7 @@ document.addEventListener('dragstart', ev => {
 
   if (seasonConfig.isLoaded()) {
 
-    // Add robot commands to drag targets.
+    // Add robot commands to drag sources.
 
     let commandOptionsList = [];
 
@@ -1686,13 +1686,13 @@ document.addEventListener('dragstart', ev => {
         commandOptionsList.push(cmd);
       }
     }
-    dragTargets = dragTargets.concat(commandOptionsList.map(c => c.name));
+    dragSources = dragSources.concat(commandOptionsList.map(c => c.name));
   }
 
-  if (dragTargets.includes(ev.target.id)) { // BOOKMARK
+  if (dragSources.includes(ev.target.id)) { // BOOKMARK
     console.log("drag start: include by target id", ev.target.id);
     ev.dataTransfer.setData('text/plain', ev.target.id);
-  } else if (dragTargets.includes(ev.target.dataset.nodeName)) {
+  } else if (dragSources.includes(ev.target.dataset.nodeName)) {
     console.log("drag start: include by data node name", ev.target.dataset.nodeName);
     ev.dataTransfer.setData('text/plain', ev.target.dataset.nodeName);
   }
@@ -1710,6 +1710,8 @@ document.addEventListener('dragend', ev => {
 
 document.addEventListener('dragenter', ev => {
   ev.preventDefault();
+
+  // Drag has entered a drop zone.  Update UI to indicate user may drop here.
 
   if (ev.target.classList.contains('action-drop-zone')) {
     if (spacerTarget) {
