@@ -153,7 +153,6 @@ let selectState = SelectState.NONE;
 let importFileName = '';
 let saveFileName = '';
 
-let targetNode = null;
 let spacerTarget = null;
 
 const ORIGIN = Point(0, 0);
@@ -1959,7 +1958,7 @@ function uiCommandEditorAddCommand(dragSource, ev) {
 
   const { commandName } = dragSource.data;
 
-  targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
+  const targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
 
   switch (commandName) {
     case 'sequence':
