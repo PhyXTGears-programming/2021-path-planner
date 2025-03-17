@@ -1842,6 +1842,7 @@ function drawNodes(node) {
       spacerElem.classList.add("action-drop-zone");
       spacerElem.classList.add("o-command-group__spacer");
       spacerElem.dataset.insertIndex = insertIndex;
+      spacerElem.dataset.dropTarget = 'command-point';
 
       return spacerElem;
     }
@@ -1932,39 +1933,50 @@ document.addEventListener('drop', ev => {
 });
 
 function dropFromCommandPalette(dragSource, ev) {
+  // Where did we drop?
+
+  switch (ev.target.dataset.dropTarget) {
+    case 'command-point':
+      if (spacerTarget) {
+        spacerTarget.classList.remove("is-active-dropzone");
+      }
+
+      uiCommandEditorAddCommand(dragSource, ev);
+      break;
+  }
+}
+
+function uiCommandEditorAddCommand(dragSource, ev) {
   const targetPoseCommands = selectedCommandPoint.commands;
   let target = ev.target;
 
-  if (spacerTarget) {
-    spacerTarget.classList.remove("is-active-dropzone");
+  let insertIndex = 0;
+
+  if (target.classList.contains('o-command-group__spacer')) {
+    insertIndex = target.dataset.insertIndex;
+    target = target.parentElement;
   }
 
-  if (ev.target.classList.contains('action-drop-zone')) {
+  const { commandName } = dragSource.data;
 
-    let insertIndex = 0;
+  targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
 
-    if (target.classList.contains('o-command-group__spacer')) {
-      insertIndex = target.dataset.insertIndex;
-      target = target.parentElement;
-    }
+  switch (commandName) {
+    case 'sequence':
+    case 'race':
+    case 'parallel':
+      if (targetNode === null) {
+        console.error("Unable to find target node", targetNode);
+      } else {
+        insertNode(createNode('group', commandName), targetNode, insertIndex);
+      }
+      break;
+    default:
+      insertNode(createNode('command', commandName), targetNode, insertIndex);
+  }
 
-    const { commandName } = dragSource.data;
-
-    targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
-
-    switch (commandName) {
-      case 'sequence':
-      case 'race':
-      case 'parallel':
-        if (targetNode === null) {
-          console.error("Unable to find target node", targetNode);
-        } else {
-          insertNode(createNode('group', commandName), targetNode, insertIndex);
-        }
-        break;
-      default:
-        insertNode(createNode('command', commandName), targetNode, insertIndex);
-    }
+  drawAllNodes(targetPoseCommands);
+}
 
     drawAllNodes(targetPoseCommands);
   }
