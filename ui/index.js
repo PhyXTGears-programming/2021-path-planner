@@ -1889,6 +1889,21 @@ function insertNode(child, parent, index) {
     .concat(parent.children.slice(index));
 }
 
+function removeNode(parent, id) {
+  for (let cmd of parent.children) {
+    if (cmd.nodeId == id) {
+      parent.children.splice(parent.children.indexOf(cmd), 1);
+      return;
+    }
+
+    // Search groups for target node.
+    if (cmd.kind == 'group') {
+      removeNode(cmd, id);
+    }
+  }
+}
+
+
 //createNode(initialNode, document.getElementById('c-action-work-area__sequence'))
 
 // function addCommandNode(commandGroupName, target, isGroup) {
@@ -2748,18 +2763,6 @@ function cmdPtObjNear(pt) {
     }
   }
   return null;
-}
-
-function runCmdRemoval(list, id) {
-  for (let cmd of list.children) {
-    if (cmd.nodeId == id) {
-      list.children.splice(list.children.indexOf(cmd), 1);
-      return;
-    }
-    if (cmd.kind == 'group') {
-      runCmdRemoval(cmd, id);
-    }
-  }
 }
 
 function moveDraggingCmdPtIfApplicable(t) {
