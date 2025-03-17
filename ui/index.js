@@ -322,6 +322,8 @@ function updateRobotCommands() {
       imgElem.draggable = true;
       imgElem.id = cmd.name;
       imgElem.title = cmd.name;
+      imgElem.dataset.dragSource = 'command-palette';
+      imgElem.dataset.commandName = cmd.name;
       imgElem.classList.add('o-action-command-icon');
 
       const itemElem = document.createElement('li');
@@ -1689,18 +1691,9 @@ document.addEventListener('dragstart', ev => {
     dragSources = dragSources.concat(commandOptionsList.map(c => c.name));
   }
 
-  if (dragSources.includes(ev.target.id)) { // BOOKMARK
-    console.log("drag start: include by target id", ev.target.id);
-    ev.dataTransfer.setData('text/plain', ev.target.id);
-  } else if (dragSources.includes(ev.target.dataset.nodeName)) {
+  if (dragSources.includes(ev.target.dataset.nodeName)) {
     console.log("drag start: include by data node name", ev.target.dataset.nodeName);
     ev.dataTransfer.setData('text/plain', ev.target.dataset.nodeName);
-  }
-
-  // NodeId located differently on commands in work area; attach ID to datatransfer
-  if (ev.target.classList.contains("o-command")) {
-    ev.dataTransfer.setData('nameText', ev.toElement.dataset.nodeName);
-    ev.dataTransfer.setData('text/plain', ev.toElement.dataset.nodeId);
   }
 });
 
