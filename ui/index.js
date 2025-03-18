@@ -2436,7 +2436,7 @@ function findIdealTIntegral(lowT, hiT, i = 0, maxTries = 20) {
 
   } else if ((ideal * 0.9) > sampleDistance) {
     // console.log("To reiterate up for precision from t ", midT, " as sample Dist (m) is ", sampleDistance);
-    return findIdealTIntegral(lowT, midT + ((midT - lowT) / 0.8), i, maxTries);
+    return findIdealTIntegral(lowT, midT + (midT - lowT), i, maxTries);
 
   } else if (sampleDistance > (ideal * 1.1)
   //|| !isTLowestOption(poseList.pointAt(lowT), midT)
