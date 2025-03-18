@@ -2419,35 +2419,30 @@ function drawHighlight(context, pos, fillColor = '2F2') {
 
   // }
 
-function findIdealTIntegral(lowT, hiT, i = 0, maxTries = 20) {
-  // console.log("reiterating with lowT, hiT:", lowT, hiT);
-  const ideal = 0.1;
+// @param tolerance - max distance from current pt before algo ends.
+// @param curT - used to compute cur
+function findNextTAtDistance(maxDistance, tolerance, curPt, loT, hiT, triesLeft = 20) {
+  const midT = (loT + hiT) / 2;
 
-  const midT = (lowT + hiT) / 2;
-  i++;
-
-  const lowPt = poseList.pointAt(lowT);
   const midPt = poseList.pointAt(midT);
-  const sampleDistance = pxToMeters(ezPtDistance2D(lowPt, midPt));
 
-  if (i >= maxTries) {
-    console.warn("While finding ideal t integral, had to iterate more than ", maxTries, " times. Returning the following t value despite it not being as accurate as wanted: ", midT);
+  const distance = pxToMeters(ezPtDistance2D(curPt, midPt));
+
+  if (0 == triesLeft) {
+    console.warn(
+      "While finding ideal t integral, exceeded tries. Returning the following t value despite it not being as accurate as wanted: ",
+      { t: midT, distance }
+    );
     return midT;
+  }
 
-  } else if ((ideal * 0.9) > sampleDistance) {
-    // console.log("To reiterate up for precision from t ", midT, " as sample Dist (m) is ", sampleDistance);
-    return findIdealTIntegral(lowT, midT + (midT - lowT), i, maxTries);
-
-  } else if (sampleDistance > (ideal * 1.1)
-  //|| !isTLowestOption(poseList.pointAt(lowT), midT)
-  // && midT > 0.05
-  ) {
-    // console.log("Going to reiterate from t ", midT, " as Sample Dist (m) is ", sampleDistance);
-    return findIdealTIntegral(lowT, midT, i, maxTries);
-
+  if (Math.abs(maxDistance - distance) < tolerance) {
+    console.log('next t within distance', { midT, distance });
+    return midT;
+  } else if (distance < maxDistance) {
+    return findNextTAtDistance(maxDistance, tolerance, curPt, midT, hiT, triesLeft - 1);
   } else {
-    return midT - lowT;
-
+    return findNextTAtDistance(maxDistance, tolerance, curPt, loT, midT, triesLeft - 1);
   }
 }
 
@@ -2478,52 +2473,64 @@ function makeAdvanceExport(poseList, rotations) {
 
 */
 
+const MAX_INTERPOLATE_DISTANCE = 0.05;  // 50 mm or ~2 in.
+const MAX_DISTANCE_TOLERANCE = 0.002;   //  2 mm or ~0.1 in
+
 function bakeAdvancedExport(poseList, rotations, commands) {//TODO
   let payload = {content: [], commands: commands};
 
   // Building initial interpolated list
-  let currentIntegral = 0;
-  let lowT = 0;
-  let endT = poseList.findTNearPoint(poseList.poses[poseList.poses.length - 1].point, 30).t;
+  let t = 0;
+  let curT = 0;
+  let endT = poseList.poses.length;
   // console.log("Low and End ts: ", lowT, endT);
 
   // console.log("Start and End pose pts for reference: ", poseList.poses[0].point, poseList.poses[poseList.poses.length - 1].point);
 
-  // Interpolating poses:
-  while (lowT + 1 <= endT) {
-    // console.log("Iterating with lowT and integral: ", lowT, currentIntegral);
-    currentIntegral = findIdealTIntegral(lowT, lowT + 1);
+  const startPt = poseList.pointAt(curT);
+  const endPt = poseList.pointAt(endT);
 
-    payload.content.push(ExportChunk(
-      "unbakedUnrotated",
-      null,
-      poseList.pointAt(lowT).x,
-      poseList.pointAt(lowT).y,
-      lowT,
-    ));
+  let curPt = startPt;
+  let distance = pxToMeters(ezPtDistance2D(curPt, endPt));
 
-    lowT = lowT + currentIntegral;
-  }
-
-  while (lowT <= endT - 0.05) {
-    // console.log("Late-stage iterating with lowT and integral: ", lowT, currentIntegral);
-    currentIntegral = findIdealTIntegral(lowT, endT, 0, 15);
-
-    payload.content.push(ExportChunk(
-      "unbakedUnrotated",
-      null,
-      poseList.pointAt(lowT).x,
-      poseList.pointAt(lowT).y,
-      lowT,
-    ));
-
-    lowT = lowT + currentIntegral;
-  }
   payload.content.push(ExportChunk(
     "unbakedUnrotated",
     null,
-    poseList.pointAt(endT).x,
-    poseList.pointAt(endT).y,
+    startPt.x,
+    startPt.y,
+    curT,
+  ));
+
+  // Interpolating poses:
+  while (distance > MAX_INTERPOLATE_DISTANCE + MAX_DISTANCE_TOLERANCE || (endT - curT) > 0.25) {
+    t = findNextTAtDistance(
+      MAX_INTERPOLATE_DISTANCE,
+      MAX_DISTANCE_TOLERANCE,
+      curPt,
+      curT,
+      Math.min(curT + 1, endT),
+    );
+
+    const pt = poseList.pointAt(t);
+
+    payload.content.push(ExportChunk(
+      "unbakedUnrotated",
+      null,
+      pt.x,
+      pt.y,
+      t,
+    ));
+
+    curT = t;
+    curPt = pt;
+    distance = pxToMeters(ezPtDistance2D(curPt, endPt));
+  }
+
+  payload.content.push(ExportChunk(
+    "unbakedUnrotated",
+    null,
+    endPt.x,
+    endPt.y,
     endT,
   ));
 
