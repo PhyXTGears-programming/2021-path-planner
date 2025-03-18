@@ -2024,6 +2024,11 @@ function dropFromCommandPoint(dragSource, ev) {
 }
 
 function uiCommandEditorRemoveCommand(dragSource) {
+  if (dragSource.data.nodeId == selectedCommandPoint.commands.nodeId) {
+    console.warn('cannot remove root command', dragSource.data.nodeId);
+    return;
+  }
+
   console.log('remove command', dragSource.data.nodeId);
 
   removeNode(selectedCommandPoint.commands, dragSource.data.nodeId);
