@@ -2010,7 +2010,7 @@ function uiCommandEditorAddCommand(dragSource, ev) {
       insertNode(createNode('command', commandName), targetNode, insertIndex);
   }
 
-  drawAllNodes(targetPoseCommands);
+  drawAllNodes(selectedCommandPoint.commands);
 }
 
 function dropFromCommandPoint(dragSource, ev) {
