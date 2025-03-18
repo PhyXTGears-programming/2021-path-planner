@@ -2017,10 +2017,47 @@ function dropFromCommandPoint(dragSource, ev) {
   // Where did we drop?
 
   switch (ev.target.dataset.dropTarget) {
+    case 'command-point':
+      uiCommandEditorMoveCommand(dragSource, ev);
+      break;
+
     case 'command-point-trashbin':
       uiCommandEditorRemoveCommand(dragSource);
       break;
   }
+}
+
+function uiCommandEditorMoveCommand(dragSource, ev) {
+  if (dragSource.data.nodeId == selectedCommandPoint.commands.nodeId) {
+    console.warn('cannot move root node', dragSource.data.nodeId);
+    return;
+  }
+
+  const { nodeId } = dragSource.data;
+
+  console.log('move command', nodeId);
+
+  const insertIndex = ev.target.dataset.insertIndex;
+  let target = ev.target;
+
+  if (target.classList.contains('o-command-group__spacer')) {
+    target = target.parentElement;
+  }
+
+  const sourceNode = findNode(selectedCommandPoint.commands, nodeId);
+  const targetParentNode = findNode(selectedCommandPoint.commands, target.dataset.nodeId);
+
+  // We can duplicate the sourceNode in the command tree first with a new node
+  // id, while the index is valid. The index becomes invalid after sourceNode
+  // is removed.
+  // A new id is used so when we remove the sourceNode, we don't accidently
+  // find the new node first.
+  insertNode(Object.assign({}, sourceNode, { nodeId: genId() }), targetParentNode, insertIndex);
+  removeNode(selectedCommandPoint.commands, nodeId);
+
+  console.log(selectedCommandPoint.commands, nodeId);
+
+  drawAllNodes(selectedCommandPoint.commands);
 }
 
 function uiCommandEditorRemoveCommand(dragSource) {
