@@ -6,7 +6,7 @@
   "robot": {
     "parameters": {
       "size": {
-        "xmeters": 0.762,
+        "xmeters": 0.813,
         "ymeters": 0.762
       },
       "maxVelocityMetersPerSecond": 1.5,
