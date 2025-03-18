@@ -390,8 +390,18 @@ function onFieldLoaded(canvas) {
     return;
   }
 
-  canvas.width = seasonConfig.config.image.width;
-  canvas.height = seasonConfig.config.image.height;
+  const resizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.contentRect && entry.target instanceof HTMLCanvasElement) {
+        entry.target.width = entry.contentRect.width;
+        entry.target.height = entry.contentRect.height;
+
+        redrawCanvas(entry.target, poseList);
+      }
+    }
+  });
+
+  resizeObserver.observe(canvas);
 
   redrawCanvas(canvas, poseList);
 
