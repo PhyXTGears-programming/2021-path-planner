@@ -1689,6 +1689,19 @@ document.addEventListener('dragstart', ev => {
       }
 
       break;
+
+    case 'command-point':
+      if ('nodeId' in ev.target.dataset) {
+        const nodeId = ev.target.dataset.nodeId;
+
+        console.log("drag start: from command point with node id", nodeId);
+
+        const source = dnd.CommandPointSource(nodeId);
+
+        ev.dataTransfer.setData('application/json', JSON.stringify(source));
+      }
+
+      break;
   }
 });
 
@@ -1830,6 +1843,7 @@ function drawNodes(node) {
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
     nodeElem.dataset.nodeKind = node.kind;
+    nodeElem.dataset.dragSource = 'command-point';
 
     const titleTop = document.createElement("span");
     const groupName = document.createTextNode(capitalizedCommandName);
@@ -1873,6 +1887,7 @@ function drawNodes(node) {
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
     nodeElem.dataset.nodeKind = node.kind;
+    nodeElem.dataset.dragSource = 'command-point';
     nodeElem.draggable = true;
 
     return nodeElem;
@@ -1943,6 +1958,10 @@ document.addEventListener('drop', ev => {
     case dnd.SourceType.CommandPalette:
       dropFromCommandPalette(dragSource, ev);
       break;
+
+    case dnd.SourceType.CommandPoint:
+      dropFromCommandPoint(dragSource, ev);
+      break;
   }
 });
 
@@ -1992,8 +2011,22 @@ function uiCommandEditorAddCommand(dragSource, ev) {
   drawAllNodes(targetPoseCommands);
 }
 
-    drawAllNodes(targetPoseCommands);
+function dropFromCommandPoint(dragSource, ev) {
+  // Where did we drop?
+
+  switch (ev.target.dataset.dropTarget) {
+    case 'command-point-trashbin':
+      uiCommandEditorRemoveCommand(dragSource);
+      break;
   }
+}
+
+function uiCommandEditorRemoveCommand(dragSource) {
+  console.log('remove command', dragSource.data.nodeId);
+
+  removeNode(selectedCommandPoint.commands, dragSource.data.nodeId);
+
+  drawAllNodes(selectedCommandPoint.commands);
 }
 
 // Hi welcome to pain
