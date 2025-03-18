@@ -41,6 +41,8 @@ import { ActionNode, CommandPointList, CommandPoint, FlatCommandPoint } from './
 
 import { CommandClump } from './js/commandclump.js';
 
+import * as dnd from './js/drag-n-drop.js';
+
 // JSDoc types
 
 /** @external {object} Canvas */
@@ -143,7 +145,7 @@ let hoveredRotation = null;
 let rotationState = null;
 let activeRotation = null;
 
-let actionedCommandPoint = null;
+let selectedCommandPoint = null;
 let hoveredCommandPoint = null;
 
 let selectState = SelectState.NONE;
@@ -151,7 +153,6 @@ let selectState = SelectState.NONE;
 let importFileName = '';
 let saveFileName = '';
 
-let targetNode = null;
 let spacerTarget = null;
 
 const ORIGIN = Point(0, 0);
@@ -261,8 +262,8 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(() => {
       onFieldLoaded(canvas);
 
-      if (actionedCommandPoint) {
-        drawAllNodes(actionedCommandPoint.commands);
+      if (selectedCommandPoint) {
+        drawAllNodes(selectedCommandPoint.commands);
       }
     })
     .catch(err => console.error('dom content loaded', err));
@@ -322,6 +323,8 @@ function updateRobotCommands() {
       imgElem.draggable = true;
       imgElem.id = cmd.name;
       imgElem.title = cmd.name;
+      imgElem.dataset.dragSource = 'command-palette';
+      imgElem.dataset.commandName = cmd.name;
       imgElem.classList.add('o-action-command-icon');
 
       const itemElem = document.createElement('li');
@@ -468,8 +471,8 @@ function onFieldLoaded(canvas) {
 
         if (potentialNearCmdPt !== null) {
 
-          actionedCommandPoint = potentialNearCmdPt;
-          drawAllNodes(actionedCommandPoint.commands);
+          selectedCommandPoint = potentialNearCmdPt;
+          drawAllNodes(selectedCommandPoint.commands);
 
         } else {
           let chosenCmdT = poseList.findTNearPoint(Point(x, y));
@@ -478,7 +481,7 @@ function onFieldLoaded(canvas) {
             chosenCmdT = tSnappedToPoses(chosenCmdT);
           }
 
-          commandPointList.newCommandPoint(chosenCmdT);
+          commandPointList.newCommandPoint(chosenCmdT, genId());
         }
 
         break;
@@ -622,9 +625,9 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
 
-        actionedCommandPoint = cmdPtObjNear(mousePt);
+        selectedCommandPoint = cmdPtObjNear(mousePt);
 
-        if(actionedCommandPoint !== null) {
+        if(selectedCommandPoint !== null) {
           break;
         }
 
@@ -702,7 +705,7 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
 
-        actionedCommandPoint = null;
+        selectedCommandPoint = null;
 
         switch (selectState) {
           case SelectState.MOVE_POSE:
@@ -1669,38 +1672,36 @@ function findNode(passedNode, idTarget) {
 }
 // _COM
 document.addEventListener('dragstart', ev => {
-  let dragTargets = [
-    "sequence",
-    "parallel",
-    "race",
-  ];
+  const dragSource = ev.target.dataset.dragSource;
 
-  if (seasonConfig.isLoaded()) {
+  switch (dragSource) {
+    case 'command-palette':
+      if ('commandName' in ev.target.dataset) {
+        const commandName = ev.target.dataset.commandName;
 
-    // Add robot commands to drag targets.
+        console.log("drag start: from command palette with command name", commandName);
 
-    let commandOptionsList = [];
+        const source = dnd.CommandPaletteSource(commandName);
 
-    for (let i = 0; i < commandClumpList.length; i++) {
-      for (let cmd of commandClumpList[i].cmds) {
-        commandOptionsList.push(cmd);
+        // Data source info requires a data structure, but drag-n-drop only
+        // supports strings or files, so we'll use json.
+        ev.dataTransfer.setData('application/json', JSON.stringify(source));
       }
-    }
-    dragTargets = dragTargets.concat(commandOptionsList.map(c => c.name));
-  }
 
-  if (dragTargets.includes(ev.target.id)) { // BOOKMARK
-    console.log("drag start: include by target id", ev.target.id);
-    ev.dataTransfer.setData('text/plain', ev.target.id);
-  } else if (dragTargets.includes(ev.target.dataset.nodeName)) {
-    console.log("drag start: include by data node name", ev.target.dataset.nodeName);
-    ev.dataTransfer.setData('text/plain', ev.target.dataset.nodeName);
-  }
+      break;
 
-  // NodeId located differently on commands in work area; attach ID to datatransfer
-  if (ev.target.classList.contains("o-command")) {
-    ev.dataTransfer.setData('nameText', ev.toElement.dataset.nodeName);
-    ev.dataTransfer.setData('text/plain', ev.toElement.dataset.nodeId);
+    case 'command-point':
+      if ('nodeId' in ev.target.dataset) {
+        const nodeId = ev.target.dataset.nodeId;
+
+        console.log("drag start: from command point with node id", nodeId);
+
+        const source = dnd.CommandPointSource(nodeId);
+
+        ev.dataTransfer.setData('application/json', JSON.stringify(source));
+      }
+
+      break;
   }
 });
 
@@ -1710,6 +1711,8 @@ document.addEventListener('dragend', ev => {
 
 document.addEventListener('dragenter', ev => {
   ev.preventDefault();
+
+  // Drag has entered a drop zone.  Update UI to indicate user may drop here.
 
   if (ev.target.classList.contains('action-drop-zone')) {
     if (spacerTarget) {
@@ -1772,7 +1775,7 @@ function drawAllNodes(rootSomething) {
 
   const moveConditionContinueClarification = document.createElement("p");
 
-  let moveCondition = actionedCommandPoint.moveCondition;
+  let moveCondition = selectedCommandPoint.moveCondition;
 
   if (moveCondition == "halt") {
     moveConditionContinueClarification.textContent = "Go";
@@ -1783,8 +1786,8 @@ function drawAllNodes(rootSomething) {
   moveConditionSwitch.classList.add('o-command-moveswitch');
 
   moveConditionSwitch.addEventListener('click', () => {
-    actionedCommandPoint.toggleMoveCondition();
-    drawAllNodes(actionedCommandPoint.commands);
+    selectedCommandPoint.toggleMoveCondition();
+    drawAllNodes(selectedCommandPoint.commands);
   });
 
   if (moveCondition === "go") {
@@ -1836,10 +1839,12 @@ function drawNodes(node) {
   if (node.kind == 'group') {
     const nodeElem = document.createElement("div");
     nodeElem.classList.add('o-command-group');
+    nodeElem.draggable = true;
 
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
     nodeElem.dataset.nodeKind = node.kind;
+    nodeElem.dataset.dragSource = 'command-point';
 
     const titleTop = document.createElement("span");
     const groupName = document.createTextNode(capitalizedCommandName);
@@ -1851,6 +1856,7 @@ function drawNodes(node) {
       spacerElem.classList.add("action-drop-zone");
       spacerElem.classList.add("o-command-group__spacer");
       spacerElem.dataset.insertIndex = insertIndex;
+      spacerElem.dataset.dropTarget = 'command-point';
 
       return spacerElem;
     }
@@ -1878,10 +1884,12 @@ function drawNodes(node) {
     nodeElem.classList.add('o-command');
     nodeElem.src = commandImages.get(node.name) || "images/command.png";
     nodeElem.title = node.name;
+    nodeElem.draggable = true;
 
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
     nodeElem.dataset.nodeKind = node.kind;
+    nodeElem.dataset.dragSource = 'command-point';
     nodeElem.draggable = true;
 
     return nodeElem;
@@ -1897,6 +1905,21 @@ function insertNode(child, parent, index) {
     .concat([child])
     .concat(parent.children.slice(index));
 }
+
+function removeNode(parent, id) {
+  for (let cmd of parent.children) {
+    if (cmd.nodeId == id) {
+      parent.children.splice(parent.children.indexOf(cmd), 1);
+      return;
+    }
+
+    // Search groups for target node.
+    if (cmd.kind == 'group') {
+      removeNode(cmd, id);
+    }
+  }
+}
+
 
 //createNode(initialNode, document.getElementById('c-action-work-area__sequence'))
 
@@ -1931,62 +1954,124 @@ function insertNode(child, parent, index) {
 
 document.addEventListener('drop', ev => {
 
-  const targetPoseCommands = actionedCommandPoint.commands;
+  let dragSource = JSON.parse(ev.dataTransfer.getData('application/json'));
+
+  switch (dragSource.type) {
+    case dnd.SourceType.CommandPalette:
+      dropFromCommandPalette(dragSource, ev);
+      break;
+
+    case dnd.SourceType.CommandPoint:
+      dropFromCommandPoint(dragSource, ev);
+      break;
+  }
+});
+
+function dropFromCommandPalette(dragSource, ev) {
+  // Where did we drop?
+
+  switch (ev.target.dataset.dropTarget) {
+    case 'command-point':
+      if (spacerTarget) {
+        spacerTarget.classList.remove("is-active-dropzone");
+      }
+
+      uiCommandEditorAddCommand(dragSource, ev);
+      break;
+  }
+}
+
+function uiCommandEditorAddCommand(dragSource, ev) {
+  const targetPoseCommands = selectedCommandPoint.commands;
   let target = ev.target;
 
-  if (spacerTarget) {
-    spacerTarget.classList.remove("is-active-dropzone");
+  let insertIndex = 0;
+
+  if (target.classList.contains('o-command-group__spacer')) {
+    insertIndex = target.dataset.insertIndex;
+    target = target.parentElement;
   }
 
-  if (ev.target.classList.contains('action-drop-zone')) {
+  const { commandName } = dragSource.data;
 
-    let insertIndex = 0;
+  const targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
 
-    if (target.classList.contains('o-command-group__spacer')) {
-      insertIndex = target.dataset.insertIndex;
-      target = target.parentElement;
-    }
-
-    let commandName = ev.dataTransfer.getData('text/plain');
-
-    targetNode = findNode(targetPoseCommands, target.dataset.nodeId, true);
-
-    if (ev.target.id == "command-trashbin") {
-      const comId = commandName; // ID and Name stored in same field; using ID here.
-
-      runCmdRemoval(actionedCommandPoint.commands, comId);
-
-      drawAllNodes(targetPoseCommands);
-      return;
-    }
-
-    drawAllNodes(targetPoseCommands);
-
-    switch (commandName) {
-      case 'sequence':
-      case 'race':
-      case 'parallel':
-        if (targetNode === null) {
-          console.error("Unable to find target node", targetNode);
-        } else {
-          insertNode(createNode('group', commandName), targetNode, insertIndex);
-        }
-        break;
-      default:
-        let movingCommandName = ev.dataTransfer.getData('nameText');
-
-        if (movingCommandName != "") {
-          insertNode(createNode('command', movingCommandName), targetNode, insertIndex);
-          runCmdRemoval(actionedCommandPoint.commands, commandName);
-        } else {
-          insertNode(createNode('command', commandName), targetNode, insertIndex);
-        }
-    }
+  switch (commandName) {
+    case 'sequence':
+    case 'race':
+    case 'parallel':
+      if (targetNode === null) {
+        console.error("Unable to find target node", targetNode);
+      } else {
+        insertNode(createNode('group', commandName), targetNode, insertIndex);
+      }
+      break;
+    default:
+      insertNode(createNode('command', commandName), targetNode, insertIndex);
   }
 
-  drawAllNodes(targetPoseCommands);
-  return;
-});
+  drawAllNodes(selectedCommandPoint.commands);
+}
+
+function dropFromCommandPoint(dragSource, ev) {
+  // Where did we drop?
+
+  switch (ev.target.dataset.dropTarget) {
+    case 'command-point':
+      uiCommandEditorMoveCommand(dragSource, ev);
+      break;
+
+    case 'command-point-trashbin':
+      uiCommandEditorRemoveCommand(dragSource);
+      break;
+  }
+}
+
+function uiCommandEditorMoveCommand(dragSource, ev) {
+  if (dragSource.data.nodeId == selectedCommandPoint.commands.nodeId) {
+    console.warn('cannot move root node', dragSource.data.nodeId);
+    return;
+  }
+
+  const { nodeId } = dragSource.data;
+
+  console.log('move command', nodeId);
+
+  const insertIndex = ev.target.dataset.insertIndex;
+  let target = ev.target;
+
+  if (target.classList.contains('o-command-group__spacer')) {
+    target = target.parentElement;
+  }
+
+  const sourceNode = findNode(selectedCommandPoint.commands, nodeId);
+  const targetParentNode = findNode(selectedCommandPoint.commands, target.dataset.nodeId);
+
+  // We can duplicate the sourceNode in the command tree first with a new node
+  // id, while the index is valid. The index becomes invalid after sourceNode
+  // is removed.
+  // A new id is used so when we remove the sourceNode, we don't accidently
+  // find the new node first.
+  insertNode(Object.assign({}, sourceNode, { nodeId: genId() }), targetParentNode, insertIndex);
+  removeNode(selectedCommandPoint.commands, nodeId);
+
+  console.log(selectedCommandPoint.commands, nodeId);
+
+  drawAllNodes(selectedCommandPoint.commands);
+}
+
+function uiCommandEditorRemoveCommand(dragSource) {
+  if (dragSource.data.nodeId == selectedCommandPoint.commands.nodeId) {
+    console.warn('cannot remove root command', dragSource.data.nodeId);
+    return;
+  }
+
+  console.log('remove command', dragSource.data.nodeId);
+
+  removeNode(selectedCommandPoint.commands, dragSource.data.nodeId);
+
+  drawAllNodes(selectedCommandPoint.commands);
+}
 
 // Hi welcome to pain
 
@@ -2757,21 +2842,9 @@ function cmdPtObjNear(pt) {
   return null;
 }
 
-function runCmdRemoval(list, id) {
-  for (let cmd of list.children) {
-    if (cmd.nodeId == id) {
-      list.children.splice(list.children.indexOf(cmd), 1);
-      return;
-    }
-    if (cmd.kind == 'group') {
-      runCmdRemoval(cmd, id);
-    }
-  }
-}
-
 function moveDraggingCmdPtIfApplicable(t) {
-  if (actionedCommandPoint !== null && t.t > 0) {
-    commandPointList.moveCommandPointToT(actionedCommandPoint, t);
+  if (selectedCommandPoint !== null && t.t > 0) {
+    commandPointList.moveCommandPointToT(selectedCommandPoint, t);
 
   }
 }

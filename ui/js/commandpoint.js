@@ -38,8 +38,8 @@ export const FlatCommandPoint = (t, xMeters, yMeters, cmds, moveCondition) => ({
 
 const CommandPointListPrototype = {
 
-    newCommandPoint (t, commands = []) {
-        let commandPackage = ActionNode("group", commands, 'sequence', 0, IdGen()); // Ensure there is always a base sequence group
+    newCommandPoint (t, id, commands = []) {
+        let commandPackage = ActionNode("group", commands, 'sequence', 0, id); // Ensure there is always a base sequence group
         this.cmdPts.push(CommandPoint(t, commandPackage, 'go'));
     },
 

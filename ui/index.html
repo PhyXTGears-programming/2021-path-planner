@@ -115,6 +115,10 @@
     height: 20px;
     border: 2px solid var(--color-border-command);
     filter:hue-rotate(180deg) saturate(3);
+
+    -webkit-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
   }
 
   .u-no-bullets {
@@ -134,6 +138,10 @@
     flex-direction: column;
 
     position: relative;
+
+    -webkit-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
   }
 /*
   .c-action-work-area__sequence > .o-command-group {
@@ -257,21 +265,27 @@
                    class="o-action-command-icon"
                    id="sequence"
                    title="sequence group"
-                   draggable="true">
+                   draggable="true"
+                   data-drag-source="command-palette"
+                   data-command-name="sequence">
             </li>
             <li>
               <img src="images/parallel-command-group.png"
                    class="o-action-command-icon"
                    id="parallel"
                    title="parallel group"
-                   draggable="true">
+                   draggable="true"
+                   data-drag-source="command-palette"
+                   data-command-name="parallel">
             </li>
             <li>
               <img src="images/parallel-race-group.png"
                    class="o-action-command-icon"
                    id="race"
                    title="race group"
-                   draggable="true">
+                   draggable="true"
+                   data-drag-source="command-palette"
+                   data-command-name="race">
             </li>
           </ul>
           <ul id="robot-command-list" class="o-command-list">
@@ -283,7 +297,9 @@
         <div class="c-action-work-area__sequence action-drop-zone" id="c-action-work-area__sequence">
         </div>
       </div>
-      <img src="images/trashbin.png" class="c-trashbin action-drop-zone" id="command-trashbin">
+      <img src="images/trashbin.png"
+        class="c-trashbin action-drop-zone"
+        data-drop-target="command-point-trashbin">
 
       <div class="c-edit-heading-field" id="rotation-heading-area">
         <p style="color:white;">Start Heading (Degrees):</p>
