@@ -129,12 +129,11 @@ const PoseListPrototype = {
     // etc...
 
     const lastPt = this.poses[this.poses.length - 1];
+    const lastT = this.findTNearPoint(lastPt.point).t;
+
+    t = Math.max(0.0, Math.min(t, lastT));
 
     const index = ~~t;   // Javascript trick to convert float to int.
-
-    if (t < 0.0 || t > this.findTNearPoint(lastPt.point).t) {
-      return null;
-    }
 
     t -= index;
 
