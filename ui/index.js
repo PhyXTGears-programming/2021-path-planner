@@ -2553,7 +2553,6 @@ function bakeAdvancedExport(poseList, rotations, commands) {//TODO
         console.log("Cannot find t near point", { x: chunk.x, y: chunk.y });
       } else {
         for (let a = lastRotationIndex; a < rotations.length; a += 1) {
-          debugger;
           if (nearestT.t >= rotations[a].t) {
             lastRotationIndex = a;
             lastRotation = rotations[a].rot;
@@ -2673,7 +2672,6 @@ function bakeAdvancedExport(poseList, rotations, commands) {//TODO
         distance += herePt.sub(prevPt).length();
         prevPt = herePt;
 
-        debugger;
         const vel = clamp(chunk.vel, 0.0, distanceToVelocity(pxToMeters(distance), prevVel));
         prevVel = vel;
 
