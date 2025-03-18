@@ -1839,6 +1839,7 @@ function drawNodes(node) {
   if (node.kind == 'group') {
     const nodeElem = document.createElement("div");
     nodeElem.classList.add('o-command-group');
+    nodeElem.draggable = true;
 
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
@@ -1883,6 +1884,7 @@ function drawNodes(node) {
     nodeElem.classList.add('o-command');
     nodeElem.src = commandImages.get(node.name) || "images/command.png";
     nodeElem.title = node.name;
+    nodeElem.draggable = true;
 
     nodeElem.dataset.nodeId = node.nodeId;
     nodeElem.dataset.nodeName = node.name;
