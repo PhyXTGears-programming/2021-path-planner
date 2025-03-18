@@ -481,7 +481,7 @@ function onFieldLoaded(canvas) {
             chosenCmdT = tSnappedToPoses(chosenCmdT);
           }
 
-          commandPointList.newCommandPoint(chosenCmdT);
+          commandPointList.newCommandPoint(chosenCmdT, genId());
         }
 
         break;
