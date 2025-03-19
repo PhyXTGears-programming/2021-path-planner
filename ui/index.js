@@ -531,7 +531,7 @@ function onFieldLoaded(canvas) {
         hoveredCommandPoint = poseList.findTNearPoint(mousePt, 50).pt;
         break;
 
-        case Tool.SELECT:
+      case Tool.SELECT:
 
         moveDraggingCmdPtIfApplicable(poseList.findTNearPoint(mousePt));
 
