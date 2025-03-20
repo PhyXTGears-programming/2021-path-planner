@@ -1028,19 +1028,21 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
 
   drawRotations(context, poseList);
 
-  if (shallDrawHighlight() && hoveredRotation != null) {
-    drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
-  } else if (shallDrawHighlight() && hoveredCommandPoint != null) {
-    let focusColor = '2f2';
+  if (shallDrawHighlight()) {
+    if (null != hoveredRotation) {
+      drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
+    } else if (null != hoveredCommand) {
+      let focusColor = '2f2';
 
-    if (cmdPtObjNear(hoveredCommandPoint) != null) {
-      focusColor = '000';
-    }
+      if (cmdPtObjNear(hoveredCommand) != null) {
+        focusColor = '000';
+      }
 
-    if (!inputState.isShiftDown) {
-      drawHighlight(context, poseList.pointAt(tSnappedToPoses(poseList.findTNearPoint(hoveredCommandPoint)).t, focusColor));
-    } else {
-      drawHighlight(context, hoveredCommandPoint, focusColor);
+      if (!inputState.isShiftDown) {
+        drawHighlight(context, poseList.pointAt(tSnappedToPoses(poseList.findTNearPoint(hoveredCommand)).t, focusColor));
+      } else {
+        drawHighlight(context, hoveredCommand, focusColor);
+      }
     }
   }
 
