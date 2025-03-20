@@ -1044,7 +1044,7 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
     }
   }
 
-  if (shallDrawNearestPoint() && hoveredCommandPoint == null) {
+  if (shallDrawNearestPoint()) {
     drawNearestPoint(context);
   }
 
@@ -1328,11 +1328,13 @@ function shallDrawNearestPoint() {
     null === hoveredHandle
     && null === hoveredPose
     && null === hoveredRotation
+    && null === hoveredCommand
   );
 
   const isProperTool = (
     (toolState === Tool.POSE && inputState.isShiftDown)
     || toolState === Tool.ROTATION
+    || toolState === Tool.COMMANDS
   );
 
   return isNothingHovered && isProperTool;
