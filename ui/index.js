@@ -2389,7 +2389,7 @@ function innerOrOuterRadius(mousePt, rotPt) {
   }
 }
 
-function drawHighlight(context, pos, fillColor = '2F2') {
+function drawHighlight(context, pos, fillColor = '#2F2') {
   if (pos == null) {
     return;
   }
@@ -2788,7 +2788,7 @@ function drawAllCommandPoints(context) {
   updateCommandPointPts();
 
   for(let cmdPt of commandPointList.cmdPts) {
-    context.fillStyle = "FFF";
+    context.fillStyle = "#FFF";
     drawCircle(context, cmdPt.t.pt.x, cmdPt.t.pt.y, 8);
     context.fill();
   }
