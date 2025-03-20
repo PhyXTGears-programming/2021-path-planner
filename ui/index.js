@@ -79,6 +79,7 @@ const SelectState = {
   MOVE_POSE: 1,
   MOVE_ENTER_HANDLE: 2,
   MOVE_EXIT_HANDLE: 3,
+  MOVE_COMMAND: 4,
 }
 
 const RotationState = {
@@ -145,8 +146,9 @@ let hoveredRotation = null;
 let rotationState = null;
 let activeRotation = null;
 
-let selectedCommandPoint = null;
-let hoveredCommandPoint = null;
+let selectedCommand = null;
+let hoveredCommand = null;
+let activeCommand = null;
 
 let selectState = SelectState.NONE;
 
@@ -481,8 +483,8 @@ function onFieldLoaded(canvas) {
 
         if (potentialNearCmdPt !== null) {
 
-          selectedCommandPoint = potentialNearCmdPt;
-          drawAllNodes(selectedCommandPoint.commands);
+          selectedCommand = potentialNearCmdPt;
+          drawAllNodes(selectedCommand.commands);
 
         } else {
           let chosenCmdT = poseList.findTNearPoint(Point(x, y));
@@ -514,6 +516,7 @@ function onFieldLoaded(canvas) {
     hoveredHandle = null;
     hoveredPose = null;
     hoveredRotation = null;
+    hoveredCommand = null;
 
     // Compute the canvas position of the cursor relative to the canvas.
     const clickVec = mouseEventToCanvasPoint(ev, canvas).vecFromOrigin();
@@ -528,7 +531,7 @@ function onFieldLoaded(canvas) {
     switch (toolState) {
       case Tool.COMMANDS:
         // hoveredPose = findPoseNear(x, y);
-        hoveredCommandPoint = poseList.findTNearPoint(mousePt, 50).pt;
+        hoveredCommand = findCommandNear(x, y);
         break;
 
       case Tool.SELECT:
@@ -566,6 +569,18 @@ function onFieldLoaded(canvas) {
             hoveredHandle = findHandleNear(x, y);
 
             break;
+
+          case SelectState.MOVE_COMMAND: {
+            const t = poseList.findTNearPoint(mousePt);
+
+            if (t.t > 0) {
+              commandPointList.moveCommandPointToT(activeCommand, t);
+
+            }
+
+            hoveredCommand = findCommandNear(x, y);
+            break;
+          }
 
           case SelectState.NONE:
             updateElementNear(x, y);
@@ -635,13 +650,11 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
 
-        selectedCommandPoint = cmdPtObjNear(mousePt);
+        if (hoveredCommand != null) {
+          selectState = SelectState.MOVE_COMMAND;
 
-        if(selectedCommandPoint !== null) {
-          break;
-        }
-
-        if (hoveredPose != null) {
+          activeCommand = hoveredCommand;
+        } else if (hoveredPose != null) {
           selectState = SelectState.MOVE_POSE;
 
           activePose = {
@@ -715,7 +728,7 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
 
-        selectedCommandPoint = null;
+        selectedCommand = null;
 
         switch (selectState) {
           case SelectState.MOVE_POSE:
@@ -733,6 +746,10 @@ function onFieldLoaded(canvas) {
             moveHandle = null;
             break;
 
+          case SelectState.MOVE_COMMAND:
+            selectState = SelectState.NONE;
+            activeCommand = null;
+            break;
 
         }
         break;
@@ -1559,6 +1576,12 @@ function insertPoseAt(t) {
 function updateElementNear(x, y) {
   // Find element nearest to the given point.  Only hover one element.
 
+  hoveredCommand = findCommandNear(x, y);
+
+  if (null !== hoveredCommand) {
+    return;
+  }
+
   hoveredHandle = findHandleNear(x, y);
 
   if (null !== hoveredHandle) {
@@ -1611,6 +1634,18 @@ function findHandleNear(x, y) {
     }
   }
 
+  return null;
+}
+
+function findCommandNear(x, y) {
+  const pt = Point(x, y);
+
+  for (let cmdPt of commandPointList.cmdPts) {
+    const distance = ezPtDistance2D(pt, cmdPt.t.pt);
+    if (distance <= 10) {
+      return cmdPt;
+    }
+  }
   return null;
 }
 
@@ -1789,7 +1824,7 @@ function drawAllNodes(rootSomething) {
 
   const moveConditionContinueClarification = document.createElement("p");
 
-  let moveCondition = selectedCommandPoint.moveCondition;
+  let moveCondition = selectedCommand.moveCondition;
 
   if (moveCondition == "halt") {
     moveConditionContinueClarification.textContent = "Go";
@@ -1800,8 +1835,8 @@ function drawAllNodes(rootSomething) {
   moveConditionSwitch.classList.add('o-command-moveswitch');
 
   moveConditionSwitch.addEventListener('click', () => {
-    selectedCommandPoint.toggleMoveCondition();
-    drawAllNodes(selectedCommandPoint.commands);
+    selectedCommand.toggleMoveCondition();
+    drawAllNodes(selectedCommand.commands);
   });
 
   if (moveCondition === "go") {
@@ -1996,7 +2031,7 @@ function dropFromCommandPalette(dragSource, ev) {
 }
 
 function uiCommandEditorAddCommand(dragSource, ev) {
-  const targetPoseCommands = selectedCommandPoint.commands;
+  const targetPoseCommands = selectedCommand.commands;
   let target = ev.target;
 
   let insertIndex = 0;
@@ -2024,7 +2059,7 @@ function uiCommandEditorAddCommand(dragSource, ev) {
       insertNode(createNode('command', commandName), targetNode, insertIndex);
   }
 
-  drawAllNodes(selectedCommandPoint.commands);
+  drawAllNodes(selectedCommand.commands);
 }
 
 function dropFromCommandPoint(dragSource, ev) {
@@ -2042,7 +2077,7 @@ function dropFromCommandPoint(dragSource, ev) {
 }
 
 function uiCommandEditorMoveCommand(dragSource, ev) {
-  if (dragSource.data.nodeId == selectedCommandPoint.commands.nodeId) {
+  if (dragSource.data.nodeId == selectedCommand.commands.nodeId) {
     console.warn('cannot move root node', dragSource.data.nodeId);
     return;
   }
@@ -2058,8 +2093,8 @@ function uiCommandEditorMoveCommand(dragSource, ev) {
     target = target.parentElement;
   }
 
-  const sourceNode = findNode(selectedCommandPoint.commands, nodeId);
-  const targetParentNode = findNode(selectedCommandPoint.commands, target.dataset.nodeId);
+  const sourceNode = findNode(selectedCommand.commands, nodeId);
+  const targetParentNode = findNode(selectedCommand.commands, target.dataset.nodeId);
 
   // We can duplicate the sourceNode in the command tree first with a new node
   // id, while the index is valid. The index becomes invalid after sourceNode
@@ -2067,24 +2102,24 @@ function uiCommandEditorMoveCommand(dragSource, ev) {
   // A new id is used so when we remove the sourceNode, we don't accidently
   // find the new node first.
   insertNode(Object.assign({}, sourceNode, { nodeId: genId() }), targetParentNode, insertIndex);
-  removeNode(selectedCommandPoint.commands, nodeId);
+  removeNode(selectedCommand.commands, nodeId);
 
-  console.log(selectedCommandPoint.commands, nodeId);
+  console.log(selectedCommand.commands, nodeId);
 
-  drawAllNodes(selectedCommandPoint.commands);
+  drawAllNodes(selectedCommand.commands);
 }
 
 function uiCommandEditorRemoveCommand(dragSource) {
-  if (dragSource.data.nodeId == selectedCommandPoint.commands.nodeId) {
+  if (dragSource.data.nodeId == selectedCommand.commands.nodeId) {
     console.warn('cannot remove root command', dragSource.data.nodeId);
     return;
   }
 
   console.log('remove command', dragSource.data.nodeId);
 
-  removeNode(selectedCommandPoint.commands, dragSource.data.nodeId);
+  removeNode(selectedCommand.commands, dragSource.data.nodeId);
 
-  drawAllNodes(selectedCommandPoint.commands);
+  drawAllNodes(selectedCommand.commands);
 }
 
 // Hi welcome to pain
@@ -2394,7 +2429,7 @@ function drawHighlight(context, pos, fillColor = '#2F2') {
     return;
   }
 
-  if (poseList.length >= 2 && hoveredRotation || hoveredCommandPoint != null) {
+  if (poseList.length >= 2 && hoveredRotation || hoveredCommand != null) {
     // const rotPos = calcRotationPos(hoveredRotation.rotation);
 
     context.fillStyle = fillColor;
@@ -2862,8 +2897,8 @@ function cmdPtObjNear(pt) {
 }
 
 function moveDraggingCmdPtIfApplicable(t) {
-  if (selectedCommandPoint !== null && t.t > 0) {
-    commandPointList.moveCommandPointToT(selectedCommandPoint, t);
+  if (selectedCommand !== null && t.t > 0) {
+    commandPointList.moveCommandPointToT(selectedCommand, t);
 
   }
 }
