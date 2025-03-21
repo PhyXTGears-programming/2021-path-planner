@@ -1049,17 +1049,7 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
     if (null != hoveredRotation) {
       drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
     } else if (null != hoveredCommand) {
-      let focusColor = '2f2';
-
-      if (cmdPtObjNear(hoveredCommand) != null) {
-        focusColor = '000';
-      }
-
-      if (!inputState.isShiftDown) {
-        drawHighlight(context, poseList.pointAt(tSnappedToPoses(poseList.findTNearPoint(hoveredCommand)).t, focusColor));
-      } else {
-        drawHighlight(context, hoveredCommand, focusColor);
-      }
+      drawHighlight(context, hoveredCommand.t.pt);
     }
   }
 
