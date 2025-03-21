@@ -1029,7 +1029,13 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
   // Draw canvas objects in viewport coordinate system.
   drawField(context);
   drawAllPoses(context, poseList);
+
+  if (shallDrawSelectedCommand()) {
+    drawSelectedCommand(context, selectedCommand);
+  }
+
   drawAllCommandPoints(context);
+
   drawBezier(context, poseList);
 
   if (toolState == Tool.SELECT) {
@@ -1351,6 +1357,10 @@ function shallDrawNearestPoint() {
   );
 
   return isNothingHovered && isProperTool;
+}
+
+function shallDrawSelectedCommand() {
+  return null != selectedCommand;
 }
 
 function shallDrawHighlight() {
@@ -2416,6 +2426,18 @@ function innerOrOuterRadius(mousePt, rotPt) {
   } else {
     return 'outer';
   }
+}
+
+function drawSelectedCommand(context, command, fillColor = "#2f2") {
+  const { pt } = command.t;
+
+  if (pt == null) {
+    return;
+  }
+
+  context.fillStyle = fillColor;
+  drawCircle(context, pt.x, pt.y, 10);
+  context.fill();
 }
 
 function drawHighlight(context, pos, fillColor = '#2F2') {
