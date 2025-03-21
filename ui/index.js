@@ -263,10 +263,6 @@ window.addEventListener('DOMContentLoaded', () => {
     .then(updateRobotCommands)
     .then(() => {
       onFieldLoaded(canvas);
-
-      if (selectedCommandPoint) {
-        drawAllNodes(selectedCommandPoint.commands);
-      }
     })
     .catch(err => console.error('dom content loaded', err));
 })
