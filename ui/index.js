@@ -536,8 +536,6 @@ function onFieldLoaded(canvas) {
 
       case Tool.SELECT:
 
-        moveDraggingCmdPtIfApplicable(poseList.findTNearPoint(mousePt));
-
         switch (selectState) {
           case SelectState.MOVE_POSE:
             const posePt = mousePt.addVec(activePose.offset);
@@ -2894,13 +2892,6 @@ function cmdPtObjNear(pt) {
     }
   }
   return null;
-}
-
-function moveDraggingCmdPtIfApplicable(t) {
-  if (selectedCommand !== null && t.t > 0) {
-    commandPointList.moveCommandPointToT(selectedCommand, t);
-
-  }
 }
 
 // Other useful functions:
