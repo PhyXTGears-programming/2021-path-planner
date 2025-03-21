@@ -2829,7 +2829,7 @@ function drawAllCommandPoints(context) {
   updateCommandPointPts();
 
   for(let cmdPt of commandPointList.cmdPts) {
-    context.fillStyle = "#FFF";
+    context.fillStyle = "#888";
     drawCircle(context, cmdPt.t.pt.x, cmdPt.t.pt.y, 8);
     context.fill();
   }
