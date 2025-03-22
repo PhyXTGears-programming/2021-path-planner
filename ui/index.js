@@ -117,6 +117,17 @@ const toolStateToName = {
   [Tool.ROTATION] : 'rotation',
 };
 
+const ui = {
+  sizeMeters: {
+    command: {
+      normal: 0.05,
+      hover: 0.06,
+    },
+  },
+  sizePx: {
+  }
+};
+
 const styles = {
   default:      { primary: '#ccc',  secondary: '#282828' },
   robotActive:  { primary: '#fffa', secondary: '#777a' },
@@ -247,6 +258,9 @@ const seasonConfig = {
     }).catch(err => {
       self.config = null;
       throw `Failed to load season config: ${err}`;
+    }).then(config => {
+      updateUiSizes(config);
+      return config;
     });
   },
 
@@ -266,6 +280,51 @@ window.addEventListener('DOMContentLoaded', () => {
     })
     .catch(err => console.error('dom content loaded', err));
 })
+
+function updateUiSizes(config) {
+  // Dynamically copy object tree inside ui.sizeMeters into ui.sizePixels with
+  // unit conversions.
+
+  const stack = [];
+
+  // Prime the stack.
+  for (let field in ui.sizeMeters) {
+    stack.push({
+      field,
+      objMeters: ui.sizeMeters,
+      objPx: ui.sizePx
+    });
+  }
+
+  // Breadth first processing.
+  while (0 != stack.length) {
+    const { field, objMeters, objPx } = stack.shift();
+
+    switch (typeof(objMeters[field])) {
+      case 'object':
+        objPx[field] = {};
+
+        for (let f in objMeters[field]) {
+          stack.push({
+            field: f,
+            objMeters: objMeters[field],
+            objPx: objPx[field]
+          });
+        }
+        break;
+
+      case 'number':
+        objPx[field] = metersToPx(objMeters[field]);
+        break;
+
+      default:
+        console.warn('unknown value in ui.sizes', { field, type: typeof(objMeters[field]) });
+        break;
+    }
+  }
+
+  console.log('updated ui sizes', ui);
+}
 
 function updateRobotCommands() {
   if (!seasonConfig.isLoaded()) {
@@ -2914,6 +2973,10 @@ function ezNumDist(a, b) {
 
 function pxToMeters(px) {
   return (seasonConfig.fieldDims.xmeters / seasonConfig.fieldDims.xPixels) * px;
+}
+
+function metersToPx(meters) {
+  return (seasonConfig.fieldDims.xPixels / seasonConfig.fieldDims.xmeters) * meters;
 }
 
 function popsicle(data) { // temporary function for debugging. Just deep clones.
