@@ -1106,9 +1106,9 @@ function _redrawCanvas(canvas, poseList, options = {}) { // _CA
 
   if (shallDrawHighlight()) {
     if (null != hoveredRotation) {
-      drawHighlight(context, calcRotationPos(hoveredRotation.rotation));
+      drawRotationHighlight(context, calcRotationPos(hoveredRotation.rotation));
     } else if (null != hoveredCommand) {
-      drawHighlight(context, hoveredCommand.t.pt);
+      drawCommandHighlight(context, hoveredCommand.t.pt);
     }
   }
 
@@ -2489,7 +2489,15 @@ function drawSelectedCommand(context, command, fillColor = "#2f2") {
   context.fill();
 }
 
-function drawHighlight(context, pos, fillColor = '#2F2') {
+function drawRotationHighlight(context, pos) {
+  drawHighlight(context, pos, 4);
+}
+
+function drawCommandHighlight(content, pos) {
+  drawHighlight(context, pos, 4);
+}
+
+function drawHighlight(context, pos, fillColor = '#2F2', size = 4) {
   if (pos == null) {
     return;
   }
@@ -2498,7 +2506,7 @@ function drawHighlight(context, pos, fillColor = '#2F2') {
     // const rotPos = calcRotationPos(hoveredRotation.rotation);
 
     context.fillStyle = fillColor;
-    drawCircle(context, pos.x, pos.y, 4);
+    drawCircle(context, pos.x, pos.y, size);
     context.fill();
   }
 }
